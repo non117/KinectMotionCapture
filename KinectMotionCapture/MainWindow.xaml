@@ -1,8 +1,12 @@
 ﻿<Window x:Class="KinectMotionCapture.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MainWindow" Height="350" Width="525">
+        Title="KinectMotionCapture" Height="600" Width="700"
+        Loaded="MainWindow_Loaded"
+        Closing="MainWindow_Closing">
     <Grid>
-        
+        <Viewbox Grid.Row="1" HorizontalAlignment="Center">
+            <Image Source="{Binding ImageSource}" Stretch="UniformToFill" />
+        </Viewbox>
     </Grid>
 </Window>
