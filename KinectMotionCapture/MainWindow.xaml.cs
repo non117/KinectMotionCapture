@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -20,57 +22,57 @@ namespace KinectMotionCapture
     /// <summary>
     /// Interaction logic for MainWindow
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, INotifyPropertyChanged
     {
         /// <summary>
         /// Radius of drawn hand circles
         /// </summary>
-        private const double HandSize = 30;
+        //private const double HandSize = 30;
 
         /// <summary>
         /// Thickness of drawn joint lines
         /// </summary>
-        private const double JointThickness = 3;
+        //private const double JointThickness = 3;
 
         /// <summary>
         /// Thickness of clip edge rectangles
         /// </summary>
-        private const double ClipBoundsThickness = 10;
+        //private const double ClipBoundsThickness = 10;
 
         /// <summary>
         /// Constant for clamping Z values of camera space points from being negative
         /// </summary>
-        private const float InferredZPositionClamp = 0.1f;
+        //private const float InferredZPositionClamp = 0.1f;
 
         /// <summary>
         /// Brush used for drawing hands that are currently tracked as closed
         /// </summary>
-        private readonly Brush handClosedBrush = new SolidColorBrush(Color.FromArgb(128, 255, 0, 0));
+        //private readonly Brush handClosedBrush = new SolidColorBrush(Color.FromArgb(128, 255, 0, 0));
 
         /// <summary>
         /// Brush used for drawing hands that are currently tracked as opened
         /// </summary>
-        private readonly Brush handOpenBrush = new SolidColorBrush(Color.FromArgb(128, 0, 255, 0));
+        //private readonly Brush handOpenBrush = new SolidColorBrush(Color.FromArgb(128, 0, 255, 0));
 
         /// <summary>
         /// Brush used for drawing hands that are currently tracked as in lasso (pointer) position
         /// </summary>
-        private readonly Brush handLassoBrush = new SolidColorBrush(Color.FromArgb(128, 0, 0, 255));
+        //private readonly Brush handLassoBrush = new SolidColorBrush(Color.FromArgb(128, 0, 0, 255));
 
         /// <summary>
         /// Brush used for drawing joints that are currently tracked
         /// </summary>
-        private readonly Brush trackedJointBrush = new SolidColorBrush(Color.FromArgb(255, 68, 192, 68));
+        //private readonly Brush trackedJointBrush = new SolidColorBrush(Color.FromArgb(255, 68, 192, 68));
 
         /// <summary>
         /// Brush used for drawing joints that are currently inferred
         /// </summary>        
-        private readonly Brush inferredJointBrush = Brushes.Yellow;
+        //private readonly Brush inferredJointBrush = Brushes.Yellow;
 
         /// <summary>
         /// Pen used for drawing bones that are currently inferred
         /// </summary>        
-        private readonly Pen inferredBonePen = new Pen(Brushes.Gray, 1);
+        //private readonly Pen inferredBonePen = new Pen(Brushes.Gray, 1);
 
         /// <summary>
         /// Drawing group for body rendering output
@@ -120,7 +122,7 @@ namespace KinectMotionCapture
         /// <summary>
         /// List of colors for each body tracked
         /// </summary>
-        private List<Pen> bodyColors;
+        //private List<Pen> bodyColors;
 
         /// <summary>
         /// Current status text to display
@@ -147,6 +149,7 @@ namespace KinectMotionCapture
             // open the reader for the body frames
             this.bodyFrameReader = this.kinectSensor.BodyFrameSource.OpenReader();
 
+            /*
             // a bone defined as a line between two joints
             this.bones = new List<Tuple<JointType, JointType>>();
 
@@ -193,16 +196,17 @@ namespace KinectMotionCapture
             this.bodyColors.Add(new Pen(Brushes.Blue, 6));
             this.bodyColors.Add(new Pen(Brushes.Indigo, 6));
             this.bodyColors.Add(new Pen(Brushes.Violet, 6));
+             */
 
             // set IsAvailableChanged event notifier
-            //this.kinectSensor.IsAvailableChanged += this.Sensor_IsAvailableChanged;
+            this.kinectSensor.IsAvailableChanged += this.Sensor_IsAvailableChanged;
 
             // open the sensor
             this.kinectSensor.Open();
 
             // set the status text
-            //this.StatusText = this.kinectSensor.IsAvailable ? Properties.Resources.RunningStatusText
-            //                                                : Properties.Resources.NoSensorStatusText;
+            this.StatusText = this.kinectSensor.IsAvailable ? Properties.Resources.RunningStatusText
+                                                            : Properties.Resources.NoSensorStatusText;
 
             // Create the drawing group we'll use for drawing
             this.drawingGroup = new DrawingGroup();
@@ -211,7 +215,7 @@ namespace KinectMotionCapture
             this.imageSource = new DrawingImage(this.drawingGroup);
 
             // use the window object as the view model in this simple example
-            this.DataContext = this;
+            //this.DataContext = this;
 
             // initialize the components (controls) of the window
             this.InitializeComponent();
@@ -220,11 +224,12 @@ namespace KinectMotionCapture
         /// <summary>
         /// INotifyPropertyChangedPropertyChanged event to allow window controls to bind to changeable data
         /// </summary>
-        //public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler PropertyChanged;
 
         /// <summary>
         /// Gets the bitmap to display
         /// </summary>
+        /// 
         public ImageSource ImageSource
         {
             get
@@ -236,7 +241,6 @@ namespace KinectMotionCapture
         /// <summary>
         /// Gets or sets the current status text to display
         /// </summary>
-        /*
         public string StatusText
         {
             get
@@ -258,7 +262,6 @@ namespace KinectMotionCapture
                 }
             }
         }
-         */
 
         /// <summary>
         /// Execute start up tasks
@@ -320,7 +323,32 @@ namespace KinectMotionCapture
                     dataReceived = true;
                 }
             }
-
+            if (dataReceived)
+            {
+                foreach(Body body in this.bodies)
+                {
+                    if (body.IsTracked)
+                    {
+                        IReadOnlyDictionary<JointType, Joint> joints = body.Joints;
+                        Dictionary<JointType, Point> jointPoints = new Dictionary<JointType, Point>();
+                        foreach(JointType jointType in joints.Keys)
+                        {
+                            CameraSpacePoint position = joints[jointType].Position;
+                            if (position.Z < 0)
+                            {
+                                position.Z = 0.1f;
+                            }
+                            DepthSpacePoint depthSpacePoint = this.coordinateMapper.MapCameraPointToDepthSpace(position);
+                            jointPoints[jointType] = new Point(depthSpacePoint.X, depthSpacePoint.Y);
+                        }
+                        Console.WriteLine(jointPoints[JointType.Head]);
+                        CameraSpacePoint p = joints[JointType.Head].Position;
+                        string output = p.X.ToString() + ", " + p.Y.ToString() + ", " + p.Z.ToString();
+                        Console.WriteLine(output);
+                    }
+                }
+            }
+            /*
             if (dataReceived)
             {
                 using (DrawingContext dc = this.drawingGroup.Open())
@@ -367,8 +395,9 @@ namespace KinectMotionCapture
                     this.drawingGroup.ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
                 }
             }
+            */
         }
-
+        /*
         /// <summary>
         /// Draws a body
         /// </summary>
@@ -503,19 +532,18 @@ namespace KinectMotionCapture
                     new Rect(this.displayWidth - ClipBoundsThickness, 0, ClipBoundsThickness, this.displayHeight));
             }
         }
+        */
 
         /// <summary>
         /// Handles the event which the sensor becomes unavailable (E.g. paused, closed, unplugged).
         /// </summary>
         /// <param name="sender">object sending the event</param>
         /// <param name="e">event arguments</param>
-        /*
         private void Sensor_IsAvailableChanged(object sender, IsAvailableChangedEventArgs e)
         {
             // on failure, set the status text
             this.StatusText = this.kinectSensor.IsAvailable ? Properties.Resources.RunningStatusText
                                                             : Properties.Resources.SensorNotAvailableStatusText;
         }
-         */
     }
 }
