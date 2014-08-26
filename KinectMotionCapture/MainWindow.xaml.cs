@@ -143,48 +143,64 @@ namespace KinectMotionCapture
         /// </summary>
         /// <param name="sender">object sending the event</param>
         /// <param name="e">event arguments</param>
-        private void Reader_FrameArrived(object sender, BodyFrameArrivedEventArgs e)
+        private void Reader_FrameArrived(object sender, MultiSourceFrameArrivedEventArgs e)
         {
-            bool dataReceived = false;
+            int depthWidth = 0;
+            int depthHeight = 0;
 
-            using (BodyFrame bodyFrame = e.FrameReference.AcquireFrame())
-            {
-                if (bodyFrame != null)
-                {
-                    if (this.bodies == null)
-                    {
-                        this.bodies = new Body[bodyFrame.BodyCount];
-                    }
+            int colorWidth = 0;
+            int colorHeight = 0;
 
-                    // The first time GetAndRefreshBodyData is called, Kinect will allocate each Body in the array.
-                    // As long as those body objects are not disposed and not set to null in the array,
-                    // those body objects will be re-used.
-                    bodyFrame.GetAndRefreshBodyData(this.bodies);
-                    dataReceived = true;
-                }
-            }
-            if (dataReceived)
+            int bodyIndexWidth = 0;
+            int bodyIndexHeight = 0;
+
+            bool multiSourceFrameProcessed = false;
+            bool colorFrameProcessed = false;
+            bool depthFrameProcessed = false;
+            bool bodyIndexFrameProcessed = false;
+
+            MultiSourceFrame multiSourceFrame = e.FrameReference.AcquireFrame();
+
+            if (multiSourceFrame != null)
             {
-                foreach(Body body in this.bodies)
+                using (DepthFrame depthFrame = multiSourceFrame.DepthFrameReference.AcquireFrame())
                 {
-                    if (body.IsTracked)
+                    using (ColorFrame colorFrame = multiSourceFrame.ColorFrameReference.AcquireFrame())
                     {
-                        IReadOnlyDictionary<JointType, Joint> joints = body.Joints;
-                        Dictionary<JointType, Point> jointPoints = new Dictionary<JointType, Point>();
-                        foreach(JointType jointType in joints.Keys)
+                        using (BodyIndexFrame bodyIndexFrame = multiSourceFrame.BodyIndexFrameReference.AcquireFrame())
                         {
-                            CameraSpacePoint position = joints[jointType].Position;
-                            if (position.Z < 0)
+                            if (depthFrame != null)
                             {
-                                position.Z = 0.1f;
+                                FrameDescription depthFrameDescription = depthFrame.FrameDescription;
+                                depthWidth = depthFrameDescription.Width;
+                                depthHeight = depthFrameDescription.Height;
+                                if ((depthWidth * depthHeight) == this.depthFrameData.Length)
+                                {
+                                    depthFrame.CopyFrameDataToArray(this.depthFrameData);
+                                    depthFrameProcessed = true;
+                                }
                             }
-                            DepthSpacePoint depthSpacePoint = this.coordinateMapper.MapCameraPointToDepthSpace(position);
-                            jointPoints[jointType] = new Point(depthSpacePoint.X, depthSpacePoint.Y);
+                            if (colorFrame != null)
+                            {
+                                FrameDescription colorFrameDescription = colorFrame.FrameDescription;
+                                colorWidth = colorFrameDescription.Width;
+                                colorHeight = colorFrameDescription.Height;
+                                if ((colorWidth * colorHeight * this.bytesPerPixel) == this.colorFrameData.Length)
+                                {
+                                    if (colorFrame.RawColorImageFormat == ColorImageFormat.Bgra)
+                                    {
+                                        colorFrame.CopyRawFrameDataToArray(this.colorFrameData);
+                                    }
+                                    else
+                                    {
+                                        colorFrame.CopyConvertedFrameDataToArray(this.colorFrameData, ColorImageFormat.Bgra);
+                                    }
+                                    colorFrameProcessed = true;
+                                }
+                            }
+                            
+
                         }
-                        Console.WriteLine(jointPoints[JointType.Head]);
-                        CameraSpacePoint p = joints[JointType.Head].Position;
-                        string output = p.X.ToString() + ", " + p.Y.ToString() + ", " + p.Z.ToString();
-                        Console.WriteLine(output);
                     }
                 }
             }
