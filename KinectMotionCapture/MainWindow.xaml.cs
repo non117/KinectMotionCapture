@@ -21,20 +21,29 @@ namespace KinectMotionCapture
 {
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
+        // Kinect関連
         private readonly int bytesPerPixel = (PixelFormats.Bgr32.BitsPerPixel + 7) / 8;
         private KinectSensor kinectSensor = null;
         private CoordinateMapper coordinateMapper = null;
         private MultiSourceFrameReader multiFrameSourceReader = null;
+
+        // 描画用
+        private DrawingGroup drawingGroup;
+        private DrawingImage imageSource;
         private WriteableBitmap bitmap = null;
+        
+        // データ貯めるやつ
         private ushort[] depthFrameData = null;
         private byte[] colorFrameData = null;
         private byte[] bodyIndexFrameData = null;
         private byte[] displayPixels = null;
         private ColorSpacePoint[] colorPoints = null;
+
         private string statusText = null;
 
         public MainWindow()
         {
+            // Kinect関連初期化処理
             this.kinectSensor = KinectSensor.GetDefault();
             this.multiFrameSourceReader = this.kinectSensor.OpenMultiSourceFrameReader(FrameSourceTypes.Depth | FrameSourceTypes.Color | FrameSourceTypes.BodyIndex);
             this.multiFrameSourceReader.MultiSourceFrameArrived += this.Reader_FrameArrived;
@@ -50,7 +59,9 @@ namespace KinectMotionCapture
             this.displayPixels = new byte[depthWidth * depthHeight * this.bytesPerPixel];
             this.colorPoints = new ColorSpacePoint[depthWidth * depthHeight];
 
-            // create the bitmap to display
+            // 描画関連
+            this.drawingGroup = new DrawingGroup();
+            this.imageSource = new DrawingImage(this.drawingGroup);
             this.bitmap = new WriteableBitmap(depthWidth, depthHeight, 96.0, 96.0, PixelFormats.Bgra32, null);
 
             // get FrameDescription from ColorFrameSource
@@ -80,11 +91,15 @@ namespace KinectMotionCapture
         /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;
 
-        /// <summary>
-        /// Gets the bitmap to display
-        /// </summary>
-        /// 
         public ImageSource ImageSource
+        {
+            get
+            {
+                return this.imageSource;
+            }
+        }
+
+        public ImageSource BackgroundImage
         {
             get
             {
