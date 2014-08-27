@@ -145,7 +145,7 @@ namespace KinectMotionCapture
         {
             get
             {
-                return this.imageSource;
+                return this.imageSource;                
             }
         }
 
@@ -297,7 +297,9 @@ namespace KinectMotionCapture
 
                 }
             }
+            BindingExpression be = BodyImage.GetBindingExpression(Image);
 
+            
         }
 
         /// <summary>
