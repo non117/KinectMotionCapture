@@ -22,7 +22,7 @@ namespace KinectMotionCapture
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
         // Kinect関連
-        private readonly uint bytesPerPixel = 0;
+        private readonly int bytesPerPixel = (PixelFormats.Bgr32.BitsPerPixel + 7) / 8;
         private KinectSensor kinectSensor = null;
         private CoordinateMapper coordinateMapper = null;
         private MultiSourceFrameReader multiFrameSourceReader = null;
@@ -30,15 +30,19 @@ namespace KinectMotionCapture
         // 描画用
         private DrawingGroup drawingGroup;
         private DrawingImage imageSource;
-        private WriteableBitmap bitmap = null;
-        
+        private WriteableBitmap colorBitmap = null;
+
         // データ貯めるやつ
-        private ushort[] depthFrameData = null;
+        //private ushort[] depthFrameData = null;
         private byte[] colorPixels = null;
-        private byte[] bodyIndexFrameData = null;
-        private byte[] displayPixels = null;
-        private ColorSpacePoint[] colorPoints = null;
+        private byte[] depthPixels = null;
+        //private ColorSpacePoint[] colorPoints = null;
         private Body[] bodies = null;
+
+        private int depthWidth = 0;
+        private int depthHeight = 0;
+        private int colorWidth = 0;
+        private int colorHeight = 0;
 
         private string statusText = null;
 
@@ -52,11 +56,11 @@ namespace KinectMotionCapture
             FrameDescription deapthFrameDescription = this.kinectSensor.DepthFrameSource.FrameDescription;
             FrameDescription colorFrameDescription = this.kinectSensor.ColorFrameSource.FrameDescription;
 
-            int depthWidth = deapthFrameDescription.Width;
-            int depthHeight = deapthFrameDescription.Height;
+            this.depthWidth = deapthFrameDescription.Width;
+            this.depthHeight = deapthFrameDescription.Height;
 
-            int colorWidth = colorFrameDescription.Width;
-            int colorHeight = colorFrameDescription.Height;
+            this.colorWidth = colorFrameDescription.Width;
+            this.colorHeight = colorFrameDescription.Height;
 
             // allocate space to put the pixels being received and coverted
             //this.depthFrameData = new ushort[depthWidth * depthHeight];
@@ -66,11 +70,12 @@ namespace KinectMotionCapture
             // 描画関連
             this.drawingGroup = new DrawingGroup();
             this.imageSource = new DrawingImage(this.drawingGroup);
-            this.bitmap = new WriteableBitmap(colorWidth, colorHeight, 96.0, 96.0, PixelFormats.Bgra32, null);           
+            // depthの場合どうするか
+            this.colorBitmap = new WriteableBitmap(this.colorWidth, this.colorHeight, 96.0, 96.0, PixelFormats.Bgra32, null);
 
             // allocate space to put the pixels being received
-            this.bytesPerPixel = colorFrameDescription.BytesPerPixel;
-            this.colorPixels = new byte[colorWidth * colorHeight * this.bytesPerPixel];
+            this.colorPixels = new byte[this.colorWidth * this.colorHeight * this.bytesPerPixel];
+            this.depthPixels = new byte[this.depthWidth * this.depthHeight];
 
             this.kinectSensor.IsAvailableChanged += this.Sensor_IsAvailableChanged;
             this.kinectSensor.Open();
@@ -99,7 +104,7 @@ namespace KinectMotionCapture
         {
             get
             {
-                return this.bitmap;
+                return this.colorBitmap;
             }
         }
 
@@ -133,7 +138,7 @@ namespace KinectMotionCapture
         /// </summary>
         /// <param name="sender">object sending the event</param>
         /// <param name="e">event arguments</param>
-        
+
         private void MainWindow_Closing(object sender, CancelEventArgs e)
         {
             if (this.multiFrameSourceReader != null)
@@ -156,12 +161,6 @@ namespace KinectMotionCapture
         /// <param name="e">event arguments</param>
         private void Reader_FrameArrived(object sender, MultiSourceFrameArrivedEventArgs e)
         {
-            int depthWidth = 0;
-            int depthHeight = 0;
-
-            int colorWidth = 0;
-            int colorHeight = 0;
-
             bool multiSourceFrameProcessed = false;
             bool colorFrameProcessed = false;
             bool depthFrameProcessed = false;
@@ -179,21 +178,16 @@ namespace KinectMotionCapture
                         {
                             if (depthFrame != null)
                             {
-                                FrameDescription depthFrameDescription = depthFrame.FrameDescription;
-                                depthWidth = depthFrameDescription.Width;
-                                depthHeight = depthFrameDescription.Height;
-                                if ((depthWidth * depthHeight) == this.depthFrameData.Length)
-                                {
-                                    depthFrame.CopyFrameDataToArray(this.depthFrameData);
-                                    depthFrameProcessed = true;
-                                }
+                                //if ((depthWidth * depthHeight) == this.depthFrameData.Length)
+                                //{
+                                //  depthFrame.CopyFrameDataToArray(this.depthFrameData);
+                                depthFrameProcessed = true;
+                                //}
                             }
                             if (colorFrame != null)
                             {
                                 FrameDescription colorFrameDescription = colorFrame.FrameDescription;
-                                colorWidth = colorFrameDescription.Width;
-                                colorHeight = colorFrameDescription.Height;
-                                if ((colorWidth * colorHeight * this.bytesPerPixel) == this.colorPixels.Length)
+                                if ((colorFrameDescription.Width == this.colorBitmap.PixelWidth) && (colorFrameDescription.Height == this.colorBitmap.PixelHeight))
                                 {
                                     if (colorFrame.RawColorImageFormat == ColorImageFormat.Bgra)
                                     {
@@ -214,7 +208,7 @@ namespace KinectMotionCapture
                                 }
                                 bodyFrame.GetAndRefreshBodyData(this.bodies);
                                 bodyFrameProcessed = true;
-                                
+
                             }
                             multiSourceFrameProcessed = true;
                         }
@@ -239,10 +233,10 @@ namespace KinectMotionCapture
         /// </summary>
         private void RenderColorPixels()
         {
-            this.bitmap.WritePixels(
-                new Int32Rect(0, 0, this.bitmap.PixelWidth, this.bitmap.PixelHeight),
+            this.colorBitmap.WritePixels(
+                new Int32Rect(0, 0, this.colorBitmap.PixelWidth, this.colorBitmap.PixelHeight),
                 this.colorPixels,
-                this.bitmap.PixelWidth * (int)this.bytesPerPixel,
+                this.colorBitmap.PixelWidth * this.bytesPerPixel,
                 0);
         }
 
