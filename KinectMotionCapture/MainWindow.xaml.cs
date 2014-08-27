@@ -58,7 +58,7 @@ namespace KinectMotionCapture
             // Kinect関連初期化処理
             this.kinectSensor = KinectSensor.GetDefault();
             this.multiFrameSourceReader = this.kinectSensor.OpenMultiSourceFrameReader(FrameSourceTypes.Depth | FrameSourceTypes.Color | FrameSourceTypes.Body);
-            //this.multiFrameSourceReader.MultiSourceFrameArrived += this.Reader_FrameArrived;
+            this.multiFrameSourceReader.MultiSourceFrameArrived += this.Reader_FrameArrived;
             this.coordinateMapper = this.kinectSensor.CoordinateMapper;
             FrameDescription deapthFrameDescription = this.kinectSensor.DepthFrameSource.FrameDescription;
             FrameDescription colorFrameDescription = this.kinectSensor.ColorFrameSource.FrameDescription;
@@ -179,19 +179,6 @@ namespace KinectMotionCapture
                         this.PropertyChanged(this, new PropertyChangedEventArgs("StatusText"));
                     }
                 }
-            }
-        }
-
-        /// <summary>
-        /// Execute start up tasks
-        /// </summary>
-        /// <param name="sender">object sending the event</param>
-        /// <param name="e">event arguments</param>
-        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
-        {
-            if (this.multiFrameSourceReader != null)
-            {
-                this.multiFrameSourceReader.MultiSourceFrameArrived += this.Reader_FrameArrived;
             }
         }
 
