@@ -21,6 +21,9 @@ namespace KinectMotionCapture
 {
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
+        // 基本設定
+        private string dataRoot = "Data";
+        
         // Kinect関連
         private KinectSensor kinectSensor = null;
         private CoordinateMapper coordinateMapper = null;
@@ -55,6 +58,9 @@ namespace KinectMotionCapture
 
         public MainWindow()
         {
+            // 基本設定の初期化処理
+            Utility.CreateDirectory(this.dataRoot);
+
             // Kinect関連初期化処理
             this.kinectSensor = KinectSensor.GetDefault();
             this.multiFrameSourceReader = this.kinectSensor.OpenMultiSourceFrameReader(FrameSourceTypes.Depth | FrameSourceTypes.Color | FrameSourceTypes.Body);
