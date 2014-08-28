@@ -10,7 +10,7 @@
     </Window.Resources>
     <Grid>
         <Image Source="{Binding BackgroundImage}" Stretch="UniformToFill" Grid.Row="0" />
-        <Image Name="BodyImage" Source="{Binding ImageSource, UpdateSourceTrigger=Explicit}" Stretch="UniformToFill" Grid.Row="0" />        
+        <Image Name="BodyImage" Source="{Binding ImageSource}" Stretch="UniformToFill" Grid.Row="0" />        
         <StatusBar Grid.Row="1" HorizontalAlignment="Stretch" Name="statusBar" VerticalAlignment="Bottom" Background="White" Foreground="{StaticResource MediumGreyBrush}">
             <StatusBarItem Content="{Binding StatusText}" />
         </StatusBar>

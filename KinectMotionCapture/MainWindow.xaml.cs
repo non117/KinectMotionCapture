@@ -145,7 +145,7 @@ namespace KinectMotionCapture
         {
             get
             {
-                return this.imageSource;                
+                return this.imageSource;
             }
         }
 
@@ -294,12 +294,9 @@ namespace KinectMotionCapture
                             this.DrawBody(joints, jointPoints, dc, drawPen);
                         }
                     }
-
-                }
-            }
-            BindingExpression be = BodyImage.GetBindingExpression(Image);
-
-            
+                    this.drawingGroup.ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, this.colorWidth, this.colorHeight));
+                }         
+            }                       
         }
 
         /// <summary>
