@@ -14,7 +14,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
 using Microsoft.Kinect;
 using KinectMotionCapture;
 
@@ -31,12 +30,17 @@ namespace KinectMotionCapture
                 encoder.Save(stream);
             }
         }
-        public static void CreateDirectory(string path)
+        public static void CreateDirectories(string path)
         {
-            if (! Directory.Exists(path) )
+            if (Directory.Exists(path))
             {
-                Directory.CreateDirectory(path);
+                return;
             }
+            string fullpath = Path.GetFullPath(path);
+            string dir = Path.GetDirectoryName(fullpath);
+            CreateDirectories(dir);
+            Directory.CreateDirectory(fullpath);
+
         }
     }
 

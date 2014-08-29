@@ -225,49 +225,45 @@ namespace KinectMotionCapture
 
             if (multiSourceFrame != null)
             {
-                using (DepthFrame depthFrame = multiSourceFrame.DepthFrameReference.AcquireFrame())
+                using (DepthFrame depthFrame = multiSourceFrame.DepthFrameReference.AcquireFrame())                
+                using (ColorFrame colorFrame = multiSourceFrame.ColorFrameReference.AcquireFrame())
+                using (BodyFrame bodyFrame = multiSourceFrame.BodyFrameReference.AcquireFrame())
                 {
-                    using (ColorFrame colorFrame = multiSourceFrame.ColorFrameReference.AcquireFrame())
+                    if (depthFrame != null)
                     {
-                        using (BodyFrame bodyFrame = multiSourceFrame.BodyFrameReference.AcquireFrame())
+                        //if ((depthWidth * depthHeight) == this.depthFrameData.Length)
+                        //{
+                        //  depthFrame.CopyFrameDataToArray(this.depthFrameData);
+                        depthFrameProcessed = true;
+                        //}
+                    }
+                    if (colorFrame != null)
+                    {
+                        FrameDescription colorFrameDescription = colorFrame.FrameDescription;
+                        if ((colorFrameDescription.Width == this.colorBitmap.PixelWidth) && (colorFrameDescription.Height == this.colorBitmap.PixelHeight))
                         {
-                            if (depthFrame != null)
+                            if (colorFrame.RawColorImageFormat == ColorImageFormat.Bgra)
                             {
-                                //if ((depthWidth * depthHeight) == this.depthFrameData.Length)
-                                //{
-                                //  depthFrame.CopyFrameDataToArray(this.depthFrameData);
-                                depthFrameProcessed = true;
-                                //}
+                                colorFrame.CopyRawFrameDataToArray(this.colorPixels);
                             }
-                            if (colorFrame != null)
+                            else
                             {
-                                FrameDescription colorFrameDescription = colorFrame.FrameDescription;
-                                if ((colorFrameDescription.Width == this.colorBitmap.PixelWidth) && (colorFrameDescription.Height == this.colorBitmap.PixelHeight))
-                                {
-                                    if (colorFrame.RawColorImageFormat == ColorImageFormat.Bgra)
-                                    {
-                                        colorFrame.CopyRawFrameDataToArray(this.colorPixels);
-                                    }
-                                    else
-                                    {
-                                        colorFrame.CopyConvertedFrameDataToArray(this.colorPixels, ColorImageFormat.Bgra);
-                                    }
-                                    colorFrameProcessed = true;
-                                }
+                                colorFrame.CopyConvertedFrameDataToArray(this.colorPixels, ColorImageFormat.Bgra);
                             }
-                            if (bodyFrame != null)
-                            {
-                                if (this.bodies == null)
-                                {
-                                    this.bodies = new Body[bodyFrame.BodyCount];
-                                }
-                                bodyFrame.GetAndRefreshBodyData(this.bodies);
-                                bodyFrameProcessed = true;
-
-                            }
-                            multiSourceFrameProcessed = true;
+                            colorFrameProcessed = true;
                         }
                     }
+                    if (bodyFrame != null)
+                    {
+                        if (this.bodies == null)
+                        {
+                            this.bodies = new Body[bodyFrame.BodyCount];
+                        }
+                        bodyFrame.GetAndRefreshBodyData(this.bodies);
+                        bodyFrameProcessed = true;
+
+                    }
+                    multiSourceFrameProcessed = true;
                 }
             }
 
