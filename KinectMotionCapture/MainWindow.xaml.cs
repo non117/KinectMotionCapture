@@ -14,15 +14,17 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
 using Microsoft.Kinect;
+
+using OpenCvSharp;
 
 namespace KinectMotionCapture
 {
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
         // 基本設定
-        private string dataRoot = "Data";
+        private string dataRoot = @"Data\hoge";
+        private int counter = 0;
         
         // Kinect関連
         private KinectSensor kinectSensor = null;
@@ -32,7 +34,7 @@ namespace KinectMotionCapture
         // 描画用
         private DrawingGroup drawingGroup;
         private DrawingImage imageSource;
-        private WriteableBitmap colorBitmap = null;
+        public WriteableBitmap colorBitmap = null;
 
         // データ貯めるやつ
         private readonly int bytesPerPixel = (PixelFormats.Bgr32.BitsPerPixel + 7) / 8;
@@ -59,7 +61,7 @@ namespace KinectMotionCapture
         public MainWindow()
         {
             // 基本設定の初期化処理
-            Utility.CreateDirectory(this.dataRoot);
+            Utility.CreateDirectories(this.dataRoot);
 
             // Kinect関連初期化処理
             this.kinectSensor = KinectSensor.GetDefault();
@@ -214,7 +216,7 @@ namespace KinectMotionCapture
         /// </summary>
         /// <param name="sender">object sending the event</param>
         /// <param name="e">event arguments</param>
-        private void Reader_FrameArrived(object sender, MultiSourceFrameArrivedEventArgs e)
+        private async void Reader_FrameArrived(object sender, MultiSourceFrameArrivedEventArgs e)
         {
             bool multiSourceFrameProcessed = false;
             bool colorFrameProcessed = false;
@@ -297,7 +299,11 @@ namespace KinectMotionCapture
                         }
                     }
                     this.drawingGroup.ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, this.colorWidth, this.colorHeight));
-                }         
+                }
+                string path = Path.Combine(this.dataRoot, this.counter.ToString());
+                CvMat cvmat = Utility.ArrayToCvMat(ref this.colorPixels, this.colorHeight, this.colorWidth);
+                await Task.Run(() => cvmat.SaveImage(path + ".jpg", new ImageEncodingParam(ImageEncodingID.JpegQuality, 85)));
+                counter++;
             }                       
         }
 
