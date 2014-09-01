@@ -23,12 +23,15 @@ namespace KinectMotionCapture
 {
     public static class Utility
     {
-        //public static WriteableBitmap ArrayToBitmap()
-
-        public static CvMat ArrayToCvMat(ref byte[] pixels, int height, int width)
+        public static CvMat ColorArrayToCvMat(int height, int width, ref byte[] data)
         {
-            CvMat cvMat = new CvMat(height, width, MatrixType.U8C4, pixels);
+            CvMat cvMat = new CvMat(height, width, MatrixType.U8C4, data);
             return cvMat;
+        }
+
+        public static CvMat DpethArrayToCvMat(int height, int width, ref ushort[] data)
+        {
+
         }
 
 

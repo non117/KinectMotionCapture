@@ -40,6 +40,7 @@ namespace KinectMotionCapture
         private readonly int bytesPerPixel = (PixelFormats.Bgr32.BitsPerPixel + 7) / 8;
         private byte[] colorPixels = null;
         private byte[] depthPixels = null;
+        private ushort[] depthBuffer = null;
 
         // bone描画関連
         private Body[] bodies = null;
@@ -90,6 +91,7 @@ namespace KinectMotionCapture
             // allocate space to put the pixels being received
             this.colorPixels = new byte[this.colorWidth * this.colorHeight * this.bytesPerPixel];
             this.depthPixels = new byte[this.depthWidth * this.depthHeight];
+            this.depthBuffer = new ushort[this.depthWidth * this.depthHeight];
 
             // a bone defined as a line between two joints
             this.bones = new List<Tuple<JointType, JointType>>();
@@ -233,11 +235,11 @@ namespace KinectMotionCapture
                 {
                     if (depthFrame != null)
                     {
-                        //if ((depthWidth * depthHeight) == this.depthFrameData.Length)
-                        //{
-                        //  depthFrame.CopyFrameDataToArray(this.depthFrameData);
-                        depthFrameProcessed = true;
-                        //}
+                        if ((depthWidth * depthHeight) == this.depthBuffer.Length)
+                        {
+                            depthFrame.CopyFrameDataToArray(this.depthBuffer);
+                            depthFrameProcessed = true;
+                        }
                     }
                     if (colorFrame != null)
                     {
@@ -301,8 +303,9 @@ namespace KinectMotionCapture
                     this.drawingGroup.ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, this.colorWidth, this.colorHeight));
                 }
                 string path = Path.Combine(this.dataRoot, this.counter.ToString());
-                CvMat cvmat = Utility.ArrayToCvMat(ref this.colorPixels, this.colorHeight, this.colorWidth);
-                await Task.Run(() => cvmat.SaveImage(path + ".jpg", new ImageEncodingParam(ImageEncodingID.JpegQuality, 85)));
+                CvMat colorMat = Utility.ColorArrayToCvMat(this.colorHeight, this.colorWidth, ref this.colorPixels);
+                CvMat depthMat;
+                await Task.Run(() => colorMat.SaveImage(path + ".jpg", new ImageEncodingParam(ImageEncodingID.JpegQuality, 85)));
                 counter++;
             }                       
         }
