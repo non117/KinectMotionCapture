@@ -25,13 +25,19 @@ namespace KinectMotionCapture
     {
         public static CvMat ColorArrayToCvMat(int height, int width, ref byte[] data)
         {
-            CvMat cvMat = new CvMat(height, width, MatrixType.U8C4, data);
-            return cvMat;
+            CvMat mat = new CvMat(height, width, MatrixType.U8C4, data);
+            return mat;
         }
 
         public static CvMat DpethArrayToCvMat(int height, int width, ref ushort[] data)
         {
-
+            CvMat mat = new CvMat(height, width, MatrixType.U16C1, data);
+            return mat;
+        }
+        public static CvMat BodyIndexArrayToCvMat(int height, int width, ref byte[] data)
+        {
+            CvMat mat = new CvMat(height, width, MatrixType.U8C1, data);
+            return mat;
         }
 
 
