@@ -7,6 +7,8 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.Threading.Tasks;
 
+using MonoGame.Framework;
+
 namespace KinectMotionCapture
 {
     public class MotionDataHandler
