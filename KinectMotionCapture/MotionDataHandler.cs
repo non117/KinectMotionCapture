@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using System.Reflection;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.Threading.Tasks;
+using System.Windows.Media.Media3D;
+using Microsoft.Kinect;
 
 namespace KinectMotionCapture
 {
@@ -70,6 +73,20 @@ namespace KinectMotionCapture
         [DataContract]
         public class Joints
         {
+            public void SetJoint(JointType jointType, CameraSpacePoint position)
+            {
+
+            }
+
+            private void SetProperty(string key, object data)
+            {
+                PropertyInfo propertyInfo = this.GetType().GetProperty(key, BindingFlags.Public | BindingFlags.Instance);
+                if (propertyInfo.PropertyType == typeof(float[]))
+                {
+                    propertyInfo.SetValue(this, (float[])data, null);
+                }
+            }
+
             [DataMember]
             public int user { get; set; }
             [DataMember]
