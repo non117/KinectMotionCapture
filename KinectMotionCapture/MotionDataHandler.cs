@@ -7,8 +7,6 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.Threading.Tasks;
 
-using MonoGame.Framework;
-
 namespace KinectMotionCapture
 {
     public class MotionDataHandler
@@ -37,7 +35,7 @@ namespace KinectMotionCapture
         public static string getJsonFromObject(object obj)
         {
             MemoryStream stream = new MemoryStream();
-            DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(MotionData);
+            DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(MotionData));
             serializer.WriteObject(stream, obj);
             stream.Position = 0;
             StreamReader sr = new StreamReader(stream);
