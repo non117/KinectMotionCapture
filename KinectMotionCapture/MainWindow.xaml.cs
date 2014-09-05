@@ -23,7 +23,6 @@ namespace KinectMotionCapture
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
         // 基本設定
-        private string dataRoot = @"Data\hoge";
         private int counter = 0;
         
         // Kinect関連
@@ -62,7 +61,6 @@ namespace KinectMotionCapture
         public MainWindow()
         {
             // 基本設定の初期化処理
-            Utility.CreateDirectories(this.dataRoot);
 
             // Kinect関連初期化処理
             this.kinectSensor = KinectSensor.GetDefault();
@@ -295,33 +293,8 @@ namespace KinectMotionCapture
             if (multiSourceFrameProcessed && depthFrameProcessed && colorFrameProcessed && bodyFrameProcessed && bodyIndexFrameProcessed)
             {
                 this.RenderColorPixels();
-                using (DrawingContext dc = this.drawingGroup.Open())
-                {
-                    dc.DrawRectangle(Brushes.Transparent, null, new Rect(0.0, 0.0, this.colorWidth, this.colorHeight));
-                    int penIndex = 0;
-                    foreach (Body body in this.bodies)
-                    {
-                        Pen drawPen = this.bodyColors[penIndex++];
-                        if (body.IsTracked)
-                        {
-                            IReadOnlyDictionary<JointType, Joint> joints = body.Joints;
-                            Dictionary<JointType, Point> jointPoints = new Dictionary<JointType, Point>();
-
-                            foreach (JointType jointType in joints.Keys)
-                            {
-                                CameraSpacePoint position = joints[jointType].Position;
-                                if (position.Z < 0)
-                                {
-                                    position.Z = 0.1f;
-                                }
-                                ColorSpacePoint colorSpacePoint = this.coordinateMapper.MapCameraPointToColorSpace(position);
-                                jointPoints[jointType] = new Point(colorSpacePoint.X, colorSpacePoint.Y);
-                            }
-                            this.DrawBody(joints, jointPoints, dc, drawPen);
-                        }
-                    }
-                    this.drawingGroup.ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, this.colorWidth, this.colorHeight));
-                }
+                this.RenderBody();
+                /*
                 string path = Path.Combine(this.dataRoot, this.counter.ToString());
                 CvMat colorOrigMat = Utility.ColorArrayToCvMat(this.colorHeight, this.colorWidth, ref this.colorPixels);
                 CvMat depthMat = Utility.DpethArrayToCvMat(this.depthHeight, this.depthWidth, ref this.depthBuffer);
@@ -331,8 +304,40 @@ namespace KinectMotionCapture
                 await Task.Run(() => colorMat.SaveImage(path + "_color.jpg", new ImageEncodingParam(ImageEncodingID.JpegQuality, 85)));
                 await Task.Run(() => depthMat.SaveImage(path + "_depth.png", new ImageEncodingParam(ImageEncodingID.PngCompression, 5)));
                 await Task.Run(() => bodyIndexMat.SaveImage(path + "_user.png", new ImageEncodingParam(ImageEncodingID.PngCompression, 5)));
+                 * */
                 counter++;
             }                       
+        }
+
+        private void RenderBody()
+        {
+            using (DrawingContext dc = this.drawingGroup.Open())
+            {
+                dc.DrawRectangle(Brushes.Transparent, null, new Rect(0.0, 0.0, this.colorWidth, this.colorHeight));
+                int penIndex = 0;
+                foreach (Body body in this.bodies)
+                {
+                    Pen drawPen = this.bodyColors[penIndex++];
+                    if (body.IsTracked)
+                    {
+                        IReadOnlyDictionary<JointType, Joint> joints = body.Joints;
+                        Dictionary<JointType, Point> jointPoints = new Dictionary<JointType, Point>();
+
+                        foreach (JointType jointType in joints.Keys)
+                        {
+                            CameraSpacePoint position = joints[jointType].Position;
+                            if (position.Z < 0)
+                            {
+                                position.Z = 0.1f;
+                            }
+                            ColorSpacePoint colorSpacePoint = this.coordinateMapper.MapCameraPointToColorSpace(position);
+                            jointPoints[jointType] = new Point(colorSpacePoint.X, colorSpacePoint.Y);
+                        }
+                        this.DrawBody(joints, jointPoints, dc, drawPen);
+                    }
+                }
+                this.drawingGroup.ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, this.colorWidth, this.colorHeight));
+            }
         }
 
         /// <summary>
