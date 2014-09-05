@@ -16,7 +16,7 @@ namespace KinectMotionCapture
 
     public class MotionDataHandler
     {
-        private string dataRoot = @"Data"; // そのうちPropertyとかUIからsetするようにしたい
+        public string dataRoot = @"Data"; // そのうちPropertyとかUIからsetするようにしたい
         public MotionDataHandler()
         {
             Utility.CreateDirectories(this.dataRoot);
@@ -56,23 +56,21 @@ namespace KinectMotionCapture
     [DataContract]
     public class MotionData
     {
-        public MotionData(int frameNo, string dataDir, int imageW, int imageH, int depthW, int depthH, long timeStamp)
+        public MotionData(int frameNo, string dataDir, long timeStamp, ref Body[] bodies)
         {
             this.FrameNo = frameNo;
             this.ImagePath = Path.Combine(dataDir, frameNo.ToString() + "_image.jpg");
             this.DepthPath = Path.Combine(dataDir, frameNo.ToString() + "_depth.png");
             this.UserPath = Path.Combine(dataDir, frameNo.ToString() + "_user.png");
             this.TimeStamp = timeStamp;
-            this.ImageSize = new Tuple<int, int>(imageW, imageH);
-            this.DepthUserSize = new Tuple<int, int>(depthW, depthH);
-        }
-        private void AddBody(ref Body body)
-        {
-            Joints joints = new Joints(ref body);
-            this.Tracking.Add(body.TrackingId, body.IsTracked);
-            if (body.IsTracked)
+            foreach (Body body in bodies)
             {
-                this.Joints.Add(body.TrackingId, joints);
+                JointPosition joints = new JointPosition(body);
+                this.Tracking.Add(body.TrackingId, body.IsTracked);
+                if (body.IsTracked)
+                {
+                    this.Joints.Add(body.TrackingId, joints);
+                }
             }
 
         }
@@ -90,19 +88,19 @@ namespace KinectMotionCapture
         [DataMember]
         public Dictionary<User, bool> Tracking { get; set; }
         [DataMember]
-        public Dictionary<User, Joints> Joints { get; set; }
+        public Dictionary<User, JointPosition> Joints { get; set; }
         [DataMember]
         public long TimeStamp { get; set; }
         [DataMember]
-        public Tuple<int, int> ImageSize { get; set; }
+        public Tuple<int, int> ImageSize { get; set; } // useless?
         [DataMember]
-        public Tuple<int, int> DepthUserSize { get; set; }
+        public Tuple<int, int> DepthUserSize { get; set; } // useless?
     }
 
     [DataContract]
-    public class Joints
+    public class JointPosition
     {
-        public Joints(ref Body body)
+        public JointPosition(Body body)
         {
             foreach (Joint joint in body.Joints.Values)
             {
