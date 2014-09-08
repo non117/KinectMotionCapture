@@ -16,10 +16,39 @@ namespace KinectMotionCapture
 
     public class MotionDataHandler
     {
-        public string dataRoot = @"Data"; // そのうちPropertyとかUIからsetするようにしたい
-        public MotionDataHandler()
+        private string dataDir = @"Data"; // そのうちPropertyとかUIからsetするようにしたい
+        private string filename = @"BoneInfo.json";
+        private string recordPath = "";
+        private string DataString = "";
+
+        private int colorWidth = 0;
+        private int colorHeight = 0;
+        private int depthWidth = 0;
+        private int depthHeight = 0;
+
+        public MotionDataHandler(int colorWidth, int colorHeight, int depthWidth, int depthHeight)
         {
-            Utility.CreateDirectories(this.dataRoot);
+            this.colorWidth = colorWidth;
+            this.colorHeight = colorHeight;
+            this.depthWidth = depthWidth;
+            this.depthHeight = depthHeight;
+            Utility.CreateDirectories(this.dataDir);
+            this.recordPath = Path.Combine(dataDir, filename);
+        }
+        public void addData(int frameNo, DateTime dateTime, ref Body[] bodies)
+        {
+            MotionData motionData = new MotionData(frameNo, this.dataDir, dateTime.Ticks, ref bodies);
+            motionData.ImageSize = new Tuple<int, int>(this.colorWidth, this.colorHeight);
+            motionData.DepthUserSize = new Tuple<int, int>(this.depthWidth, this.depthHeight);
+            this.DataString += JsonHandler.getJsonFromObject(motionData);
+        }
+        public async Task writeData()
+        {
+            byte[] encodedText = Encoding.Unicode.GetBytes(this.DataString);
+            using (FileStream sourceStream = new FileStream(this.recordPath, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize:4096, useAsync:true))
+            {
+                await sourceStream.WriteAsync(encodedText, 0, encodedText.Length);
+            }
         }
     }
 
@@ -63,6 +92,8 @@ namespace KinectMotionCapture
             this.DepthPath = Path.Combine(dataDir, frameNo.ToString() + "_depth.png");
             this.UserPath = Path.Combine(dataDir, frameNo.ToString() + "_user.png");
             this.TimeStamp = timeStamp;
+            this.Tracking = new Dictionary<User,bool>();
+            this.Joints = new Dictionary<User,JointPosition>();
             foreach (Body body in bodies)
             {
                 JointPosition joints = new JointPosition(body);
@@ -83,8 +114,8 @@ namespace KinectMotionCapture
         public string DepthPath { get; set; }
         [DataMember]
         public string UserPath { get; set; }
-        [DataMember]
-        public User[] Users { get; set; } // いるんかこれ
+        //[DataMember]
+        //public User[] Users { get; set; } // いるんかこれ
         [DataMember]
         public Dictionary<User, bool> Tracking { get; set; }
         [DataMember]
