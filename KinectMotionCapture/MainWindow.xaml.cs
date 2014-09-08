@@ -296,6 +296,7 @@ namespace KinectMotionCapture
                 this.RenderBody();
                 /*
                 string path = Path.Combine(this.dataRoot, this.counter.ToString());
+                // 下の三行はあとでw, hを逆にする。
                 CvMat colorOrigMat = Utility.ColorArrayToCvMat(this.colorHeight, this.colorWidth, ref this.colorPixels);
                 CvMat depthMat = Utility.DpethArrayToCvMat(this.depthHeight, this.depthWidth, ref this.depthBuffer);
                 CvMat bodyIndexMat = Utility.BodyIndexArrayToCvMat(this.depthHeight, this.depthWidth, ref this.bodyIndexBuffer);

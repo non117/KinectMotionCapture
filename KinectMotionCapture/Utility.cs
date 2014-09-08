@@ -21,20 +21,45 @@ using OpenCvSharp;
 
 namespace KinectMotionCapture
 {
+    /// <summary>
+    /// 雑多なツールを集めたライブラリ
+    /// </summary>
     public static class Utility
     {
-        public static CvMat ColorArrayToCvMat(int height, int width, ref byte[] data)
+        /// <summary>
+        /// KinectのカラーデータをCvMatに変換する
+        /// </summary>
+        /// <param name="height"></param>
+        /// <param name="width"></param>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public static CvMat ColorArrayToCvMat(int width, int height, ref byte[] data)
         {
             CvMat mat = new CvMat(height, width, MatrixType.U8C4, data);
             return mat;
         }
 
-        public static CvMat DpethArrayToCvMat(int height, int width, ref ushort[] data)
+        /// <summary>
+        /// Kinectの深度データをCvMatに変換する
+        /// </summary>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public static CvMat DpethArrayToCvMat(int width, int height, ref ushort[] data)
         {
             CvMat mat = new CvMat(height, width, MatrixType.U16C1, data);
             return mat;
         }
-        public static CvMat BodyIndexArrayToCvMat(int height, int width, ref byte[] data)
+
+        /// <summary>
+        /// kinectのBodyIndexデータをCvMatに変換する
+        /// </summary>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public static CvMat BodyIndexArrayToCvMat(int width, int height, ref byte[] data)
         {
             CvMat mat = new CvMat(height, width, MatrixType.U8C1, data);
             return mat;

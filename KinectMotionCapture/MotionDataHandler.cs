@@ -14,6 +14,9 @@ namespace KinectMotionCapture
 {
     using User = System.UInt64;
 
+    /// <summary>
+    /// Kinectで記録したbody情報とかを記録するやつ
+    /// </summary>
     public class MotionDataHandler
     {
         private string dataDir = @"Data"; // そのうちPropertyとかUIからsetするようにしたい
@@ -35,6 +38,13 @@ namespace KinectMotionCapture
             Utility.CreateDirectories(this.dataDir);
             this.recordPath = Path.Combine(dataDir, filename);
         }
+
+        /// <summary>
+        /// 非同期的にデータを追加できたらいいな
+        /// </summary>
+        /// <param name="frameNo"></param>
+        /// <param name="dateTime"></param>
+        /// <param name="bodies"></param>
         public void addData(int frameNo, DateTime dateTime, ref Body[] bodies)
         {
             MotionData motionData = new MotionData(frameNo, this.dataDir, dateTime.Ticks, ref bodies);
@@ -42,6 +52,11 @@ namespace KinectMotionCapture
             motionData.DepthUserSize = new Tuple<int, int>(this.depthWidth, this.depthHeight);
             this.DataString += JsonHandler.getJsonFromObject(motionData);
         }
+
+        /// <summary>
+        /// 非同期的にデータをファイルに書き出す
+        /// </summary>
+        /// <returns></returns>
         public async Task writeData()
         {
             byte[] encodedText = Encoding.Unicode.GetBytes(this.DataString);
@@ -49,6 +64,7 @@ namespace KinectMotionCapture
             {
                 await sourceStream.WriteAsync(encodedText, 0, encodedText.Length);
             }
+            this.DataString = "";
         }
     }
 
