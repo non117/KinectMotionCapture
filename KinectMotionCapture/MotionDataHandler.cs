@@ -22,7 +22,7 @@ namespace KinectMotionCapture
     public class MotionDataHandler
     {
         private string dataDir = @"Data"; // そのうちPropertyとかUIからsetするようにしたい
-        private string filename = @"BoneInfo.json";
+        private string filename = @"BodyInfo.json";
         private string recordPath = "";
         private string dataString = "";
 
