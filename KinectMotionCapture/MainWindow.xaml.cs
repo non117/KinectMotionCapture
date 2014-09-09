@@ -56,6 +56,8 @@ namespace KinectMotionCapture
         private int colorWidth = 0;
         private int colorHeight = 0;
 
+        private MotionDataHandler motionDataHandler = null;
+
         private string statusText = null;
 
         public MainWindow()
@@ -74,6 +76,8 @@ namespace KinectMotionCapture
             this.depthHeight = deapthFrameDescription.Height;
             this.colorWidth = colorFrameDescription.Width;
             this.colorHeight = colorFrameDescription.Height;
+
+            this.motionDataHandler = new MotionDataHandler(this.colorWidth, this.colorHeight, this.depthWidth, this.depthHeight);
 
             // 描画関連
             this.drawingGroup = new DrawingGroup();
@@ -203,6 +207,7 @@ namespace KinectMotionCapture
                 this.kinectSensor.Close();
                 this.kinectSensor = null;
             }
+            this.motionDataHandler.writeData();
         }
 
         /// <summary>
@@ -210,7 +215,7 @@ namespace KinectMotionCapture
         /// </summary>
         /// <param name="sender">object sending the event</param>
         /// <param name="e">event arguments</param>
-        private async void Reader_FrameArrived(object sender, MultiSourceFrameArrivedEventArgs e)
+        private void Reader_FrameArrived(object sender, MultiSourceFrameArrivedEventArgs e)
         {
             int depthWidth = 0;
             int depthHeight = 0;
@@ -294,18 +299,8 @@ namespace KinectMotionCapture
             {
                 this.RenderColorPixels();
                 this.RenderBody();
-                /*
-                string path = Path.Combine(this.dataRoot, this.counter.ToString());
-                // 下の三行はあとでw, hを逆にする。
-                CvMat colorOrigMat = Utility.ColorArrayToCvMat(this.colorHeight, this.colorWidth, ref this.colorPixels);
-                CvMat depthMat = Utility.DpethArrayToCvMat(this.depthHeight, this.depthWidth, ref this.depthBuffer);
-                CvMat bodyIndexMat = Utility.BodyIndexArrayToCvMat(this.depthHeight, this.depthWidth, ref this.bodyIndexBuffer);
-                CvMat colorMat = new CvMat(this.colorHeight/2, this.colorWidth/2, MatrixType.U8C4);
-                Cv.Resize(colorOrigMat, colorMat, Interpolation.Lanczos4);
-                await Task.Run(() => colorMat.SaveImage(path + "_color.jpg", new ImageEncodingParam(ImageEncodingID.JpegQuality, 85)));
-                await Task.Run(() => depthMat.SaveImage(path + "_depth.png", new ImageEncodingParam(ImageEncodingID.PngCompression, 5)));
-                await Task.Run(() => bodyIndexMat.SaveImage(path + "_user.png", new ImageEncodingParam(ImageEncodingID.PngCompression, 5)));
-                 * */
+                this.motionDataHandler.saveImages(this.counter, ref this.colorPixels, ref this.depthBuffer, ref this.bodyIndexBuffer);
+                this.motionDataHandler.addData(this.counter, DateTime.Now, ref this.bodies);
                 counter++;
             }                       
         }
