@@ -41,7 +41,7 @@ namespace KinectMotionCapture
             this.recordPath = Path.Combine(dataDir, filename);
         }
 
-        public void saveImages(int frameNo, ref byte[] colorPixels, ref ushort[] depthBuffer, ref byte[] bodyIndexBuffer)
+        private void saveImages(int frameNo, ref byte[] colorPixels, ref ushort[] depthBuffer, ref byte[] bodyIndexBuffer)
         {
             string path = Path.Combine(this.dataDir, frameNo.ToString());
             CvMat colorOrigMat = Utility.ColorArrayToCvMat(this.colorWidth, this.colorHeight, ref colorPixels);
@@ -60,15 +60,16 @@ namespace KinectMotionCapture
         /// <param name="frameNo"></param>
         /// <param name="dateTime"></param>
         /// <param name="bodies"></param>
-        public void addData(int frameNo, DateTime dateTime, ref Body[] bodies)
+        public void addData(int frameNo, DateTime dateTime, ref Body[] bodies, ref byte[] colorPixels, ref ushort[] depthBuffer, ref byte[] bodyIndexBuffer)
         {
+            this.saveImages(frameNo, ref colorPixels, ref depthBuffer, ref bodyIndexBuffer);
             MotionData motionData = new MotionData(frameNo, this.dataDir, dateTime.Ticks, ref bodies);
             motionData.ImageSize = new Tuple<int, int>(this.colorWidth, this.colorHeight);
             motionData.DepthUserSize = new Tuple<int, int>(this.depthWidth, this.depthHeight);
             this.dataString += JsonHandler.getJsonFromObject(motionData) + ",\n";
         }
 
-        public void writeData()
+        public void flush()
         {
             byte[] encodedText = Encoding.UTF8.GetBytes("[" + this.dataString + "]");
             using (FileStream sourceStream = new FileStream(this.recordPath, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: 4096))
