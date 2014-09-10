@@ -30,6 +30,13 @@ namespace KinectMotionCapture
         private int depthWidth = 0;
         private int depthHeight = 0;
 
+        /// <summary>
+        /// Kinect記録用のコンストラクタ
+        /// </summary>
+        /// <param name="colorWidth"></param>
+        /// <param name="colorHeight"></param>
+        /// <param name="depthWidth"></param>
+        /// <param name="depthHeight"></param>
         public MotionDataHandler(int colorWidth, int colorHeight, int depthWidth, int depthHeight)
         {
             this.motionDataList = new List<MotionData>();
@@ -41,6 +48,15 @@ namespace KinectMotionCapture
             this.recordPath = Path.Combine(dataDir, filename);
         }
 
+        
+
+        /// <summary>
+        /// 各Kinect情報の画像を保存する
+        /// </summary>
+        /// <param name="frameNo"></param>
+        /// <param name="colorPixels"></param>
+        /// <param name="depthBuffer"></param>
+        /// <param name="bodyIndexBuffer"></param>
         private void SaveImages(int frameNo, ref byte[] colorPixels, ref ushort[] depthBuffer, ref byte[] bodyIndexBuffer)
         {
             string path = Path.Combine(this.dataDir, frameNo.ToString());
@@ -69,6 +85,9 @@ namespace KinectMotionCapture
             this.motionDataList.Add(motionData);
         }
 
+        /// <summary>
+        /// 骨格情報をファイルに書き出して、リストを空にする。
+        /// </summary>
         public void Flush()
         {
             using (MemoryStream ms = new MemoryStream())
