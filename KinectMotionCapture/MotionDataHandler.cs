@@ -123,7 +123,7 @@ namespace KinectMotionCapture
             foreach (Joint joint in body.Joints.Values)
             {
                 CameraSpacePoint position = joint.Position;
-                Point3 points = new Point3(position.X, position.Y, position.Z, joint.TrackingState);
+                PointInfo points = new PointInfo(position.X, position.Y, position.Z, joint.TrackingState);
                 this.SetProperty(joint.JointType.ToString(), points);
             }
         }
@@ -131,57 +131,63 @@ namespace KinectMotionCapture
         private void SetProperty(string key, object data)
         {
             PropertyInfo propertyInfo = this.GetType().GetProperty(key, BindingFlags.Public | BindingFlags.Instance);
-            if (propertyInfo.PropertyType == typeof(Point3))
+            if (propertyInfo.PropertyType == typeof(PointInfo))
             {
-                propertyInfo.SetValue(this, (Point3)data, null);
+                propertyInfo.SetValue(this, (PointInfo)data, null);
             }
         }
 
         #region JointDefinition
 
         public User user { get; set; }
-        public Point3 SpineBase { get; set; } // 0
-        public Point3 SpineMid { get; set; } // 1
-        public Point3 Neck { get; set; } // 2
-        public Point3 Head { get; set; } // 3
-        public Point3 ShoulderLeft { get; set; } // 4
-        public Point3 ElbowLeft { get; set; } // 5
-        public Point3 WristLeft { get; set; } // 6
-        public Point3 HandLeft { get; set; } // 7
-        public Point3 ShoulderRight { get; set; } // 8
-        public Point3 ElbowRight { get; set; } // 9
-        public Point3 WristRight { get; set; } // 10
-        public Point3 HandRight { get; set; } // 11
-        public Point3 HipLeft { get; set; } // 12
-        public Point3 KneeLeft { get; set; } // 13
-        public Point3 AnkleLeft { get; set; } // 14
-        public Point3 FootLeft { get; set; } // 15
-        public Point3 HipRight { get; set; } // 16
-        public Point3 KneeRight { get; set; } // 17
-        public Point3 AnkleRight { get; set; } //18
-        public Point3 FootRight { get; set; } // 19
-        public Point3 SpineShoulder { get; set; } // 20
-        public Point3 HandTipLeft { get; set; } // 21
-        public Point3 ThumbLeft { get; set; } // 22
-        public Point3 HandTipRight { get; set; } //23
-        public Point3 ThumbRight { get; set; } //24
+        public PointInfo SpineBase { get; set; } // 0
+        public PointInfo SpineMid { get; set; } // 1
+        public PointInfo Neck { get; set; } // 2
+        public PointInfo Head { get; set; } // 3
+        public PointInfo ShoulderLeft { get; set; } // 4
+        public PointInfo ElbowLeft { get; set; } // 5
+        public PointInfo WristLeft { get; set; } // 6
+        public PointInfo HandLeft { get; set; } // 7
+        public PointInfo ShoulderRight { get; set; } // 8
+        public PointInfo ElbowRight { get; set; } // 9
+        public PointInfo WristRight { get; set; } // 10
+        public PointInfo HandRight { get; set; } // 11
+        public PointInfo HipLeft { get; set; } // 12
+        public PointInfo KneeLeft { get; set; } // 13
+        public PointInfo AnkleLeft { get; set; } // 14
+        public PointInfo FootLeft { get; set; } // 15
+        public PointInfo HipRight { get; set; } // 16
+        public PointInfo KneeRight { get; set; } // 17
+        public PointInfo AnkleRight { get; set; } //18
+        public PointInfo FootRight { get; set; } // 19
+        public PointInfo SpineShoulder { get; set; } // 20
+        public PointInfo HandTipLeft { get; set; } // 21
+        public PointInfo ThumbLeft { get; set; } // 22
+        public PointInfo HandTipRight { get; set; } //23
+        public PointInfo ThumbRight { get; set; } //24
+
         #endregion
     }
 
-    public class Point3
+    public class PointInfo
     {
-        public Point3() { }
-        public Point3(float x, float y, float z, TrackingState state)
+        public PointInfo() { }
+        public PointInfo(float x, float y, float z, TrackingState state)
         {
             this.X = x;
             this.Y = y;
             this.Z = z;
             this.trackingState = state;
         }
+
         public float X { get; set; }
         public float Y { get; set; }
         public float Z { get; set; }
         public TrackingState trackingState { get; set; }
+        public Point3D GetPoint3D()
+        {
+            return new Point3D(this.X, this.Y, this.Z);
+        }
     }
 
 }
