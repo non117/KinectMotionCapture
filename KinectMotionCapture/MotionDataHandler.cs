@@ -20,15 +20,16 @@ namespace KinectMotionCapture
     /// </summary>
     public class MotionDataHandler
     {
-        private string dataDir = @"Data"; // そのうちPropertyとかUIからsetするようにしたい
-        private string filename = @"BodyInfo.mpac";
+        private string dataDir = ""; // そのうちPropertyとかUIからsetするようにしたい
+        private string bodyInfoFilename = @"BodyInfo.mpac";
         private string recordPath = "";
-        private List<MotionData> motionDataList = null;
 
         private int colorWidth = 0;
         private int colorHeight = 0;
         private int depthWidth = 0;
         private int depthHeight = 0;
+
+        public List<MotionData> motionDataList { get; set; }
 
         /// <summary>
         /// Kinect記録用のコンストラクタ
@@ -37,18 +38,50 @@ namespace KinectMotionCapture
         /// <param name="colorHeight"></param>
         /// <param name="depthWidth"></param>
         /// <param name="depthHeight"></param>
-        public MotionDataHandler(int colorWidth, int colorHeight, int depthWidth, int depthHeight)
+        public MotionDataHandler(string dataDir, int colorWidth, int colorHeight, int depthWidth, int depthHeight)
         {
+            this.dataDir = dataDir;
+            this.recordPath = Path.Combine(dataDir, bodyInfoFilename);
+            Utility.CreateDirectories(this.dataDir);
+            
             this.motionDataList = new List<MotionData>();
             this.colorWidth = colorWidth;
             this.colorHeight = colorHeight;
             this.depthWidth = depthWidth;
-            this.depthHeight = depthHeight;
-            Utility.CreateDirectories(this.dataDir);
-            this.recordPath = Path.Combine(dataDir, filename);
+            this.depthHeight = depthHeight;                        
         }
 
-        
+        /// <summary>
+        /// 記録が存在するときのコンストラクタ
+        /// </summary>
+        /// <param name="dataDir"></param>
+        public MotionDataHandler(string dataDir)
+        {
+            this.dataDir = dataDir;
+            this.recordPath = Path.Combine(dataDir, bodyInfoFilename);
+            
+            this.motionDataList = this.GetMotionDataFromFile(this.recordPath);
+            MotionData md = this.motionDataList[0];
+            this.colorWidth = md.ImageSize.Item1;
+            this.colorHeight = md.ImageSize.Item2;
+            this.depthWidth = md.DepthUserSize.Item1;
+            this.depthHeight = md.DepthUserSize.Item2;
+        }
+
+        /// <summary>
+        /// ファイルからBodyデータをデシリアライズする
+        /// </summary>
+        /// <param name="filepath"></param>
+        /// <returns></returns>
+        private List<MotionData> GetMotionDataFromFile(string filepath)
+        {
+            using (MemoryStream ms = new MemoryStream())
+            using (FileStream fs = new FileStream(filepath, FileMode.Create, FileAccess.Write))
+            {
+                var serializer = SerializationContext.Default.GetSerializer<List<MotionData>>();
+                return serializer.Unpack(ms);
+            }
+        }
 
         /// <summary>
         /// 各Kinect情報の画像を保存する
@@ -100,6 +133,12 @@ namespace KinectMotionCapture
             }
             this.motionDataList.Clear();
         }
+
+        public IEnumerable<string> GetColorImagePaths()
+        {
+            IEnumerable<string> paths = this.motionDataList.Select(data => data.ImagePath);
+            return paths;
+        }
     }
 
     public class MotionData
@@ -130,8 +169,8 @@ namespace KinectMotionCapture
         public string UserPath { get; set; }
         public Dictionary<User, JointPosition> Joints { get; set; }
         public long TimeStamp { get; set; }
-        public Tuple<int, int> ImageSize { get; set; } // useless?
-        public Tuple<int, int> DepthUserSize { get; set; } // useless?
+        public Tuple<int, int> ImageSize { get; set; }
+        public Tuple<int, int> DepthUserSize { get; set; }
     }
 
     public class JointPosition

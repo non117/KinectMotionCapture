@@ -77,7 +77,7 @@ namespace KinectMotionCapture
             this.colorWidth = colorFrameDescription.Width;
             this.colorHeight = colorFrameDescription.Height;
 
-            this.motionDataHandler = new MotionDataHandler(this.colorWidth, this.colorHeight, this.depthWidth, this.depthHeight);
+            this.motionDataHandler = new MotionDataHandler(@"Data" , this.colorWidth, this.colorHeight, this.depthWidth, this.depthHeight);
 
             // 描画関連
             this.drawingGroup = new DrawingGroup();
