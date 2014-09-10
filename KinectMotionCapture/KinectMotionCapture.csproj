@@ -96,6 +96,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Kinect, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="MsgPack">
+      <HintPath>..\packages\MsgPack.Cli.0.5.2\lib\net45\MsgPack.dll</HintPath>
+    </Reference>
     <Reference Include="OpenCvSharp">
       <HintPath>..\packages\OpenCvSharp-AnyCPU.2.4.9.20140901\lib\net40\OpenCvSharp.dll</HintPath>
     </Reference>

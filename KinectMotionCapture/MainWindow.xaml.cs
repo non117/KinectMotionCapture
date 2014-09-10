@@ -207,7 +207,7 @@ namespace KinectMotionCapture
                 this.kinectSensor.Close();
                 this.kinectSensor = null;
             }
-            this.motionDataHandler.flush();
+            this.motionDataHandler.Flush();
         }
 
         /// <summary>
@@ -299,7 +299,7 @@ namespace KinectMotionCapture
             {
                 this.RenderColorPixels();
                 this.RenderBody();
-                Task.Run(() => this.motionDataHandler.addData(this.counter, DateTime.Now, ref this.bodies, ref this.colorPixels, ref this.depthBuffer, ref this.bodyIndexBuffer));
+                Task.Run(() => this.motionDataHandler.AddData(this.counter, DateTime.Now, ref this.bodies, ref this.colorPixels, ref this.depthBuffer, ref this.bodyIndexBuffer));
                 counter++;
             }                       
         }

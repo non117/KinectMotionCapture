@@ -4,12 +4,11 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.Reflection;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Json;
 using System.Threading.Tasks;
 using System.Windows.Media.Media3D;
 using Microsoft.Kinect;
 
+using MsgPack.Serialization;
 using OpenCvSharp;
 
 namespace KinectMotionCapture
@@ -22,9 +21,9 @@ namespace KinectMotionCapture
     public class MotionDataHandler
     {
         private string dataDir = @"Data"; // そのうちPropertyとかUIからsetするようにしたい
-        private string filename = @"BodyInfo.json";
+        private string filename = @"BodyInfo.mpac";
         private string recordPath = "";
-        private string dataString = "";
+        private List<MotionData> motionDataList = null;
 
         private int colorWidth = 0;
         private int colorHeight = 0;
@@ -33,6 +32,7 @@ namespace KinectMotionCapture
 
         public MotionDataHandler(int colorWidth, int colorHeight, int depthWidth, int depthHeight)
         {
+            this.motionDataList = new List<MotionData>();
             this.colorWidth = colorWidth;
             this.colorHeight = colorHeight;
             this.depthWidth = depthWidth;
@@ -41,7 +41,7 @@ namespace KinectMotionCapture
             this.recordPath = Path.Combine(dataDir, filename);
         }
 
-        private void saveImages(int frameNo, ref byte[] colorPixels, ref ushort[] depthBuffer, ref byte[] bodyIndexBuffer)
+        private void SaveImages(int frameNo, ref byte[] colorPixels, ref ushort[] depthBuffer, ref byte[] bodyIndexBuffer)
         {
             string path = Path.Combine(this.dataDir, frameNo.ToString());
             CvMat colorOrigMat = Utility.ColorArrayToCvMat(this.colorWidth, this.colorHeight, ref colorPixels);
@@ -60,73 +60,32 @@ namespace KinectMotionCapture
         /// <param name="frameNo"></param>
         /// <param name="dateTime"></param>
         /// <param name="bodies"></param>
-        public void addData(int frameNo, DateTime dateTime, ref Body[] bodies, ref byte[] colorPixels, ref ushort[] depthBuffer, ref byte[] bodyIndexBuffer)
+        public void AddData(int frameNo, DateTime dateTime, ref Body[] bodies, ref byte[] colorPixels, ref ushort[] depthBuffer, ref byte[] bodyIndexBuffer)
         {
-            this.saveImages(frameNo, ref colorPixels, ref depthBuffer, ref bodyIndexBuffer);
+            this.SaveImages(frameNo, ref colorPixels, ref depthBuffer, ref bodyIndexBuffer);
             MotionData motionData = new MotionData(frameNo, this.dataDir, dateTime.Ticks, ref bodies);
             motionData.ImageSize = new Tuple<int, int>(this.colorWidth, this.colorHeight);
             motionData.DepthUserSize = new Tuple<int, int>(this.depthWidth, this.depthHeight);
-            this.dataString += JsonHandler.getJsonFromObject(motionData) + ",\n";
+            this.motionDataList.Add(motionData);
         }
 
-        public void flush()
+        public void Flush()
         {
-            byte[] encodedText = Encoding.UTF8.GetBytes("[" + this.dataString + "]");
-            using (FileStream sourceStream = new FileStream(this.recordPath, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: 4096))
+            using (MemoryStream ms = new MemoryStream())
+            using (FileStream fs = new FileStream(this.recordPath, FileMode.Create, FileAccess.Write))
             {
-                sourceStream.Write(encodedText, 0, encodedText.Length);
+                var serializer = SerializationContext.Default.GetSerializer<List<MotionData>>();
+                serializer.Pack(ms, this.motionDataList);
+                byte[] data = ms.ToArray();
+                fs.Write(data, 0, data.Length);
             }
-            this.dataString = "";
-        }
-
-        /// <summary>
-        /// 非同期的にデータをファイルに書き出す
-        /// </summary>
-        /// <returns></returns>
-        public async Task writeDataAsync()
-        {
-            byte[] encodedText = Encoding.UTF8.GetBytes(this.dataString);
-            using (FileStream sourceStream = new FileStream(this.recordPath, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize:4096, useAsync:true))
-            {
-                await sourceStream.WriteAsync(encodedText, 0, encodedText.Length);
-            }
-            this.dataString = "";
+            this.motionDataList.Clear();
         }
     }
 
-    public class JsonHandler
-    {
-        /// <summary>
-        /// json文字列からオブジェクトに変換する
-        /// </summary>
-        /// <param name="jsonString"></param>
-        /// <returns></returns>
-        public static MotionData getObjectFromeJson(string jsonString)
-        {
-            DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(MotionData));
-            byte[] jsonBytes = Encoding.Unicode.GetBytes(jsonString);
-            MemoryStream stream = new MemoryStream(jsonBytes);
-            return (MotionData)serializer.ReadObject(stream);
-        }
-        /// <summary>
-        /// オブジェクトをjson文字列に変換する
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <returns></returns>
-        public static string getJsonFromObject(object obj)
-        {
-            MemoryStream stream = new MemoryStream();
-            DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(MotionData));
-            serializer.WriteObject(stream, obj);
-            stream.Position = 0;
-            StreamReader sr = new StreamReader(stream);
-            return sr.ReadToEnd();
-        }
-    }
-
-    [DataContract]
     public class MotionData
     {
+        public MotionData() { }
         public MotionData(int frameNo, string dataDir, long timeStamp, ref Body[] bodies)
         {
             this.FrameNo = frameNo;
@@ -146,27 +105,19 @@ namespace KinectMotionCapture
 
         }
 
-        [DataMember]
         public int FrameNo { get; set; }
-        [DataMember]
         public string ImagePath { get; set; }
-        [DataMember]
         public string DepthPath { get; set; }
-        [DataMember]
         public string UserPath { get; set; }
-        [DataMember]
         public Dictionary<User, JointPosition> Joints { get; set; }
-        [DataMember]
         public long TimeStamp { get; set; }
-        [DataMember]
         public Tuple<int, int> ImageSize { get; set; } // useless?
-        [DataMember]
         public Tuple<int, int> DepthUserSize { get; set; } // useless?
     }
 
-    [DataContract]
     public class JointPosition
     {
+        public JointPosition() { }
         public JointPosition(Body body)
         {
             foreach (Joint joint in body.Joints.Values)
@@ -187,64 +138,39 @@ namespace KinectMotionCapture
         }
 
         #region JointDefinition
-        [DataMember]
+
         public User user { get; set; }
-        [DataMember]
         public Point3 SpineBase { get; set; } // 0
-        [DataMember]
         public Point3 SpineMid { get; set; } // 1
-        [DataMember]
         public Point3 Neck { get; set; } // 2
-        [DataMember]
         public Point3 Head { get; set; } // 3
-        [DataMember]
         public Point3 ShoulderLeft { get; set; } // 4
-        [DataMember]
         public Point3 ElbowLeft { get; set; } // 5
-        [DataMember]
         public Point3 WristLeft { get; set; } // 6
-        [DataMember]
         public Point3 HandLeft { get; set; } // 7
-        [DataMember]
         public Point3 ShoulderRight { get; set; } // 8
-        [DataMember]
         public Point3 ElbowRight { get; set; } // 9
-        [DataMember]
         public Point3 WristRight { get; set; } // 10
-        [DataMember]
         public Point3 HandRight { get; set; } // 11
-        [DataMember]
         public Point3 HipLeft { get; set; } // 12
-        [DataMember]
         public Point3 KneeLeft { get; set; } // 13
-        [DataMember]
         public Point3 AnkleLeft { get; set; } // 14
-        [DataMember]
         public Point3 FootLeft { get; set; } // 15
-        [DataMember]
         public Point3 HipRight { get; set; } // 16
-        [DataMember]
         public Point3 KneeRight { get; set; } // 17
-        [DataMember]
         public Point3 AnkleRight { get; set; } //18
-        [DataMember]
         public Point3 FootRight { get; set; } // 19
-        [DataMember]
         public Point3 SpineShoulder { get; set; } // 20
-        [DataMember]
         public Point3 HandTipLeft { get; set; } // 21
-        [DataMember]
         public Point3 ThumbLeft { get; set; } // 22
-        [DataMember]
         public Point3 HandTipRight { get; set; } //23
-        [DataMember]
         public Point3 ThumbRight { get; set; } //24
         #endregion
     }
 
-    [DataContract]
     public class Point3
     {
+        public Point3() { }
         public Point3(float x, float y, float z, TrackingState state)
         {
             this.X = x;
@@ -252,13 +178,9 @@ namespace KinectMotionCapture
             this.Z = z;
             this.trackingState = state;
         }
-        [DataMember]
         public float X { get; set; }
-        [DataMember]
         public float Y { get; set; }
-        [DataMember]
         public float Z { get; set; }
-        [DataMember]
         public TrackingState trackingState { get; set; }
     }
 
