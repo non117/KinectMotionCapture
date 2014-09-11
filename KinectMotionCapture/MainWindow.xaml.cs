@@ -56,6 +56,10 @@ namespace KinectMotionCapture
         private int colorWidth = 0;
         private int colorHeight = 0;
 
+        // 記録再生制御とか
+        private bool isRecording = false;
+
+        // Model
         private MotionDataHandler motionDataHandler = null;
 
         private string statusText = null;
@@ -135,8 +139,8 @@ namespace KinectMotionCapture
             this.bodyColors.Add(new Pen(Brushes.Indigo, 6));
             this.bodyColors.Add(new Pen(Brushes.Violet, 6));
 
-            this.kinectSensor.IsAvailableChanged += this.Sensor_IsAvailableChanged;
-            this.kinectSensor.Open();
+            //this.kinectSensor.IsAvailableChanged += this.Sensor_IsAvailableChanged;
+            //this.kinectSensor.Open();
 
             this.DataContext = this;
             this.InitializeComponent();
@@ -160,6 +164,26 @@ namespace KinectMotionCapture
             get
             {
                 return this.colorBitmap;
+            }
+        }
+
+        public void RecordButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (this.isRecording)
+            {
+                if (this.kinectSensor != null)
+                {
+                    this.kinectSensor.Close();                    
+                }
+                this.kinectSensor.IsAvailableChanged -= this.Sensor_IsAvailableChanged;
+                this.motionDataHandler.Flush();
+
+                this.isRecording = false;
+            }else
+            {
+                this.kinectSensor.Open();
+                this.kinectSensor.IsAvailableChanged += this.Sensor_IsAvailableChanged;
+                this.isRecording = true;
             }
         }
 
@@ -207,7 +231,6 @@ namespace KinectMotionCapture
                 this.kinectSensor.Close();
                 this.kinectSensor = null;
             }
-            this.motionDataHandler.Flush();
         }
 
         /// <summary>

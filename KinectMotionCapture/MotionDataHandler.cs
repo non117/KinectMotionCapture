@@ -124,6 +124,7 @@ namespace KinectMotionCapture
         /// </summary>
         public void Flush()
         {
+            // TODO: Flushしている間にデータが追加されるかもしれないので、操作をブロックしたい
             var serializer = MessagePackSerializer.Get<List<MotionData>>();
             using (FileStream fs = File.Open(this.recordPath, FileMode.OpenOrCreate, FileAccess.Write))
             {
