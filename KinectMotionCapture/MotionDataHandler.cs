@@ -62,10 +62,10 @@ namespace KinectMotionCapture
             
             this.motionDataList = this.GetMotionDataFromFile(this.recordPath);
             MotionData md = this.motionDataList[0];
-            this.colorWidth = md.ImageSize.Item1;
-            this.colorHeight = md.ImageSize.Item2;
-            this.depthWidth = md.DepthUserSize.Item1;
-            this.depthHeight = md.DepthUserSize.Item2;
+            this.colorWidth = md.ColorWidth;
+            this.colorHeight = md.ColorHeight;
+            this.depthWidth = md.DepthUserWidth;
+            this.depthHeight = md.DepthUserHeight;
         }
 
         /// <summary>
@@ -75,11 +75,10 @@ namespace KinectMotionCapture
         /// <returns></returns>
         private List<MotionData> GetMotionDataFromFile(string filepath)
         {
-            using (MemoryStream ms = new MemoryStream())
-            using (FileStream fs = new FileStream(filepath, FileMode.Create, FileAccess.Write))
+            var serializer = MessagePackSerializer.Get<List<MotionData>>();
+            using (FileStream fs = File.Open(filepath, FileMode.Open))
             {
-                var serializer = SerializationContext.Default.GetSerializer<List<MotionData>>();
-                return serializer.Unpack(ms);
+                return serializer.Unpack(fs);
             }
         }
 
@@ -113,8 +112,10 @@ namespace KinectMotionCapture
         {
             this.SaveImages(frameNo, ref colorPixels, ref depthBuffer, ref bodyIndexBuffer);
             MotionData motionData = new MotionData(frameNo, this.dataDir, dateTime.Ticks, ref bodies);
-            motionData.ImageSize = new Tuple<int, int>(this.colorWidth, this.colorHeight);
-            motionData.DepthUserSize = new Tuple<int, int>(this.depthWidth, this.depthHeight);
+            motionData.ColorWidth = this.colorWidth;
+            motionData.ColorHeight = this.colorHeight;
+            motionData.DepthUserWidth = this.depthWidth;
+            motionData.DepthUserHeight = this.depthHeight;
             this.motionDataList.Add(motionData);
         }
 
@@ -123,17 +124,18 @@ namespace KinectMotionCapture
         /// </summary>
         public void Flush()
         {
-            using (MemoryStream ms = new MemoryStream())
-            using (FileStream fs = new FileStream(this.recordPath, FileMode.Create, FileAccess.Write))
+            var serializer = MessagePackSerializer.Get<List<MotionData>>();
+            using (FileStream fs = File.Open(this.recordPath, FileMode.OpenOrCreate, FileAccess.Write))
             {
-                var serializer = SerializationContext.Default.GetSerializer<List<MotionData>>();
-                serializer.Pack(ms, this.motionDataList);
-                byte[] data = ms.ToArray();
-                fs.Write(data, 0, data.Length);
+                serializer.Pack(fs, this.motionDataList);
             }
             this.motionDataList.Clear();
         }
 
+        /// <summary>
+        /// 画面描画用のカラー画像のパスを返す
+        /// </summary>
+        /// <returns></returns>
         public IEnumerable<string> GetColorImagePaths()
         {
             IEnumerable<string> paths = this.motionDataList.Select(data => data.ImagePath);
@@ -141,9 +143,23 @@ namespace KinectMotionCapture
         }
     }
 
+    /// <summary>
+    /// 動作のメタデータと骨格座標とかのモデルクラス
+    /// </summary>
     public class MotionData
     {
+        /// <summary>
+        /// for MsgPack
+        /// </summary>
         public MotionData() { }
+
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        /// <param name="frameNo"></param>
+        /// <param name="dataDir"></param>
+        /// <param name="timeStamp"></param>
+        /// <param name="bodies"></param>
         public MotionData(int frameNo, string dataDir, long timeStamp, ref Body[] bodies)
         {
             this.FrameNo = frameNo;
@@ -151,101 +167,65 @@ namespace KinectMotionCapture
             this.DepthPath = Path.Combine(dataDir, frameNo.ToString() + "_depth.png");
             this.UserPath = Path.Combine(dataDir, frameNo.ToString() + "_user.png");
             this.TimeStamp = timeStamp;
-            this.Joints = new Dictionary<User,JointPosition>();
-            foreach (Body body in bodies)
-            {                                
-                if (body.IsTracked)
-                {
-                    JointPosition joints = new JointPosition(body);
-                    this.Joints.Add(body.TrackingId, joints);
-                }
-            }
-
+            this.bodies = bodies.Where(body => body.IsTracked).Select(body => new SerializableBody(ref body)).ToArray();
         }
 
         public int FrameNo { get; set; }
         public string ImagePath { get; set; }
         public string DepthPath { get; set; }
         public string UserPath { get; set; }
-        public Dictionary<User, JointPosition> Joints { get; set; }
+        public SerializableBody[] bodies { get; set; }
         public long TimeStamp { get; set; }
-        public Tuple<int, int> ImageSize { get; set; }
-        public Tuple<int, int> DepthUserSize { get; set; }
+        public int ColorWidth { get; set; }
+        public int ColorHeight { get; set; }
+        public int DepthUserWidth { get; set; }
+        public int DepthUserHeight { get; set; }
     }
 
-    public class JointPosition
+    /// <summary>
+    /// BodyクラスはMsgPackでシリアライズできないので、勝手に定義
+    /// </summary>
+    public class SerializableBody
     {
-        public JointPosition() { }
-        public JointPosition(Body body)
+        /// <summary>
+        /// for MsgPack
+        /// </summary>
+        public SerializableBody() { }
+
+        /// <summary>
+        /// bodyがTrackされている場合にのみ格納する
+        /// </summary>
+        /// <param name="body"></param>
+        public SerializableBody(ref Body body)
         {
-            foreach (Joint joint in body.Joints.Values)
+            foreach (PropertyInfo bodyPropertyInfo in body.GetType().GetProperties())
             {
-                CameraSpacePoint position = joint.Position;
-                PointInfo points = new PointInfo(position.X, position.Y, position.Z, joint.TrackingState);
-                this.SetProperty(joint.JointType.ToString(), points);
+                foreach (PropertyInfo propertyInfo in this.GetType().GetProperties())
+                {
+                    if (bodyPropertyInfo.Name == propertyInfo.Name)
+                    {
+                        propertyInfo.SetValue(this, bodyPropertyInfo.GetValue(body, null));
+                    }
+                }
             }
+
         }
-
-        private void SetProperty(string key, object data)
-        {
-            PropertyInfo propertyInfo = this.GetType().GetProperty(key, BindingFlags.Public | BindingFlags.Instance);
-            if (propertyInfo.PropertyType == typeof(PointInfo))
-            {
-                propertyInfo.SetValue(this, (PointInfo)data, null);
-            }
-        }
-
-        #region JointDefinition
-
-        public User user { get; set; }
-        public PointInfo SpineBase { get; set; } // 0
-        public PointInfo SpineMid { get; set; } // 1
-        public PointInfo Neck { get; set; } // 2
-        public PointInfo Head { get; set; } // 3
-        public PointInfo ShoulderLeft { get; set; } // 4
-        public PointInfo ElbowLeft { get; set; } // 5
-        public PointInfo WristLeft { get; set; } // 6
-        public PointInfo HandLeft { get; set; } // 7
-        public PointInfo ShoulderRight { get; set; } // 8
-        public PointInfo ElbowRight { get; set; } // 9
-        public PointInfo WristRight { get; set; } // 10
-        public PointInfo HandRight { get; set; } // 11
-        public PointInfo HipLeft { get; set; } // 12
-        public PointInfo KneeLeft { get; set; } // 13
-        public PointInfo AnkleLeft { get; set; } // 14
-        public PointInfo FootLeft { get; set; } // 15
-        public PointInfo HipRight { get; set; } // 16
-        public PointInfo KneeRight { get; set; } // 17
-        public PointInfo AnkleRight { get; set; } //18
-        public PointInfo FootRight { get; set; } // 19
-        public PointInfo SpineShoulder { get; set; } // 20
-        public PointInfo HandTipLeft { get; set; } // 21
-        public PointInfo ThumbLeft { get; set; } // 22
-        public PointInfo HandTipRight { get; set; } //23
-        public PointInfo ThumbRight { get; set; } //24
-
-        #endregion
+        public Dictionary<Activity, DetectionResult> Activities { get; set; }
+        public Dictionary<Appearance, DetectionResult> Appearance { get; set; }
+        public FrameEdges ClippedEdges { get; set; }
+        public DetectionResult Engaged { get; set; }
+        public Dictionary<Expression, DetectionResult> Expressions { get; set; }
+        public TrackingConfidence HandLeftConfidence { get; set; }
+        public HandState HandLeftState { get; set; }
+        public TrackingConfidence HandRightConfidence { get; set; }
+        public HandState HandRightState { get; set; }
+        public bool IsRestricted { get; set; }
+        public bool IsTracked { get; set; }
+        public static int JointCount { get; set; }
+        public Dictionary<JointType, JointOrientation> JointOrientations { get; set; }
+        public Dictionary<JointType, Joint> Joints { get; set; }
+        public PointF Lean { get; set; }
+        public TrackingState LeanTrackingState { get; set; }
+        public ulong TrackingId { get; set; }
     }
-
-    public class PointInfo
-    {
-        public PointInfo() { }
-        public PointInfo(float x, float y, float z, TrackingState state)
-        {
-            this.X = x;
-            this.Y = y;
-            this.Z = z;
-            this.trackingState = state;
-        }
-
-        public float X { get; set; }
-        public float Y { get; set; }
-        public float Z { get; set; }
-        public TrackingState trackingState { get; set; }
-        public Point3D GetPoint3D()
-        {
-            return new Point3D(this.X, this.Y, this.Z);
-        }
-    }
-
 }

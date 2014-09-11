@@ -315,7 +315,7 @@ namespace KinectMotionCapture
                     Pen drawPen = this.bodyColors[penIndex++];
                     if (body.IsTracked)
                     {
-                        IReadOnlyDictionary<JointType, Joint> joints = body.Joints;
+                        Dictionary<JointType, Joint> joints = (Dictionary<JointType, Joint>)body.Joints;
                         Dictionary<JointType, Point> jointPoints = new Dictionary<JointType, Point>();
 
                         foreach (JointType jointType in joints.Keys)
@@ -342,7 +342,7 @@ namespace KinectMotionCapture
         /// <param name="jointPoints">translated positions of joints to draw</param>
         /// <param name="drawingContext">drawing context to draw to</param>
         /// <param name="drawingPen">specifies color to draw a specific body</param>
-        private void DrawBody(IReadOnlyDictionary<JointType, Joint> joints, IDictionary<JointType, Point> jointPoints, DrawingContext drawingContext, Pen drawingPen)
+        private void DrawBody(IDictionary<JointType, Joint> joints, IDictionary<JointType, Point> jointPoints, DrawingContext drawingContext, Pen drawingPen)
         {
             // Draw the bones
             foreach (var bone in this.bones)
@@ -382,7 +382,7 @@ namespace KinectMotionCapture
         /// <param name="jointType1">second joint of bone to draw</param>
         /// <param name="drawingContext">drawing context to draw to</param>
         /// /// <param name="drawingPen">specifies color to draw a specific bone</param>
-        private void DrawBone(IReadOnlyDictionary<JointType, Joint> joints, IDictionary<JointType, Point> jointPoints, JointType jointType0, JointType jointType1, DrawingContext drawingContext, Pen drawingPen)
+        private void DrawBone(IDictionary<JointType, Joint> joints, IDictionary<JointType, Point> jointPoints, JointType jointType0, JointType jointType1, DrawingContext drawingContext, Pen drawingPen)
         {
             Joint joint0 = joints[jointType0];
             Joint joint1 = joints[jointType1];
