@@ -21,7 +21,7 @@ namespace KinectMotionCapture
     /// </summary>
     public class MotionDataHandler
     {
-        public string dataDir = "";
+        private string dataDir = "";
         private string bodyInfoFilename = @"BodyInfo.mpac";
         private string recordPath = "";
 

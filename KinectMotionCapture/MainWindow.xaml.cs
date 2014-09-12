@@ -25,7 +25,7 @@ namespace KinectMotionCapture
     {
         // 基本設定
         private int counter = 0;
-        private string defaultRecordPath = Path.Combine(Environment.CurrentDirectory, Properties.Settings.Default.RecordDirectoryName);
+        private string recordPath = Path.Combine(Environment.CurrentDirectory, Properties.Settings.Default.RecordDirectoryName);
         
         // Kinect関連
         private KinectSensor kinectSensor = null;
@@ -83,7 +83,7 @@ namespace KinectMotionCapture
             this.colorWidth = colorFrameDescription.Width;
             this.colorHeight = colorFrameDescription.Height;
 
-            this.motionDataHandler = new MotionDataHandler(this.defaultRecordPath , this.colorWidth, this.colorHeight, this.depthWidth, this.depthHeight);
+            this.motionDataHandler = new MotionDataHandler(this.recordPath , this.colorWidth, this.colorHeight, this.depthWidth, this.depthHeight);
 
             // 描画関連
             this.drawingGroup = new DrawingGroup();
@@ -153,6 +153,15 @@ namespace KinectMotionCapture
         /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;
 
+        private void OnPropertyChanged(string name)
+        {
+            if (this.PropertyChanged != null)
+            {
+                this.PropertyChanged(this, new PropertyChangedEventArgs(name));
+            }
+
+        }
+
         public ImageSource ImageSource
         {
             get
@@ -169,16 +178,24 @@ namespace KinectMotionCapture
             }
         }
 
+        public string RecordPath
+        {
+            get
+            {
+                return this.recordPath;
+            }
+        }
 
         private void OpenFolderButton_Click(object sender, RoutedEventArgs e)
         {
             FolderBrowserDialog fbd = new FolderBrowserDialog();
             fbd.Description = "フォルダを選択してください";
-            fbd.SelectedPath = this.defaultRecordPath;
+            fbd.SelectedPath = this.recordPath;
             if (fbd.ShowDialog() == System.Windows.Forms.DialogResult.OK )
             {
-                this.defaultRecordPath = fbd.SelectedPath;
+                this.recordPath = fbd.SelectedPath;
                 this.motionDataHandler.DataDir = fbd.SelectedPath;
+                this.OnPropertyChanged("RecordPath");
             }
         }
         
@@ -189,10 +206,12 @@ namespace KinectMotionCapture
                 this.motionDataHandler.Flush();
                 this.counter = 0;
 
+                RecordButton.Content = "Record";
                 this.isRecording = false;
                 this.StatusText = Properties.Resources.RecordingReadyStatusText;
             }else
             {
+                RecordButton.Content = "Stop";
                 this.isRecording = true;
                 this.StatusText = Properties.Resources.RecordingStatusText;
             }
@@ -213,12 +232,7 @@ namespace KinectMotionCapture
                 if (this.statusText != value)
                 {
                     this.statusText = value;
-
-                    // notify any bound elements that the text has changed
-                    if (this.PropertyChanged != null)
-                    {
-                        this.PropertyChanged(this, new PropertyChangedEventArgs("StatusText"));
-                    }
+                    this.OnPropertyChanged("StatusText");
                 }
             }
         }
