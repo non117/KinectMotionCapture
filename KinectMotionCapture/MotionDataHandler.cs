@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.IO;
@@ -111,12 +112,15 @@ namespace KinectMotionCapture
         public void AddData(int frameNo, DateTime dateTime, ref Body[] bodies, ref byte[] colorPixels, ref ushort[] depthBuffer, ref byte[] bodyIndexBuffer)
         {
             this.SaveImages(frameNo, ref colorPixels, ref depthBuffer, ref bodyIndexBuffer);
-            MotionData motionData = new MotionData(frameNo, this.dataDir, dateTime.Ticks, ref bodies);
-            motionData.ColorWidth = this.colorWidth;
-            motionData.ColorHeight = this.colorHeight;
-            motionData.DepthUserWidth = this.depthWidth;
-            motionData.DepthUserHeight = this.depthHeight;
-            this.motionDataList.Add(motionData);
+            lock (this.motionDataList)
+            {
+                MotionData motionData = new MotionData(frameNo, this.dataDir, dateTime.Ticks, ref bodies);
+                motionData.ColorWidth = this.colorWidth;
+                motionData.ColorHeight = this.colorHeight;
+                motionData.DepthUserWidth = this.depthWidth;
+                motionData.DepthUserHeight = this.depthHeight;
+                this.motionDataList.Add(motionData);
+            }
         }
 
         /// <summary>
@@ -124,11 +128,13 @@ namespace KinectMotionCapture
         /// </summary>
         public void Flush()
         {
-            // TODO: Flushしている間にデータが追加されるかもしれないので、操作をブロックしたい
             var serializer = MessagePackSerializer.Get<List<MotionData>>();
             using (FileStream fs = File.Open(this.recordPath, FileMode.OpenOrCreate, FileAccess.Write))
             {
-                serializer.Pack(fs, this.motionDataList);
+                lock (this.motionDataList)
+                {
+                    serializer.Pack(fs, this.motionDataList);
+                }
             }
             this.motionDataList.Clear();
         }

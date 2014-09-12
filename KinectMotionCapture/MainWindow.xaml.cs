@@ -139,8 +139,8 @@ namespace KinectMotionCapture
             this.bodyColors.Add(new Pen(Brushes.Indigo, 6));
             this.bodyColors.Add(new Pen(Brushes.Violet, 6));
 
-            //this.kinectSensor.IsAvailableChanged += this.Sensor_IsAvailableChanged;
-            //this.kinectSensor.Open();
+            this.kinectSensor.IsAvailableChanged += this.Sensor_IsAvailableChanged;
+            this.kinectSensor.Open();
 
             this.DataContext = this;
             this.InitializeComponent();
@@ -171,19 +171,15 @@ namespace KinectMotionCapture
         {
             if (this.isRecording)
             {
-                if (this.kinectSensor != null)
-                {
-                    this.kinectSensor.Close();                    
-                }
-                this.kinectSensor.IsAvailableChanged -= this.Sensor_IsAvailableChanged;
                 this.motionDataHandler.Flush();
+                this.counter = 0;
 
                 this.isRecording = false;
+                this.StatusText = Properties.Resources.RecordingReadyStatusText;
             }else
             {
-                this.kinectSensor.Open();
-                this.kinectSensor.IsAvailableChanged += this.Sensor_IsAvailableChanged;
                 this.isRecording = true;
+                this.StatusText = Properties.Resources.RecordingStatusText;
             }
         }
 
@@ -322,8 +318,11 @@ namespace KinectMotionCapture
             {
                 this.RenderColorPixels();
                 this.RenderBody();
-                Task.Run(() => this.motionDataHandler.AddData(this.counter, DateTime.Now, ref this.bodies, ref this.colorPixels, ref this.depthBuffer, ref this.bodyIndexBuffer));
-                counter++;
+                if (this.isRecording)
+                {
+                    Task.Run(() => this.motionDataHandler.AddData(this.counter, DateTime.Now, ref this.bodies, ref this.colorPixels, ref this.depthBuffer, ref this.bodyIndexBuffer));
+                    counter++;
+                }
             }                       
         }
 
@@ -447,7 +446,7 @@ namespace KinectMotionCapture
         private void Sensor_IsAvailableChanged(object sender, IsAvailableChangedEventArgs e)
         {
             // on failure, set the status text
-            this.StatusText = this.kinectSensor.IsAvailable ? Properties.Resources.RunningStatusText
+            this.StatusText = this.kinectSensor.IsAvailable ? Properties.Resources.RecordingReadyStatusText
                                                             : Properties.Resources.SensorNotAvailableStatusText;
         }
     }

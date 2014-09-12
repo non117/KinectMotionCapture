@@ -117,14 +117,14 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="FailedScreenshotStatusTextFormat" xml:space="preserve">
-    <value>Failed to write screenshot to {0}</value>
-  </data>
   <data name="NoSensorStatusText" xml:space="preserve">
     <value>No ready Kinect found!</value>
   </data>
-  <data name="RunningStatusText" xml:space="preserve">
-    <value>Running</value>
+  <data name="RecordingReadyStatusText" xml:space="preserve">
+    <value>Ready to Record</value>
+  </data>
+  <data name="RecordingStatusText" xml:space="preserve">
+    <value>Recording</value>
   </data>
   <data name="SensorNotAvailableStatusText" xml:space="preserve">
     <value>Kinect not available!</value>
