@@ -21,7 +21,7 @@ namespace KinectMotionCapture
     /// </summary>
     public class MotionDataHandler
     {
-        private string dataDir = ""; // そのうちPropertyとかUIからsetするようにしたい
+        public string dataDir = "";
         private string bodyInfoFilename = @"BodyInfo.mpac";
         private string recordPath = "";
 
@@ -42,7 +42,7 @@ namespace KinectMotionCapture
         public MotionDataHandler(string dataDir, int colorWidth, int colorHeight, int depthWidth, int depthHeight)
         {
             this.dataDir = dataDir;
-            this.recordPath = Path.Combine(dataDir, bodyInfoFilename);
+            this.recordPath = Path.Combine(dataDir, this.bodyInfoFilename);
             Utility.CreateDirectories(this.dataDir);
             
             this.motionDataList = new List<MotionData>();
@@ -67,6 +67,16 @@ namespace KinectMotionCapture
             this.colorHeight = md.ColorHeight;
             this.depthWidth = md.DepthUserWidth;
             this.depthHeight = md.DepthUserHeight;
+        }
+
+        public string DataDir
+        {
+            get{ return this.dataDir; }
+            set
+            {
+                this.dataDir = value;
+                this.recordPath = Path.Combine(this.dataDir, this.bodyInfoFilename);
+            }
         }
 
         /// <summary>
@@ -111,6 +121,7 @@ namespace KinectMotionCapture
         /// <param name="bodies"></param>
         public void AddData(int frameNo, DateTime dateTime, ref Body[] bodies, ref byte[] colorPixels, ref ushort[] depthBuffer, ref byte[] bodyIndexBuffer)
         {
+            Debug.WriteLine(this.recordPath);
             this.SaveImages(frameNo, ref colorPixels, ref depthBuffer, ref bodyIndexBuffer);
             lock (this.motionDataList)
             {

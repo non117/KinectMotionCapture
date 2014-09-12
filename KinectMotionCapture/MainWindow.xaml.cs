@@ -10,6 +10,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -24,6 +25,7 @@ namespace KinectMotionCapture
     {
         // 基本設定
         private int counter = 0;
+        private string defaultRecordPath = Path.Combine(Environment.CurrentDirectory, Properties.Settings.Default.RecordDirectoryName);
         
         // Kinect関連
         private KinectSensor kinectSensor = null;
@@ -81,7 +83,7 @@ namespace KinectMotionCapture
             this.colorWidth = colorFrameDescription.Width;
             this.colorHeight = colorFrameDescription.Height;
 
-            this.motionDataHandler = new MotionDataHandler(@"Data" , this.colorWidth, this.colorHeight, this.depthWidth, this.depthHeight);
+            this.motionDataHandler = new MotionDataHandler(this.defaultRecordPath , this.colorWidth, this.colorHeight, this.depthWidth, this.depthHeight);
 
             // 描画関連
             this.drawingGroup = new DrawingGroup();
@@ -167,6 +169,19 @@ namespace KinectMotionCapture
             }
         }
 
+
+        private void OpenFolderButton_Click(object sender, RoutedEventArgs e)
+        {
+            FolderBrowserDialog fbd = new FolderBrowserDialog();
+            fbd.Description = "フォルダを選択してください";
+            fbd.SelectedPath = this.defaultRecordPath;
+            if (fbd.ShowDialog() == System.Windows.Forms.DialogResult.OK )
+            {
+                this.defaultRecordPath = fbd.SelectedPath;
+                this.motionDataHandler.DataDir = fbd.SelectedPath;
+            }
+        }
+        
         public void RecordButton_Click(object sender, RoutedEventArgs e)
         {
             if (this.isRecording)
