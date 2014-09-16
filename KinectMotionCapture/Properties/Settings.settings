@@ -5,5 +5,8 @@
     <Setting Name="RecordDirectoryName" Type="System.String" Scope="User">
       <Value Profile="(Default)">record</Value>
     </Setting>
+    <Setting Name="InitialRecordPath" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
   </Settings>
 </SettingsFile>

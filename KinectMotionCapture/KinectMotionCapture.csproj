@@ -136,8 +136,26 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="CalcEx.cs" />
+    <Compile Include="CameraUndistortWindow.xaml.cs">
+      <DependentUpon>CameraUndistortWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CvEx.cs" />
+    <Compile Include="EventEx.cs" />
+    <Compile Include="KinectUndistortion.cs" />
+    <Compile Include="ListEx.cs" />
+    <Compile Include="MemorySavingLeastSquare.cs" />
     <Compile Include="MotionDataHandler.cs" />
+    <Compile Include="ProgressData.cs" />
+    <Compile Include="ProgressWindow.xaml.cs">
+      <DependentUpon>ProgressWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SerializableCvMat.cs" />
     <Compile Include="Utility.cs" />
+    <Page Include="CameraUndistortWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -150,6 +168,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="ProgressWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">

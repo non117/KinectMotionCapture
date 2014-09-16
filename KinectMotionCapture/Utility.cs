@@ -27,6 +27,16 @@ namespace KinectMotionCapture
     public static class Utility
     {
         /// <summary>
+        /// 画像を読みまくり
+        /// </summary>
+        /// <param name="paths"></param>
+        /// <returns></returns>
+        public static void LoadImages(IEnumerable<string> paths, out IEnumerable<CvMat> depthImages)
+        {
+            depthImages = paths.Select(path => CvMat.LoadImageM(path, LoadMode.Unchanged));
+        }
+
+        /// <summary>
         /// KinectのカラーデータをCvMatに変換する
         /// </summary>
         /// <param name="height"></param>

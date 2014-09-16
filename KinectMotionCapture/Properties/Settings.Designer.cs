@@ -34,5 +34,17 @@ namespace KinectMotionCapture.Properties {
                 this["RecordDirectoryName"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string InitialRecordPath {
+            get {
+                return ((string)(this["InitialRecordPath"]));
+            }
+            set {
+                this["InitialRecordPath"] = value;
+            }
+        }
     }
 }

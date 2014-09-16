@@ -156,8 +156,16 @@ namespace KinectMotionCapture
         /// <returns></returns>
         public IEnumerable<string> GetColorImagePaths()
         {
-            IEnumerable<string> paths = this.motionDataList.Select(data => data.ImagePath);
-            return paths;
+            return this.motionDataList.Select(data => data.ImagePath);
+        }
+
+        /// <summary>
+        /// Depth画像のパスを返す
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<string> GetDepthImagePaths()
+        {
+            return this.motionDataList.Select(data => data.DepthPath);
         }
     }
 
