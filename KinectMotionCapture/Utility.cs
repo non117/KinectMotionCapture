@@ -31,9 +31,9 @@ namespace KinectMotionCapture
         /// </summary>
         /// <param name="paths"></param>
         /// <returns></returns>
-        public static void LoadImages(IEnumerable<string> paths, out IEnumerable<CvMat> depthImages)
+        public static void LoadImages(IEnumerable<string> paths, out IEnumerable<CvMat> images)
         {
-            depthImages = paths.Select(path => CvMat.LoadImageM(path, LoadMode.Unchanged));
+            images = paths.Select(path => CvMat.LoadImageM(path, LoadMode.Unchanged));
         }
 
         /// <summary>

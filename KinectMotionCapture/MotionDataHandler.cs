@@ -79,6 +79,11 @@ namespace KinectMotionCapture
             }
         }
 
+        public int FrameCount
+        {
+            get { return this.motionDataList.Count();  }
+        }
+
         /// <summary>
         /// ファイルからBodyデータをデシリアライズする
         /// </summary>
