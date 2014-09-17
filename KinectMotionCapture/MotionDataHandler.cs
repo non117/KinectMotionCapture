@@ -194,7 +194,7 @@ namespace KinectMotionCapture
         public MotionData(int frameNo, string dataDir, long timeStamp, ref Body[] bodies)
         {
             this.FrameNo = frameNo;
-            this.ImagePath = Path.Combine(dataDir, frameNo.ToString() + "_image.jpg");
+            this.ImagePath = Path.Combine(dataDir, frameNo.ToString() + "_color.jpg");
             this.DepthPath = Path.Combine(dataDir, frameNo.ToString() + "_depth.png");
             this.UserPath = Path.Combine(dataDir, frameNo.ToString() + "_user.png");
             this.TimeStamp = timeStamp;

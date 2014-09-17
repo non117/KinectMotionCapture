@@ -1,0 +1,17 @@
+﻿<Window x:Class="KinectMotionCapture.InitWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="KinectMotionCapture" Height="600" Width="400"
+        >
+    <Border Background="WhiteSmoke" BorderBrush="Black" Padding="10">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="100"/>
+                <RowDefinition Height="100"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Button Grid.Row="0" Content="Record Motions" Margin="20" Name="RecordMotionButton" Click="RecordMotionButton_Click" />
+            <Button Grid.Row="1" Content="Calibrate Kinect" Margin="20" Name="CalibrateCameraButton" Click="CalibrateCameraButton_Click" />
+        </Grid>
+    </Border>
+</Window>

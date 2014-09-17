@@ -21,7 +21,7 @@ using OpenCvSharp;
 
 namespace KinectMotionCapture
 {
-    public partial class MainWindow : Window, INotifyPropertyChanged
+    public partial class RecordWindow : Window, INotifyPropertyChanged
     {
         // 基本設定
         private int counter = 0;
@@ -66,7 +66,7 @@ namespace KinectMotionCapture
 
         private string statusText = null;
 
-        public MainWindow()
+        public RecordWindow()
         {
             // 基本設定の初期化処理
 

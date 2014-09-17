@@ -285,7 +285,8 @@ namespace KinectMotionCapture
         {
             if (bmp == null || bmp.PixelWidth != mat.Height || bmp.PixelHeight != mat.Width || bmp.Format != format)
             {
-                bmp = new WriteableBitmap(mat.Height, mat.Width, 96, 96, format, null);
+                //bmp = new WriteableBitmap(mat.Height, mat.Width, 96, 96, format, null);
+                bmp = new WriteableBitmap(mat.Width, mat.Height, 96, 96, format, null);
             }
             bmp.WritePixels(new Int32Rect(0, 0, bmp.PixelWidth, bmp.PixelHeight), mat.Data, bmp.BackBufferStride * bmp.PixelHeight, bmp.BackBufferStride, 0, 0);
         }

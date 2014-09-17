@@ -419,7 +419,7 @@ namespace KinectMotionCapture
                             CvEx.DrawChessboardCornerFrame(displayMat1, boardSize, corners, new CvScalar(64, 128, 64));
                             displayMat1.DrawChessboardCorners(boardSize, corners, true);
                             lastCorners = corners;
-                            putImage(displayMat1, PixelFormats.Rgb24);
+                            putImage(displayMat1, PixelFormats.Bgr32);
                         }
                         else
                         {
@@ -427,7 +427,6 @@ namespace KinectMotionCapture
                             putImage(displayMat3, PixelFormats.Rgb24);
                         }
                     }
-
 
                     this.UndistortionData.CalibrateCamera(list, cols, rows, (horizLength + vertLength) / 2, imageSize, imageNum, path);
                     CvMat displayMat2 = CvEx.InitCvMat(displayMat1);

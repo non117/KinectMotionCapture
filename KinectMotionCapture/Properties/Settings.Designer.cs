@@ -46,5 +46,65 @@ namespace KinectMotionCapture.Properties {
                 this["InitialRecordPath"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("10")]
+        public int ChessboardColumns {
+            get {
+                return ((int)(this["ChessboardColumns"]));
+            }
+            set {
+                this["ChessboardColumns"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("7")]
+        public int ChessboardRows {
+            get {
+                return ((int)(this["ChessboardRows"]));
+            }
+            set {
+                this["ChessboardRows"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("50")]
+        public int ChessboardVerticalLength {
+            get {
+                return ((int)(this["ChessboardVerticalLength"]));
+            }
+            set {
+                this["ChessboardVerticalLength"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("50")]
+        public int ChessboardHorizontalLength {
+            get {
+                return ((int)(this["ChessboardHorizontalLength"]));
+            }
+            set {
+                this["ChessboardHorizontalLength"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("80")]
+        public int CalibrationCameraImageNum {
+            get {
+                return ((int)(this["CalibrationCameraImageNum"]));
+            }
+            set {
+                this["CalibrationCameraImageNum"] = value;
+            }
+        }
     }
 }
