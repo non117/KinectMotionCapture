@@ -1241,7 +1241,7 @@ namespace KinectMotionCapture
 
         readonly object _lockForCorrectionMap = new object();
 
-        void correctImage(ref CvMat dest, CvMat src, CvPoint[] correctionMat, CvSize correctionMatSize)
+        void correctImage(CvMat dest, CvMat src, CvPoint[] correctionMat, CvSize correctionMatSize)
         {
             if (correctionMat == null)
             {
@@ -1363,7 +1363,7 @@ namespace KinectMotionCapture
             }
         }
 
-        public void CorrectSingleTrackImage(TrackImageFrame dest, TrackImageFrame source)
+        public void CorrectSingleTrackImage(MotionData dest, MotionData source)
         {
 
             if (_imageCorrectionMap == null)
@@ -1412,13 +1412,13 @@ namespace KinectMotionCapture
 
             EventEx.SimultaneousInvoke(() =>
             {
-                correctImage(ref dest.ImageMat, source.ImageMat, _imageCorrectionMap, _imageMatSize);
+                correctImage(dest.ImageMat, source.ImageMat, _imageCorrectionMap, _imageMatSize);
             }, () =>
             {
-                correctImage(ref dest.DepthMat, depthMat2, _depthCorrectionMap, _depthMatSize);
+                correctImage(dest.DepthMat, depthMat2, _depthCorrectionMap, _depthMatSize);
             }, () =>
             {
-                correctImage(ref dest.UserMat, source.UserMat, _depthCorrectionMap, _depthMatSize);
+                correctImage(dest.UserMat, source.UserMat, _depthCorrectionMap, _depthMatSize);
             });
 
             dest.Timestamp = source.Timestamp;
