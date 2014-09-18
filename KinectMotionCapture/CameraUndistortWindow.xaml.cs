@@ -78,43 +78,38 @@ namespace KinectMotionCapture
         private void buttonFlatDepthCalib_Click(object sender, RoutedEventArgs e)
         {
             // 改造
-            string path1, path2;
-            MotionDataHandler handler1, handler2;
+            string path1;
+            MotionDataHandler handler1;
             {
-                if (openMotionData(out handler1, out path1) )//&& openMotionData(out handler2, out path2))
+                if (openMotionData(out handler1, out path1))
                 {
-                    Task.Run(() =>
+                    IEnumerable<CvMat> depthImages1 = null;
+                    Utility.LoadImages(handler1.GetDepthImagePaths(), out depthImages1);
+
+                    List<double> errorVarLog = new List<double>();
+                    CvMat resultMat = null;
+
+                    if (ProgressData.DoAction(progress =>
                     {
-                        IEnumerable<CvMat> depthImages1 = null;
-                        //IEnumerable<CvMat> depthImages2 = null;
-                        Utility.LoadImages(handler1.GetDepthImagePaths(), out depthImages1);
-                        //Utility.LoadImages(handler2.GetDepthImagePaths(), out depthImages2);
-
-                        List<double> errorVarLog = new List<double>();
-                        CvMat resultMat = null;
-
                         int length = handler1.FrameCount;
+                        progress.InitProgress("Calculating...", length);
                         DepthUndistortionLinearCalibrator undistort = new DepthUndistortionLinearCalibrator(this.UndistortionData.CameraStruct, 1);
                         CvMat mat = null;
 
                         foreach (CvMat depthMat in depthImages1)
                         {
+                            progress.CurrentValue++;
                             CalcEx.SmoothDepthStep(ref mat, depthMat, 19);
                             undistort.PutDepthImage(ref resultMat, mat, _undistortion);
                             viewDepthUndistionMat(resultMat, depthMat);
                         }
-                        /*
-                        foreach (CvMat depthMat in depthImages2)
-                        {
-                            CalcEx.SmoothDepthStep(ref mat, depthMat, 19);
-                            undistort.PutDepthImage(ref resultMat, mat, _undistortion);
-                            viewDepthUndistionMat(resultMat, depthMat);
-                        }
-                         */
+
                         this.UndistortionData.SetUndistortionDepthMat(undistort.GetUndistortCoefMat(), path1);
+                    }, "Flat Depth Calib", true))
+                    {
                         displayLabels();
                         viewDepthUndistionMat(this.UndistortionData.UndistortionDepthMat);
-                    });
+                    }
                 }
             }
         }
@@ -399,10 +394,11 @@ namespace KinectMotionCapture
                 CvMat displayMat1 = null;
                 CvMat displayMat3 = null;
                 CvMat gray = null;
-                Task.Run(() =>
+                if (ProgressData.DoAction(progress =>
                 {
                     int length = handler.FrameCount;
                     if (length == 0) { return; }
+                    progress.InitProgress("Find Chessboard...", length * 2);
                     CvSize boardSize = new CvSize(cols, rows);
                     List<CvPoint2D32f[]> list = new List<CvPoint2D32f[]>();
                     CvSize imageSize = new CvSize();
@@ -413,6 +409,7 @@ namespace KinectMotionCapture
 
                     foreach (CvMat imageMat in colorImages)
                     {
+                        progress.CurrentValue++;
                         using (imageMat)
                         {
                             imageSize = new CvSize(imageMat.Cols, imageMat.Rows);
@@ -439,6 +436,8 @@ namespace KinectMotionCapture
                         }
                     }
 
+                    progress.SetProgress("Calibrating...", length);
+
                     this.UndistortionData.CalibrateCamera(list, cols, rows, (horizLength + vertLength) / 2, imageSize, imageNum, path);
                     CvMat displayMat2 = CvEx.InitCvMat(displayMat1);
                     displayMat1.Undistort2(displayMat2, this.UndistortionData.CameraStruct.CreateCvMat(), this.UndistortionData.DistortStruct.CreateCvMat(true));
@@ -448,11 +447,10 @@ namespace KinectMotionCapture
                     }
 
                     putImage(displayMat2, PixelFormats.Bgr24);
-
+                }, "Camera Calib", true))
+                {
                     displayLabels();
-
-
-                });
+                }
             }
 
         }
@@ -525,10 +523,11 @@ namespace KinectMotionCapture
                 CvMat displayMat3 = null;
                 CvMat gray = null;
 
-                Task.Run(() =>
+                if (ProgressData.DoAction(progress =>
                 {
                     int length = handler.FrameCount;
                     if (length == 0) { return; }
+                    progress.InitProgress("Find Chessboard...", length * 2);
 
                     CvSize boardSize = new CvSize(cols, rows);
                     List<CvPoint3D32f?[]> list = new List<CvPoint3D32f?[]>();
@@ -542,6 +541,8 @@ namespace KinectMotionCapture
 
                     foreach (Tuple<CvMat, CvMat> imagePair in images)
                     {
+                        progress.CurrentValue++;
+
                         CvMat imageMat = imagePair.Item1;
                         CvMat depthMat = imagePair.Item2;
                         imageSize = new CvSize(imageMat.Cols, imageMat.Rows);
@@ -576,6 +577,7 @@ namespace KinectMotionCapture
                             //putImage(displayMat3, PixelFormats.Bgr24);
                         }
                     }
+                    progress.SetProgress("Scale Offset Calibrating...", length);
 
                     this.UndistortionData.CalibrateRealScaleAndOffset(list, cols, rows, horizLength, vertLength, imageSize);
                     CvMat displayMat2 = CvEx.InitCvMat(displayMat1);
@@ -590,9 +592,11 @@ namespace KinectMotionCapture
                     displayMat2.PutText(string.Format("Zoffset: {0}", this.UndistortionData.ZOffset), new CvPoint(20, 60), new CvFont(FontFace.HersheyPlain, 1, 1), new CvScalar(255, 255, 255));
                     putImage(displayMat2, PixelFormats.Bgr24);
 
+                }, "Calibrate Scale Offset", true))
+                {
 
                     displayLabels();
-                });
+                }
             }
         }
 

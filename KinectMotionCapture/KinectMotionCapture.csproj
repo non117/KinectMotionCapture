@@ -149,6 +149,10 @@
     <Compile Include="ListEx.cs" />
     <Compile Include="MemorySavingLeastSquare.cs" />
     <Compile Include="MotionDataHandler.cs" />
+    <Compile Include="ProgressData.cs" />
+    <Compile Include="ProgressWindow.xaml.cs">
+      <DependentUpon>ProgressWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="SerializableCvMat.cs" />
     <Compile Include="Utility.cs" />
     <Page Include="CameraUndistortWindow.xaml">
@@ -156,6 +160,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="InitWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ProgressWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
