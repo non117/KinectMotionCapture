@@ -6,6 +6,7 @@ using OpenCvSharp;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using Microsoft.Kinect;
 
 namespace KinectMotionCapture
 {
@@ -473,20 +474,20 @@ namespace KinectMotionCapture
         /// <summary>
         /// 深度画像の水平視野角。OpenNIより取得
         /// </summary>
-        public const double DepthFovHorizontalAngle = 1.0144686707507438;
+        public const double DepthFovHorizontalAngle = 1.23220245190799668130;//1.0144686707507438;
         /// <summary>
         /// 深度画像の片側視野角。OpenNIより取得
         /// </summary>
-        public const double DepthFovVerticalAngle = 0.78980943449644714;
+        public const double DepthFovVerticalAngle = 1.047197551196597746154;//0.78980943449644714;
         //public const double DepthScaleXPerZ = 1.1114666461944582;
         /// <summary>
         /// 片側水平視野角のtangentの二倍の値。右手系にするために負の値にしている
         /// </summary>
-        public const double DepthScaleXPerZ = -1.1114666461944582;
+        public const double DepthScaleXPerZ = -1.4160789342560455782435;//-1.1114666461944582;
         /// <summary>
         /// 片側垂直視野角のtangentの二倍の値
         /// </summary>
-        public const double DepthScaleYPerZ = -0.83359998464584351;
+        public const double DepthScaleYPerZ = -1.1547005383792515290180;//-0.83359998464584351;
         /// <summary>
         /// 奥行きゆがみ補正に用いたレコードのパス
         /// </summary>
@@ -713,12 +714,10 @@ namespace KinectMotionCapture
             return new OpenCvSharp.CvPoint3D64f(x2, y2, z);
         }
 
-        /*
-        public static OpenCvSharp.CvPoint3D64f GetOriginalScreenPosFromReal(OpenNI.Point3D point, OpenCvSharp.CvSize imageSize)
+        public static OpenCvSharp.CvPoint3D64f GetOriginalScreenPosFromReal(CameraSpacePoint point, OpenCvSharp.CvSize imageSize)
         {
             return GetOriginalScreenPosFromReal(point.X, point.Y, point.Z, imageSize);
         }
-         */
 
         public static OpenCvSharp.CvPoint3D64f GetOriginalScreenPosFromReal(CvPoint3D64f point, OpenCvSharp.CvSize imageSize)
         {
@@ -1364,82 +1363,64 @@ namespace KinectMotionCapture
             }
         }
 
-        /*
         public void CorrectSingleTrackImage(TrackImageFrame dest, TrackImageFrame source)
         {
+
+            if (_imageCorrectionMap == null)
+            {
+                lock (_lockForCorrectionMap)
+                {
+                    if (_imageCorrectionMap == null)
+                    {
+                        if (_imageMatSize == CvSize.Empty)
+                        {
+                            _imageMatSize = source.ImageSize;
+                        }
+                        _imageCorrectionMap = getCorrectionMap(_imageMatSize);
+                    }
+                }
+            }
+            if (_depthCorrectionMap == null)
+            {
+                lock (_lockForCorrectionMap)
+                {
+                    if (_depthCorrectionMap == null)
+                    {
+                        if (_depthMatSize == CvSize.Empty)
+                        {
+                            _depthMatSize = source.DepthUserSize;
+                        }
+                        _depthCorrectionMap = getCorrectionMap(_depthMatSize);
+                    }
+                }
+            }
+
+            CvMat depthMat = null;
+            CvMat depthMat2 = null;
+            CvMat[] _tempMatArr = null;
             if (true)
             {
-                if (_imageCorrectionMap == null)
-                {
-                    lock (_lockForCorrectionMap)
-                    {
-                        if (_imageCorrectionMap == null)
-                        {
-                            if (_imageMatSize == CvSize.Empty)
-                            {
-                                _imageMatSize = source.ImageSize;
-                            }
-                            _imageCorrectionMap = getCorrectionMap(_imageMatSize);
-                        }
-                    }
-                }
-                if (_depthCorrectionMap == null)
-                {
-                    lock (_lockForCorrectionMap)
-                    {
-                        if (_depthCorrectionMap == null)
-                        {
-                            if (_depthMatSize == CvSize.Empty)
-                            {
-                                _depthMatSize = source.DepthUserSize;
-                            }
-                            _depthCorrectionMap = getCorrectionMap(_depthMatSize);
-                        }
-                    }
-                }
+                CalcEx.MedianDepthMat(ref depthMat, source.DepthMat, 7);
+                CalcEx.FillHoleDepthMat(ref depthMat2, depthMat, 15, 0.25, 0.75, 350);
+                CalcEx.FillHoleDepthMat(ref depthMat, depthMat2, 9, 0.25, 0.75, 180);
+                CalcEx.SmoothDepthStep(ref depthMat2, depthMat, 9);
 
-                CvMat depthMat = null;
-                CvMat depthMat2 = null;
-                CvMat[] _tempMatArr = null;
-                if (true)
-                {
-                    CalcEx.MedianDepthMat(ref depthMat, source.DepthMat, 7);
-                    CalcEx.FillHoleDepthMat(ref depthMat2, depthMat, 15, 0.25, 0.75, 350);
-                    CalcEx.FillHoleDepthMat(ref depthMat, depthMat2, 9, 0.25, 0.75, 180);
-                    CalcEx.SmoothDepthStep(ref depthMat2, depthMat, 9);
-
-                    CalcEx.TrimEdgeDepthMat(ref depthMat, depthMat2, ref _tempMatArr);
-                    //  depthMat2.Copy(depthMat);
-                    undistortDepthMat(ref depthMat2, depthMat);
-                }
-                else
-                {
-                    undistortDepthMat(ref depthMat2, source.DepthMat);
-                }
-                EventEx.SimultaneousInvoke(() =>
-                {
-                    correctImage(ref dest.ImageMat, source.ImageMat, _imageCorrectionMap, _imageMatSize);
-                }, () =>
-                {
-                    correctImage(ref dest.DepthMat, depthMat2, _depthCorrectionMap, _depthMatSize);
-                }, () =>
-                {
-                    correctImage(ref dest.UserMat, source.UserMat, _depthCorrectionMap, _depthMatSize);
-                });
+                CalcEx.TrimEdgeDepthMat(ref depthMat, depthMat2, ref _tempMatArr);
+                //  depthMat2.Copy(depthMat);
+                undistortDepthMat(ref depthMat2, depthMat);
             }
-            else
+
+            EventEx.SimultaneousInvoke(() =>
             {
-                EventEx.SimultaneousInvoke(() =>
-                {
-                    CvEx.CloneCvMat(ref dest.ImageMat, source.ImageMat);
-                }, () =>
-                {
-                    CvEx.CloneCvMat(ref dest.DepthMat, source.DepthMat);
-                }, () =>
-                {
-                    CvEx.CloneCvMat(ref dest.UserMat, source.UserMat);
-                });
-            }
+                correctImage(ref dest.ImageMat, source.ImageMat, _imageCorrectionMap, _imageMatSize);
+            }, () =>
+            {
+                correctImage(ref dest.DepthMat, depthMat2, _depthCorrectionMap, _depthMatSize);
+            }, () =>
+            {
+                correctImage(ref dest.UserMat, source.UserMat, _depthCorrectionMap, _depthMatSize);
+            });
+
             dest.Timestamp = source.Timestamp;
             dest.UserTrackings = new Dictionary<int, UserTrackingState>();
             foreach (var pair in source.UserTrackings)
@@ -1474,6 +1455,5 @@ namespace KinectMotionCapture
                 }
             }
         }
-        */
     }
 }
