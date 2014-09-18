@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Media.Imaging;
 using OpenCvSharp;
+using OpenCvSharp.Extensions;
 using System;
 using System.Collections.Generic;
 using Media3D = System.Windows.Media.Media3D;
@@ -282,13 +283,13 @@ namespace KinectMotionCapture
         /// <param name="mat"></param>
         /// <param name="format"></param>
         public static void GetBmpFromMat(ref WriteableBitmap bmp, CvMat mat, System.Windows.Media.PixelFormat format)
-        {
+        {            
             if (bmp == null || bmp.PixelWidth != mat.Height || bmp.PixelHeight != mat.Width || bmp.Format != format)
             {
-                //bmp = new WriteableBitmap(mat.Height, mat.Width, 96, 96, format, null);
                 bmp = new WriteableBitmap(mat.Width, mat.Height, 96, 96, format, null);
             }
             bmp.WritePixels(new Int32Rect(0, 0, bmp.PixelWidth, bmp.PixelHeight), mat.Data, bmp.BackBufferStride * bmp.PixelHeight, bmp.BackBufferStride, 0, 0);
+             
         }
 
         [Obsolete("Cv.Rodrigues2", true)]

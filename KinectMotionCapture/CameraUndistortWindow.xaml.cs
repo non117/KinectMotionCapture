@@ -80,35 +80,42 @@ namespace KinectMotionCapture
             // 改造
             string path1, path2;
             MotionDataHandler handler1, handler2;
-            if (openMotionData(out handler1, out path1) && openMotionData(out handler2, out path2))
             {
-                IEnumerable<CvMat> depthImages1 = null;
-                IEnumerable<CvMat> depthImages2 = null;
-                Utility.LoadImages(handler1.GetDepthImagePaths(), out depthImages1);
-                Utility.LoadImages(handler2.GetDepthImagePaths(), out depthImages2);
-
-                List<double> errorVarLog = new List<double>();
-                CvMat resultMat = null;
-
-                int length = handler1.FrameCount;
-                DepthUndistortionLinearCalibrator undistort = new DepthUndistortionLinearCalibrator(this.UndistortionData.CameraStruct, 1);
-                CvMat mat = null;
-
-                foreach (CvMat depthMat in depthImages1)
+                if (openMotionData(out handler1, out path1) )//&& openMotionData(out handler2, out path2))
                 {
-                    CalcEx.SmoothDepthStep(ref mat, depthMat, 19);
-                    undistort.PutDepthImage(ref resultMat, mat, _undistortion);
-                    viewDepthUndistionMat(resultMat, depthMat);
+                    Task.Run(() =>
+                    {
+                        IEnumerable<CvMat> depthImages1 = null;
+                        //IEnumerable<CvMat> depthImages2 = null;
+                        Utility.LoadImages(handler1.GetDepthImagePaths(), out depthImages1);
+                        //Utility.LoadImages(handler2.GetDepthImagePaths(), out depthImages2);
+
+                        List<double> errorVarLog = new List<double>();
+                        CvMat resultMat = null;
+
+                        int length = handler1.FrameCount;
+                        DepthUndistortionLinearCalibrator undistort = new DepthUndistortionLinearCalibrator(this.UndistortionData.CameraStruct, 1);
+                        CvMat mat = null;
+
+                        foreach (CvMat depthMat in depthImages1)
+                        {
+                            CalcEx.SmoothDepthStep(ref mat, depthMat, 19);
+                            undistort.PutDepthImage(ref resultMat, mat, _undistortion);
+                            viewDepthUndistionMat(resultMat, depthMat);
+                        }
+                        /*
+                        foreach (CvMat depthMat in depthImages2)
+                        {
+                            CalcEx.SmoothDepthStep(ref mat, depthMat, 19);
+                            undistort.PutDepthImage(ref resultMat, mat, _undistortion);
+                            viewDepthUndistionMat(resultMat, depthMat);
+                        }
+                         */
+                        this.UndistortionData.SetUndistortionDepthMat(undistort.GetUndistortCoefMat(), path1);
+                        displayLabels();
+                        viewDepthUndistionMat(this.UndistortionData.UndistortionDepthMat);
+                    });
                 }
-                foreach (CvMat depthMat in depthImages2)
-                {
-                    CalcEx.SmoothDepthStep(ref mat, depthMat, 19);
-                    undistort.PutDepthImage(ref resultMat, mat, _undistortion);
-                    viewDepthUndistionMat(resultMat, depthMat);
-                }
-                this.UndistortionData.SetUndistortionDepthMat(undistort.GetUndistortCoefMat(), path1);
-                displayLabels();
-                viewDepthUndistionMat(this.UndistortionData.UndistortionDepthMat);
             }
         }
         void viewDepthUndistionMat(CvMat src)
@@ -150,7 +157,7 @@ namespace KinectMotionCapture
                         total.DrawLine(new CvPoint((int)pX, 0), new CvPoint((int)pX, total.Rows), new CvScalar(255, 255, 0));
                         total.DrawLine(new CvPoint(0, (int)pY), new CvPoint(total.Cols, (int)pY), new CvScalar(255, 255, 0));
                         total.DrawEllipse(new CvPoint((int)pX, (int)pY), new CvSize(focalX, focalY), 0, 0, 360, new CvScalar(255, 0, 0));
-                        putImage(total, PixelFormats.Rgb24);
+                        putImage(total, PixelFormats.Bgr24);
                     }
                 }
             }
@@ -174,7 +181,7 @@ namespace KinectMotionCapture
                         total.DrawLine(new CvPoint((int)pX, 0), new CvPoint((int)pX, total.Rows), new CvScalar(255, 255, 0));
                         total.DrawLine(new CvPoint(0, (int)pY), new CvPoint(total.Cols, (int)pY), new CvScalar(255, 255, 0));
                         total.DrawEllipse(new CvPoint((int)pX, (int)pY), new CvSize(focalX, focalY), 0, 0, 360, new CvScalar(255, 0, 0));
-                        putImage(total, PixelFormats.Rgb24);
+                        putImage(total, PixelFormats.Bgr24);
                     }
                 }
             }
@@ -198,7 +205,7 @@ namespace KinectMotionCapture
                         total.DrawEllipse(new CvPoint((int)pX, (int)pY), new CvSize(focalX, focalY), 0, 0, 360, new CvScalar(255, 0, 0));
 
                     }
-                    putImage(total, PixelFormats.Rgb24);
+                    putImage(total, PixelFormats.Bgr24);
                 }
             }
         }
@@ -392,6 +399,7 @@ namespace KinectMotionCapture
                 CvMat displayMat1 = null;
                 CvMat displayMat3 = null;
                 CvMat gray = null;
+                Task.Run(() =>
                 {
                     int length = handler.FrameCount;
                     if (length == 0) { return; }
@@ -405,26 +413,29 @@ namespace KinectMotionCapture
 
                     foreach (CvMat imageMat in colorImages)
                     {
-                        imageSize = new CvSize(imageMat.Cols, imageMat.Rows);
-                        CvPoint2D32f[] corners;
-                        int count;
-                        CvEx.InitCvMat(ref gray, imageMat, MatrixType.U8C1);
-                        imageMat.CvtColor(gray, ColorConversion.RgbToGray);
-                        if (gray.FindChessboardCorners(boardSize, out corners, out count, ChessboardFlag.AdaptiveThresh))
+                        using (imageMat)
                         {
-                            CvEx.CloneCvMat(ref displayMat1, imageMat);
-                            CvTermCriteria criteria = new CvTermCriteria(20, 0.1);
-                            gray.FindCornerSubPix(corners, count, new CvSize(11, 11), new CvSize(-1, -1), criteria);
-                            list.Add(corners);
-                            CvEx.DrawChessboardCornerFrame(displayMat1, boardSize, corners, new CvScalar(64, 128, 64));
-                            displayMat1.DrawChessboardCorners(boardSize, corners, true);
-                            lastCorners = corners;
-                            putImage(displayMat1, PixelFormats.Bgr32);
-                        }
-                        else
-                        {
-                            CvEx.CloneCvMat(ref displayMat3, imageMat);
-                            putImage(displayMat3, PixelFormats.Rgb24);
+                            imageSize = new CvSize(imageMat.Cols, imageMat.Rows);
+                            CvPoint2D32f[] corners;
+                            int count;
+                            CvEx.InitCvMat(ref gray, imageMat, MatrixType.U8C1);
+                            imageMat.CvtColor(gray, ColorConversion.RgbToGray);
+                            if (gray.FindChessboardCorners(boardSize, out corners, out count, ChessboardFlag.AdaptiveThresh))
+                            {
+                                CvEx.CloneCvMat(ref displayMat1, imageMat);
+                                CvTermCriteria criteria = new CvTermCriteria(20, 0.1);
+                                gray.FindCornerSubPix(corners, count, new CvSize(11, 11), new CvSize(-1, -1), criteria);
+                                list.Add(corners);
+                                CvEx.DrawChessboardCornerFrame(displayMat1, boardSize, corners, new CvScalar(64, 128, 64));
+                                displayMat1.DrawChessboardCorners(boardSize, corners, true);
+                                lastCorners = corners;
+                                putImage(displayMat1, PixelFormats.Bgr24);
+                            }
+                            else
+                            {
+                                CvEx.CloneCvMat(ref displayMat3, imageMat);
+                                putImage(displayMat3, PixelFormats.Bgr24);
+                            }
                         }
                     }
 
@@ -436,12 +447,12 @@ namespace KinectMotionCapture
                         drawUndistortedCornerFrame(displayMat2, lastCorners, boardSize);
                     }
 
-                    putImage(displayMat2, PixelFormats.Rgb24);
+                    putImage(displayMat2, PixelFormats.Bgr24);
 
                     displayLabels();
 
 
-                }
+                });
             }
 
         }
@@ -514,71 +525,74 @@ namespace KinectMotionCapture
                 CvMat displayMat3 = null;
                 CvMat gray = null;
 
-                int length = handler.FrameCount;
-                if (length == 0) { return; }
-
-                CvSize boardSize = new CvSize(cols, rows);
-                List<CvPoint3D32f?[]> list = new List<CvPoint3D32f?[]>();
-                CvSize imageSize = new CvSize();
-                CvPoint2D32f[] lastCorners = null;
-
-                IEnumerable<CvMat> colorImages, depthImages;
-                Utility.LoadImages(handler.GetColorImagePaths(), out colorImages);
-                Utility.LoadImages(handler.GetDepthImagePaths(), out depthImages);
-                var images = colorImages.Zip(depthImages, (first, second) => Tuple.Create(first, second));
-
-                foreach (Tuple<CvMat, CvMat> imagePair in images)
+                Task.Run(() =>
                 {
-                    CvMat imageMat = imagePair.Item1;
-                    CvMat depthMat = imagePair.Item2;
-                    imageSize = new CvSize(imageMat.Cols, imageMat.Rows);
-                    CvPoint2D32f[] corners;
-                    int count;
-                    CvEx.InitCvMat(ref gray, imageMat, MatrixType.U8C1);
-                    imageMat.CvtColor(gray, ColorConversion.RgbToGray);
-                    if (gray.FindChessboardCorners(boardSize, out corners, out count, ChessboardFlag.AdaptiveThresh))
+                    int length = handler.FrameCount;
+                    if (length == 0) { return; }
+
+                    CvSize boardSize = new CvSize(cols, rows);
+                    List<CvPoint3D32f?[]> list = new List<CvPoint3D32f?[]>();
+                    CvSize imageSize = new CvSize();
+                    CvPoint2D32f[] lastCorners = null;
+
+                    IEnumerable<CvMat> colorImages, depthImages;
+                    Utility.LoadImages(handler.GetColorImagePaths(), out colorImages);
+                    Utility.LoadImages(handler.GetDepthImagePaths(), out depthImages);
+                    var images = colorImages.Zip(depthImages, (first, second) => Tuple.Create(first, second));
+
+                    foreach (Tuple<CvMat, CvMat> imagePair in images)
                     {
-                        CvEx.CloneCvMat(ref displayMat1, imageMat);
-                        CvTermCriteria criteria = new CvTermCriteria(50, 0.01);
-                        gray.FindCornerSubPix(corners, count, new CvSize(3, 3), new CvSize(-1, -1), criteria);
-                        CvPoint3D32f?[] cornerPoints = new CvPoint3D32f?[corners.Length];
-                        for (int j = 0; j < corners.Length; j++)
+                        CvMat imageMat = imagePair.Item1;
+                        CvMat depthMat = imagePair.Item2;
+                        imageSize = new CvSize(imageMat.Cols, imageMat.Rows);
+                        CvPoint2D32f[] corners;
+                        int count;
+                        CvEx.InitCvMat(ref gray, imageMat, MatrixType.U8C1);
+                        imageMat.CvtColor(gray, ColorConversion.RgbToGray);
+                        if (gray.FindChessboardCorners(boardSize, out corners, out count, ChessboardFlag.AdaptiveThresh))
                         {
-                            CvPoint2D32f corner = corners[j];
-                            double? value = CalcEx.BilateralFilterDepthMatSinglePixel(corner, depthMat, 100, 4, 9);
-                            if (value.HasValue)
+                            CvEx.CloneCvMat(ref displayMat1, imageMat);
+                            CvTermCriteria criteria = new CvTermCriteria(50, 0.01);
+                            gray.FindCornerSubPix(corners, count, new CvSize(3, 3), new CvSize(-1, -1), criteria);
+                            CvPoint3D32f?[] cornerPoints = new CvPoint3D32f?[corners.Length];
+                            for (int j = 0; j < corners.Length; j++)
                             {
-                                cornerPoints[j] = new CvPoint3D32f(corner.X, corner.Y, value.Value);
+                                CvPoint2D32f corner = corners[j];
+                                double? value = CalcEx.BilateralFilterDepthMatSinglePixel(corner, depthMat, 100, 4, 9);
+                                if (value.HasValue)
+                                {
+                                    cornerPoints[j] = new CvPoint3D32f(corner.X, corner.Y, value.Value);
+                                }
                             }
+                            list.Add(cornerPoints);
+                            CvEx.DrawChessboardCornerFrame(displayMat1, boardSize, corners, new CvScalar(64, 128, 64));
+                            displayMat1.DrawChessboardCorners(boardSize, corners, true);
+                            lastCorners = corners;
+                            //putImage(displayMat1, PixelFormats.Bgr24);
                         }
-                        list.Add(cornerPoints);
-                        CvEx.DrawChessboardCornerFrame(displayMat1, boardSize, corners, new CvScalar(64, 128, 64));
-                        displayMat1.DrawChessboardCorners(boardSize, corners, true);
-                        lastCorners = corners;
-                        putImage(displayMat1, PixelFormats.Rgb24);
+                        else
+                        {
+                            CvEx.CloneCvMat(ref displayMat3, imageMat);
+                            //putImage(displayMat3, PixelFormats.Bgr24);
+                        }
                     }
-                    else
+
+                    this.UndistortionData.CalibrateRealScaleAndOffset(list, cols, rows, horizLength, vertLength, imageSize);
+                    CvMat displayMat2 = CvEx.InitCvMat(displayMat1);
+                    displayMat1.Undistort2(displayMat2, this.UndistortionData.CameraStruct.CreateCvMat(), this.UndistortionData.DistortStruct.CreateCvMat(true));
+                    if (lastCorners != null)
                     {
-                        CvEx.CloneCvMat(ref displayMat3, imageMat);
-                        putImage(displayMat3, PixelFormats.Rgb24);
+                        drawUndistortedCornerFrame(displayMat2, lastCorners, boardSize);
                     }
-                }
 
-                this.UndistortionData.CalibrateRealScaleAndOffset(list, cols, rows, horizLength, vertLength, imageSize);
-                CvMat displayMat2 = CvEx.InitCvMat(displayMat1);
-                displayMat1.Undistort2(displayMat2, this.UndistortionData.CameraStruct.CreateCvMat(), this.UndistortionData.DistortStruct.CreateCvMat(true));
-                if (lastCorners != null)
-                {
-                    drawUndistortedCornerFrame(displayMat2, lastCorners, boardSize);
-                }
-
-                displayMat2.PutText(string.Format("XScale: {0}", this.UndistortionData.XScale), new CvPoint(20, 20), new CvFont(FontFace.HersheyPlain, 1, 1), new CvScalar(255, 255, 255));
-                displayMat2.PutText(string.Format("YScale: {0}", this.UndistortionData.YScale), new CvPoint(20, 40), new CvFont(FontFace.HersheyPlain, 1, 1), new CvScalar(255, 255, 255));
-                displayMat2.PutText(string.Format("Zoffset: {0}", this.UndistortionData.ZOffset), new CvPoint(20, 60), new CvFont(FontFace.HersheyPlain, 1, 1), new CvScalar(255, 255, 255));
-                putImage(displayMat2, PixelFormats.Rgb24);
+                    displayMat2.PutText(string.Format("XScale: {0}", this.UndistortionData.XScale), new CvPoint(20, 20), new CvFont(FontFace.HersheyPlain, 1, 1), new CvScalar(255, 255, 255));
+                    displayMat2.PutText(string.Format("YScale: {0}", this.UndistortionData.YScale), new CvPoint(20, 40), new CvFont(FontFace.HersheyPlain, 1, 1), new CvScalar(255, 255, 255));
+                    displayMat2.PutText(string.Format("Zoffset: {0}", this.UndistortionData.ZOffset), new CvPoint(20, 60), new CvFont(FontFace.HersheyPlain, 1, 1), new CvScalar(255, 255, 255));
+                    putImage(displayMat2, PixelFormats.Bgr24);
 
 
-                displayLabels();
+                    displayLabels();
+                });
             }
         }
 
