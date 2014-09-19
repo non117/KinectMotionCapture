@@ -1056,47 +1056,20 @@ namespace KinectMotionCapture
                 }
             }
             double zOffset = 0;
-            if (true)
+            // Len*A+LenPerZ*(A*B)=Distancer
+            // 疑似解
+            List<double[]> left = new List<double[]>();
+            List<double> right = new List<double>();
+            foreach (var info in infoList)
             {
-                // Len*A+LenPerZ*(A*B)=Distancer
-                // 疑似解
-                List<double[]> left = new List<double[]>();
-                List<double> right = new List<double>();
-                foreach (var info in infoList)
-                {
-                    double[] l = new double[] { Math.Sqrt(CvEx.GetDistanceSq(info.Real1, info.Real2)), CvEx.GetLength(info.PerZ1 - info.PerZ2) };
-                    left.Add(l);
-                    right.Add(info.ExpectedLength);
-                }
-                double[] ans = CvEx.Solve(left, right, InvertMethod.Svd);
-                this.XScale = ans[0];
-                this.YScale = ans[0];
-                zOffset = ans[1] / ans[0];
+                double[] l = new double[] { Math.Sqrt(CvEx.GetDistanceSq(info.Real1, info.Real2)), CvEx.GetLength(info.PerZ1 - info.PerZ2) };
+                left.Add(l);
+                right.Add(info.ExpectedLength);
             }
-            else
-            {
-                double searchRange = 100;
-                for (int i = 0; i < 32; i++)
-                {
-                    SortedList<double, double> variances = new SortedList<double, double>();
-                    for (double tempZOffset = zOffset - searchRange; tempZOffset < zOffset + searchRange; tempZOffset += searchRange / 200)
-                    {
-                        // 新しい距離=元の距離/元のdepth*新しいdepth=元の距離/元のdepth*(元のdepth+変動値)=元の距離*(1+変動値/元のdepth)
-                        List<double> tempList = depthList.Select(x => x.Item2 * (1.0 + tempZOffset / x.Item1)).ToList();
-                        double variance = tempList.Select(x => x * x).Average() - Math.Pow(tempList.Average(), 2);
-                        variances.Add(tempZOffset, variance);
-                    }
-                    double minVariance = variances.Values.Min();
-                    double newZOffset = variances.Where(x => x.Value == minVariance).First().Key;
-                    // このタイミングで脱出
-                    if (searchRange < 0.0001)
-                        break;
-                    // 中央に近いほど次の探索幅を下げる
-                    searchRange *= 0.05 + 0.95 * (Math.Abs(newZOffset - zOffset) / searchRange);
-
-                    zOffset = newZOffset;
-                }
-            }
+            double[] ans = CvEx.Solve(left, right, InvertMethod.Svd);
+            this.XScale = ans[0];
+            this.YScale = ans[0];
+            zOffset = ans[1] / ans[0];
             this.ZOffset = zOffset;
 
             // (Dx1 * Z1 -Dx2*Z2)^2 * alpha + (Dy1*Z1-Dy2*Z2) * beta = DistanceSq
@@ -1421,36 +1394,30 @@ namespace KinectMotionCapture
                 correctImage(dest.UserMat, source.UserMat, _depthCorrectionMap, _depthMatSize);
             });
 
-            dest.Timestamp = source.Timestamp;
-            dest.UserTrackings = new Dictionary<int, UserTrackingState>();
-            foreach (var pair in source.UserTrackings)
+            dest.TimeStamp = source.TimeStamp;
+            //dest.UserTrackings = new Dictionary<int, UserTrackingState>();
+            dest.bodies = new SerializableBody[source.bodies.Length];
+            foreach (SerializableBody body in source.bodies)
             {
-                if (pair.Value == null)
+                UserTrackingState state = dest.UserTrackings[pair.Key] = new UserTrackingState();
+                state.IsCalibrating = pair.Value.IsCalibrating;
+                state.IsTracking = pair.Value.IsTracking;
+                state.UserIndex = pair.Value.UserIndex;
+                state.OriginalUserIndex = pair.Value.OriginalUserIndex;
+                state.Position = KinectUndistortion.GetOriginalScreenPosFromReal(this.GetRealFromScreenPos(pair.Value.Position.ToCvPoint3D(), source.DepthUserSize), source.DepthUserSize).ToOpenNIPoint3D();
+                if (pair.Value.OriginalJoints == null)
                 {
-                    dest.UserTrackings[pair.Key] = null;
+                    state.OriginalJoints = null;
                 }
                 else
                 {
-                    UserTrackingState state = dest.UserTrackings[pair.Key] = new UserTrackingState();
-                    state.IsCalibrating = pair.Value.IsCalibrating;
-                    state.IsTracking = pair.Value.IsTracking;
-                    state.UserIndex = pair.Value.UserIndex;
-                    state.OriginalUserIndex = pair.Value.OriginalUserIndex;
-                    state.Position = KinectUndistortion.GetOriginalScreenPosFromReal(this.GetRealFromScreenPos(pair.Value.Position.ToCvPoint3D(), source.DepthUserSize), source.DepthUserSize).ToOpenNIPoint3D();
-                    if (pair.Value.OriginalJoints == null)
+                    state.OriginalJoints = new Dictionary<OpenNI.SkeletonJoint, OpenNI.SkeletonJointPosition>();
+                    foreach (var joint in pair.Value.OriginalJoints)
                     {
-                        state.OriginalJoints = null;
-                    }
-                    else
-                    {
-                        state.OriginalJoints = new Dictionary<OpenNI.SkeletonJoint, OpenNI.SkeletonJointPosition>();
-                        foreach (var joint in pair.Value.OriginalJoints)
-                        {
-                            OpenNI.SkeletonJointPosition newJointPos = new OpenNI.SkeletonJointPosition();
-                            newJointPos.Position = KinectUndistortion.GetOriginalScreenPosFromReal(this.GetRealFromScreenPos(joint.Value.Position.ToCvPoint3D(), source.DepthUserSize), source.DepthUserSize).ToOpenNIPoint3D();
-                            newJointPos.Confidence = joint.Value.Confidence;
-                            state.OriginalJoints[joint.Key] = newJointPos;
-                        }
+                        OpenNI.SkeletonJointPosition newJointPos = new OpenNI.SkeletonJointPosition();
+                        newJointPos.Position = KinectUndistortion.GetOriginalScreenPosFromReal(this.GetRealFromScreenPos(joint.Value.Position.ToCvPoint3D(), source.DepthUserSize), source.DepthUserSize).ToOpenNIPoint3D();
+                        newJointPos.Confidence = joint.Value.Confidence;
+                        state.OriginalJoints[joint.Key] = newJointPos;
                     }
                 }
             }

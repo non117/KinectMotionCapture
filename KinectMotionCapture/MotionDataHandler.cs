@@ -130,7 +130,7 @@ namespace KinectMotionCapture
             this.SaveImages(frameNo, ref colorPixels, ref depthBuffer, ref bodyIndexBuffer);
             lock (this.motionDataList)
             {
-                MotionData motionData = new MotionData(frameNo, this.dataDir, dateTime.Ticks, ref bodies);
+                MotionData motionData = new MotionData(frameNo, this.dataDir, dateTime, ref bodies);
                 motionData.ColorWidth = this.colorWidth;
                 motionData.ColorHeight = this.colorHeight;
                 motionData.DepthUserWidth = this.depthWidth;
@@ -191,7 +191,7 @@ namespace KinectMotionCapture
         /// <param name="dataDir"></param>
         /// <param name="timeStamp"></param>
         /// <param name="bodies"></param>
-        public MotionData(int frameNo, string dataDir, long timeStamp, ref Body[] bodies)
+        public MotionData(int frameNo, string dataDir, DateTime timeStamp, ref Body[] bodies)
         {
             this.FrameNo = frameNo;
             this.ImagePath = Path.Combine(dataDir, frameNo.ToString() + "_color.jpg");
@@ -206,7 +206,7 @@ namespace KinectMotionCapture
         public string DepthPath { get; set; }
         public string UserPath { get; set; }
         public SerializableBody[] bodies { get; set; }
-        public long TimeStamp { get; set; }
+        public DateTime TimeStamp { get; set; }
         public int ColorWidth { get; set; }
         public int ColorHeight { get; set; }
         public int DepthUserWidth { get; set; }
