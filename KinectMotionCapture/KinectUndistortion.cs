@@ -1397,6 +1397,7 @@ namespace KinectMotionCapture
             dest.TimeStamp = source.TimeStamp;
             //dest.UserTrackings = new Dictionary<int, UserTrackingState>();
             dest.bodies = new SerializableBody[source.bodies.Length];
+            /*
             foreach (SerializableBody body in source.bodies)
             {
                 UserTrackingState state = dest.UserTrackings[pair.Key] = new UserTrackingState();
@@ -1421,6 +1422,7 @@ namespace KinectMotionCapture
                     }
                 }
             }
+             */
         }
     }
 }

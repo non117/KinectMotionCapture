@@ -21,6 +21,7 @@ using OpenCvSharp;
 
 namespace KinectMotionCapture
 {
+    using PointsPair = Tuple<Dictionary<JointType, Point>, Dictionary<JointType, Point>>;
     public partial class RecordWindow : Window, INotifyPropertyChanged
     {
         // 基本設定
@@ -73,7 +74,8 @@ namespace KinectMotionCapture
             // Kinect関連初期化処理
             this.kinectSensor = KinectSensor.GetDefault();
             this.multiFrameSourceReader = this.kinectSensor.OpenMultiSourceFrameReader(FrameSourceTypes.Depth | FrameSourceTypes.Color | FrameSourceTypes.Body | FrameSourceTypes.BodyIndex);
-            this.coordinateMapper = this.kinectSensor.CoordinateMapper;
+            this.coordinateMapper = this.kinectSensor.CoordinateMapper;            
+
             FrameDescription deapthFrameDescription = this.kinectSensor.DepthFrameSource.FrameDescription;
             FrameDescription colorFrameDescription = this.kinectSensor.ColorFrameSource.FrameDescription;
 
@@ -357,45 +359,58 @@ namespace KinectMotionCapture
             // we got all frames
             if (multiSourceFrameProcessed && depthFrameProcessed && colorFrameProcessed && bodyFrameProcessed && bodyIndexFrameProcessed)
             {
+                Dictionary<ulong, PointsPair> pointPairs = new Dictionary<ulong, PointsPair>();
                 this.RenderColorPixels();
-                this.RenderBody();
+                using (DrawingContext dc = this.drawingGroup.Open())
+                {
+                    dc.DrawRectangle(Brushes.Transparent, null, new Rect(0.0, 0.0, this.colorWidth, this.colorHeight));
+                    int penIndex = 0;
+                    
+                    foreach (Body body in this.bodies)
+                    {
+                        Pen drawPen = this.bodyColors[penIndex++];
+                        if (body.IsTracked)
+                        {
+                            Dictionary<JointType, Joint> joints = (Dictionary<JointType, Joint>)body.Joints;
+                            PointsPair pointsPair = this.ConvertCameraPoint(joints);
+                            pointPairs[body.TrackingId] = pointsPair;
+                            
+                            Dictionary<JointType, Point> colorPoints = pointsPair.Item1;
+                            this.DrawBody(joints, colorPoints, dc, drawPen);
+                        }
+                    }
+                    this.drawingGroup.ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, this.colorWidth, this.colorHeight));
+                }
                 if (this.isRecording)
                 {
-                    Task.Run(() => this.motionDataHandler.AddData(this.counter, DateTime.Now, ref this.bodies, ref this.colorPixels, ref this.depthBuffer, ref this.bodyIndexBuffer));
+                    Task.Run(() => this.motionDataHandler.AddData(this.counter, DateTime.Now, ref this.bodies, ref this.colorPixels, ref this.depthBuffer, ref this.bodyIndexBuffer, pointPairs));
                     counter++;
                 }
-            }                       
+            }
         }
 
-        private void RenderBody()
+        /// <summary>
+        /// jointsを受け取ってカラー画像 / 深度画像の2次元座標系に変換する
+        /// </summary>
+        /// <param name="joints"></param>
+        /// <returns></returns>
+        private PointsPair ConvertCameraPoint(Dictionary<JointType, Joint> joints)
         {
-            using (DrawingContext dc = this.drawingGroup.Open())
+            Dictionary<JointType, Point> colorPoints = new Dictionary<JointType, Point>();
+            Dictionary<JointType, Point> depthPoints = new Dictionary<JointType, Point>();
+            foreach (JointType jointType in joints.Keys)
             {
-                dc.DrawRectangle(Brushes.Transparent, null, new Rect(0.0, 0.0, this.colorWidth, this.colorHeight));
-                int penIndex = 0;
-                foreach (Body body in this.bodies)
+                CameraSpacePoint position = joints[jointType].Position;
+                if (position.Z < 0)
                 {
-                    Pen drawPen = this.bodyColors[penIndex++];
-                    if (body.IsTracked)
-                    {
-                        Dictionary<JointType, Joint> joints = (Dictionary<JointType, Joint>)body.Joints;
-                        Dictionary<JointType, Point> jointPoints = new Dictionary<JointType, Point>();
-
-                        foreach (JointType jointType in joints.Keys)
-                        {
-                            CameraSpacePoint position = joints[jointType].Position;
-                            if (position.Z < 0)
-                            {
-                                position.Z = 0.1f;
-                            }
-                            ColorSpacePoint colorSpacePoint = this.coordinateMapper.MapCameraPointToColorSpace(position);
-                            jointPoints[jointType] = new Point(colorSpacePoint.X, colorSpacePoint.Y);
-                        }
-                        this.DrawBody(joints, jointPoints, dc, drawPen);
-                    }
+                    position.Z = 0.1f;
                 }
-                this.drawingGroup.ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, this.colorWidth, this.colorHeight));
+                ColorSpacePoint colorSpacePoint = this.coordinateMapper.MapCameraPointToColorSpace(position);
+                colorPoints[jointType] = new Point(colorSpacePoint.X, colorSpacePoint.Y);
+                DepthSpacePoint depthSpacePoint = this.coordinateMapper.MapCameraPointToDepthSpace(position);
+                depthPoints[jointType] = new Point(depthSpacePoint.X, depthSpacePoint.Y);
             }
+            return Tuple.Create(colorPoints, depthPoints);
         }
 
         /// <summary>

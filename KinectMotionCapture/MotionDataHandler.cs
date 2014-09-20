@@ -6,6 +6,7 @@ using System.Text;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Media.Media3D;
 using Microsoft.Kinect;
 
@@ -14,6 +15,7 @@ using OpenCvSharp;
 
 namespace KinectMotionCapture
 {
+    using PointsPair = Tuple<Dictionary<JointType, Point>, Dictionary<JointType, Point>>;
     using User = System.UInt64;
 
     /// <summary>
@@ -124,13 +126,13 @@ namespace KinectMotionCapture
         /// <param name="frameNo"></param>
         /// <param name="dateTime"></param>
         /// <param name="bodies"></param>
-        public void AddData(int frameNo, DateTime dateTime, ref Body[] bodies, ref byte[] colorPixels, ref ushort[] depthBuffer, ref byte[] bodyIndexBuffer)
+        public void AddData(int frameNo, DateTime dateTime, ref Body[] bodies, ref byte[] colorPixels, ref ushort[] depthBuffer, ref byte[] bodyIndexBuffer, Dictionary<ulong, PointsPair> pointPairs)
         {
             Debug.WriteLine(this.recordPath);
             this.SaveImages(frameNo, ref colorPixels, ref depthBuffer, ref bodyIndexBuffer);
             lock (this.motionDataList)
             {
-                MotionData motionData = new MotionData(frameNo, this.dataDir, dateTime, ref bodies);
+                MotionData motionData = new MotionData(frameNo, this.dataDir, dateTime, ref bodies, pointPairs);
                 motionData.ColorWidth = this.colorWidth;
                 motionData.ColorHeight = this.colorHeight;
                 motionData.DepthUserWidth = this.depthWidth;
@@ -191,7 +193,7 @@ namespace KinectMotionCapture
         /// <param name="dataDir"></param>
         /// <param name="timeStamp"></param>
         /// <param name="bodies"></param>
-        public MotionData(int frameNo, string dataDir, DateTime timeStamp, ref Body[] bodies)
+        public MotionData(int frameNo, string dataDir, DateTime timeStamp, ref Body[] bodies, Dictionary<ulong, PointsPair> pointPairs)
         {
             this.FrameNo = frameNo;
             this.ImagePath = Path.Combine(dataDir, frameNo.ToString() + "_color.jpg");
@@ -199,6 +201,11 @@ namespace KinectMotionCapture
             this.UserPath = Path.Combine(dataDir, frameNo.ToString() + "_user.png");
             this.TimeStamp = timeStamp;
             this.bodies = bodies.Where(body => body.IsTracked).Select(body => new SerializableBody(ref body)).ToArray();
+            foreach (SerializableBody body in this.bodies)
+            {
+                body.colorSpacePoints = pointPairs[body.TrackingId].Item1;
+                body.depthSpacePoints = pointPairs[body.TrackingId].Item2;
+            }
         }
 
         public int FrameNo { get; set; }
@@ -266,7 +273,7 @@ namespace KinectMotionCapture
         public Dictionary<Appearance, DetectionResult> Appearance { get; set; }
         public FrameEdges ClippedEdges { get; set; }
         public DetectionResult Engaged { get; set; }
-        public Dictionary<Expression, DetectionResult> Expressions { get; set; }
+        public Dictionary<Microsoft.Kinect.Expression, DetectionResult> Expressions { get; set; }
         public TrackingConfidence HandLeftConfidence { get; set; }
         public HandState HandLeftState { get; set; }
         public TrackingConfidence HandRightConfidence { get; set; }
@@ -279,5 +286,7 @@ namespace KinectMotionCapture
         public PointF Lean { get; set; }
         public TrackingState LeanTrackingState { get; set; }
         public ulong TrackingId { get; set; }
+        public Dictionary<JointType, Point> colorSpacePoints { get; set; }
+        public Dictionary<JointType, Point> depthSpacePoints { get; set; }
     }
 }
