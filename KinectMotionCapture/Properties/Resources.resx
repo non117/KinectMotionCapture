@@ -120,6 +120,9 @@
   <data name="NoSensorStatusText" xml:space="preserve">
     <value>No ready Kinect found!</value>
   </data>
+  <data name="PlayingStatusText" xml:space="preserve">
+    <value>Playing</value>
+  </data>
   <data name="RecordingReadyStatusText" xml:space="preserve">
     <value>Ready to Record</value>
   </data>

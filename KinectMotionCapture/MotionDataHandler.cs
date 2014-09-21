@@ -60,15 +60,33 @@ namespace KinectMotionCapture
         /// <param name="dataDir"></param>
         public MotionDataHandler(string dataDir)
         {
+            this.LoadAndSetData(dataDir);
+        }
+
+        /// <summary>
+        /// データを破棄して既存のデータをロードします。
+        /// </summary>
+        /// <param name="dataDir"></param>
+        public void LoadAndSetData(string dataDir)
+        {
             this.dataDir = dataDir;
             this.recordPath = Path.Combine(dataDir, bodyInfoFilename);
-            
+
+            this.ClearAll();
             this.motionDataList = this.GetMotionDataFromFile(this.recordPath);
             MotionData md = this.motionDataList[0];
             this.colorWidth = md.ColorWidth;
             this.colorHeight = md.ColorHeight;
             this.depthWidth = md.DepthUserWidth;
             this.depthHeight = md.DepthUserHeight;
+        }
+
+        /// <summary>
+        /// すべてのデータを破棄する
+        /// </summary>
+        public void ClearAll()
+        {
+            this.motionDataList.Clear();
         }
 
         public string DataDir

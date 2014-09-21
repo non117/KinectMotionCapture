@@ -70,6 +70,15 @@ namespace KinectMotionCapture.Properties {
         }
         
         /// <summary>
+        ///   Playing に類似しているローカライズされた文字列を検索します。
+        /// </summary>
+        internal static string PlayingStatusText {
+            get {
+                return ResourceManager.GetString("PlayingStatusText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ready to Record に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string RecordingReadyStatusText {

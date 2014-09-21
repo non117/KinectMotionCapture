@@ -18,6 +18,7 @@ using System.Windows.Navigation;
 using Microsoft.Kinect;
 
 using OpenCvSharp;
+using OpenCvSharp.Extensions;
 
 namespace KinectMotionCapture
 {
@@ -61,6 +62,7 @@ namespace KinectMotionCapture
 
         // 記録再生制御とか
         private bool isRecording = false;
+        private bool isPlaying = false;
 
         // Model
         private MotionDataHandler motionDataHandler = null;
@@ -213,9 +215,28 @@ namespace KinectMotionCapture
             }else
             {
                 RecordButton.Content = "Stop";
+                this.motionDataHandler.ClearAll();
                 this.isRecording = true;
-                this.StatusText = Properties.Resources.RecordingStatusText;
+                this.StatusText = Properties.Resources.RecordingStatusText;                
             }
+        }
+        
+        private void PlayButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (!this.isRecording)
+            {
+                this.statusText = Properties.Resources.PlayingStatusText;
+                this.motionDataHandler.LoadAndSetData(this.recordPath);
+
+                foreach (MotionData motionData in this.motionDataHandler.motionDataList)
+                {
+                    //this.ColorImage.Source = new BitmapImage(new Uri(motionData.ImagePath));
+                    //this.OnPropertyChanged("ColorImage");
+                }
+
+                //this.statusText = Properties.Resources.RecordingReadyStatusText;
+            }
+
         }
 
         /// <summary>
@@ -505,5 +526,6 @@ namespace KinectMotionCapture
             this.StatusText = this.kinectSensor.IsAvailable ? Properties.Resources.RecordingReadyStatusText
                                                             : Properties.Resources.SensorNotAvailableStatusText;
         }
+
     }
 }
