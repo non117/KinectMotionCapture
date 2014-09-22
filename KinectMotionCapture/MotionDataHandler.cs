@@ -51,7 +51,7 @@ namespace KinectMotionCapture
             this.colorWidth = colorWidth;
             this.colorHeight = colorHeight;
             this.depthWidth = depthWidth;
-            this.depthHeight = depthHeight;                        
+            this.depthHeight = depthHeight;
         }
 
         /// <summary>
@@ -104,6 +104,8 @@ namespace KinectMotionCapture
             get { return this.motionDataList.Count();  }
         }
 
+        public PointF[] DepthLUT { get; set; }
+
         /// <summary>
         /// ファイルからBodyデータをデシリアライズする
         /// </summary>
@@ -146,7 +148,6 @@ namespace KinectMotionCapture
         /// <param name="bodies"></param>
         public void AddData(int frameNo, DateTime dateTime, ref Body[] bodies, ref byte[] colorPixels, ref ushort[] depthBuffer, ref byte[] bodyIndexBuffer, Dictionary<ulong, PointsPair> pointPairs)
         {
-            Debug.WriteLine(this.recordPath);
             this.SaveImages(frameNo, ref colorPixels, ref depthBuffer, ref bodyIndexBuffer);
             lock (this.motionDataList)
             {
@@ -155,6 +156,10 @@ namespace KinectMotionCapture
                 motionData.ColorHeight = this.colorHeight;
                 motionData.DepthUserWidth = this.depthWidth;
                 motionData.DepthUserHeight = this.depthHeight;
+                if (frameNo == 0)
+                {
+                    motionData.depthLUT = this.DepthLUT;
+                }
                 this.motionDataList.Add(motionData);
             }
         }
@@ -236,6 +241,7 @@ namespace KinectMotionCapture
         public int ColorHeight { get; set; }
         public int DepthUserWidth { get; set; }
         public int DepthUserHeight { get; set; }
+        public PointF[] depthLUT { get; set; }
 
         public CvSize ImageSize
         {

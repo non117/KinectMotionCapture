@@ -76,7 +76,7 @@ namespace KinectMotionCapture
             // Kinect関連初期化処理
             this.kinectSensor = KinectSensor.GetDefault();
             this.multiFrameSourceReader = this.kinectSensor.OpenMultiSourceFrameReader(FrameSourceTypes.Depth | FrameSourceTypes.Color | FrameSourceTypes.Body | FrameSourceTypes.BodyIndex);
-            this.coordinateMapper = this.kinectSensor.CoordinateMapper;            
+            this.coordinateMapper = this.kinectSensor.CoordinateMapper;
 
             FrameDescription deapthFrameDescription = this.kinectSensor.DepthFrameSource.FrameDescription;
             FrameDescription colorFrameDescription = this.kinectSensor.ColorFrameSource.FrameDescription;
@@ -358,6 +358,12 @@ namespace KinectMotionCapture
             bool bodyFrameProcessed = false;
             bool bodyIndexFrameProcessed = false;
 
+            // coordinatemapperのルックアップテーブルがどのタイミングで生成されるのかよくわからんので、とりあえずここ
+            if (this.motionDataHandler.DepthLUT == null)
+            {
+                this.motionDataHandler.DepthLUT = this.coordinateMapper.GetDepthFrameToCameraSpaceTable();
+            }
+
             MultiSourceFrame multiSourceFrame = e.FrameReference.AcquireFrame();
 
             if (multiSourceFrame != null)
@@ -449,8 +455,7 @@ namespace KinectMotionCapture
                 }
                 if (this.isRecording)
                 {
-                    Task.Run(() => this.motionDataHandler.AddData(this.counter, DateTime.Now, ref this.bodies, ref this.colorPixels, ref this.depthBuffer, ref this.bodyIndexBuffer, pointPairs));
-                    counter++;
+                    Task.Run(() => this.motionDataHandler.AddData(this.counter++, DateTime.Now, ref this.bodies, ref this.colorPixels, ref this.depthBuffer, ref this.bodyIndexBuffer, pointPairs));
                 }
             }
         }
