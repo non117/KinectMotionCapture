@@ -22,7 +22,7 @@
             
             <Button Content="Play" Name="PlayButton" Height="23" Width="55" HorizontalAlignment="Center" Click="PlayButton_Click" Grid.Row="1" Margin="10"/>
             <Button Content="Record" Name="RecordButton" Height="23" Width="55" HorizontalAlignment="Right" Click="RecordButton_Click" Grid.Row="1" Margin="10" />
-            
+                        
             <Image Name="ColorImage" Source="{Binding BackgroundImage}" Stretch="UniformToFill" Grid.Row="2" />
             <Image Name="BodyImage" Source="{Binding ImageSource}" Stretch="UniformToFill" Grid.Row="2" />
             <StatusBar Grid.Row="2" HorizontalAlignment="Stretch" Name="statusBar" VerticalAlignment="Bottom" Background="White" Foreground="{StaticResource MediumGreyBrush}">

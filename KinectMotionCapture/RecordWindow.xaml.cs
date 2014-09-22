@@ -220,20 +220,65 @@ namespace KinectMotionCapture
                 this.StatusText = Properties.Resources.RecordingStatusText;                
             }
         }
-        
+
         private void PlayButton_Click(object sender, RoutedEventArgs e)
         {
             if (!this.isRecording)
             {
-                this.statusText = Properties.Resources.PlayingStatusText;
+                //this.multiFrameSourceReader.MultiSourceFrameArrived -= this.Reader_FrameArrived;
+                //this.statusText = Properties.Resources.PlayingStatusText;
+                //PlayButton.Content = "Playing";
                 this.motionDataHandler.LoadAndSetData(this.recordPath);
+
+                string checkdir = "check";
+                Utility.CreateDirectories(checkdir);
+                DrawingVisual dv = new DrawingVisual();
+
+                IplImage ipl = null;
+                WriteableBitmap img = null;
+                DrawingContext dc = null;
+                RenderTargetBitmap bitmap = null;
 
                 foreach (MotionData motionData in this.motionDataHandler.motionDataList)
                 {
-                    //this.ColorImage.Source = new BitmapImage(new Uri(motionData.ImagePath));
-                    //this.OnPropertyChanged("ColorImage");
+                    ipl = new IplImage(motionData.ImagePath);
+                    img = ipl.ToWriteableBitmap();
+
+                    
+                    using (dc = dv.RenderOpen())
+                    {
+                        dc.DrawImage(img, new Rect(0.0, 0.0, this.colorWidth, this.colorHeight));
+                        int penIndex = 0;
+
+                        foreach (SerializableBody body in motionData.bodies)
+                        {
+                            Pen drawPen = this.bodyColors[penIndex++];
+                            if (body.IsTracked)
+                            {
+                                Dictionary<JointType, Joint> joints = (Dictionary<JointType, Joint>)body.Joints;
+                                PointsPair pointsPair = this.ConvertCameraPoint(joints);
+
+                                Dictionary<JointType, Point> colorPoints = pointsPair.Item1;
+                                this.DrawBody(joints, colorPoints, dc, drawPen);
+                            }
+                        }
+                        this.drawingGroup.ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, this.colorWidth, this.colorHeight));
+
+                    }
+                    bitmap = new RenderTargetBitmap(this.colorWidth, this.colorHeight, 96, 96, PixelFormats.Default);
+                    bitmap.Render(dv);
+                    string newpath = Path.Combine(checkdir, Path.GetFileName(motionData.ImagePath));
+
+                    using (FileStream stream = new FileStream(newpath, FileMode.Create, FileAccess.Write))
+                    {
+                        JpegBitmapEncoder encoder = new JpegBitmapEncoder();
+                        encoder.Frames.Add(BitmapFrame.Create(bitmap));
+                        encoder.Save(stream);
+                    }
+
                 }
 
+                //this.multiFrameSourceReader.MultiSourceFrameArrived += this.Reader_FrameArrived;
                 //this.statusText = Properties.Resources.RecordingReadyStatusText;
             }
 
@@ -383,7 +428,7 @@ namespace KinectMotionCapture
                 Dictionary<ulong, PointsPair> pointPairs = new Dictionary<ulong, PointsPair>();
                 this.RenderColorPixels();
                 using (DrawingContext dc = this.drawingGroup.Open())
-                {
+                {                    
                     dc.DrawRectangle(Brushes.Transparent, null, new Rect(0.0, 0.0, this.colorWidth, this.colorHeight));
                     int penIndex = 0;
                     
