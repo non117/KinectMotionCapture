@@ -146,12 +146,12 @@ namespace KinectMotionCapture
         /// <param name="frameNo"></param>
         /// <param name="dateTime"></param>
         /// <param name="bodies"></param>
-        public void AddData(int frameNo, DateTime dateTime, ref Body[] bodies, ref byte[] colorPixels, ref ushort[] depthBuffer, ref byte[] bodyIndexBuffer, Dictionary<ulong, PointsPair> pointPairs)
+        public void AddData(int frameNo, DateTime dateTime, Body[] bodies, ref byte[] colorPixels, ref ushort[] depthBuffer, ref byte[] bodyIndexBuffer, Dictionary<ulong, PointsPair> pointPairs)
         {
             this.SaveImages(frameNo, ref colorPixels, ref depthBuffer, ref bodyIndexBuffer);
             lock (this.motionDataList)
             {
-                MotionData motionData = new MotionData(frameNo, this.dataDir, dateTime, ref bodies, pointPairs);
+                MotionData motionData = new MotionData(frameNo, this.dataDir, dateTime, bodies, pointPairs);
                 motionData.ColorWidth = this.colorWidth;
                 motionData.ColorHeight = this.colorHeight;
                 motionData.DepthUserWidth = this.depthWidth;
@@ -216,7 +216,7 @@ namespace KinectMotionCapture
         /// <param name="dataDir"></param>
         /// <param name="timeStamp"></param>
         /// <param name="bodies"></param>
-        public MotionData(int frameNo, string dataDir, DateTime timeStamp, ref Body[] bodies, Dictionary<ulong, PointsPair> pointPairs)
+        public MotionData(int frameNo, string dataDir, DateTime timeStamp, Body[] bodies, Dictionary<ulong, PointsPair> pointPairs)
         {
             this.FrameNo = frameNo;
             this.ImagePath = Path.Combine(dataDir, frameNo.ToString() + "_color.jpg");
@@ -226,8 +226,14 @@ namespace KinectMotionCapture
             this.bodies = bodies.Where(body => body.IsTracked).Select(body => new SerializableBody(ref body)).ToArray();
             foreach (SerializableBody body in this.bodies)
             {
-                body.colorSpacePoints = pointPairs[body.TrackingId].Item1;
-                body.depthSpacePoints = pointPairs[body.TrackingId].Item2;
+                try
+                {
+                    body.colorSpacePoints = pointPairs[body.TrackingId].Item1;
+                    body.depthSpacePoints = pointPairs[body.TrackingId].Item2;
+                }catch(KeyNotFoundException e){
+                    body.colorSpacePoints = null;
+                    body.depthSpacePoints = null;
+                }
             }
         }
 

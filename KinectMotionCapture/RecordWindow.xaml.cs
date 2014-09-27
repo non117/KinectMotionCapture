@@ -455,7 +455,7 @@ namespace KinectMotionCapture
                 }
                 if (this.isRecording)
                 {
-                    Task.Run(() => this.motionDataHandler.AddData(this.counter++, DateTime.Now, ref this.bodies, ref this.colorPixels, ref this.depthBuffer, ref this.bodyIndexBuffer, pointPairs));
+                    Task.Run(() => this.motionDataHandler.AddData(this.counter++, DateTime.Now, this.bodies, ref this.colorPixels, ref this.depthBuffer, ref this.bodyIndexBuffer, pointPairs));
                 }
             }
         }
