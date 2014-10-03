@@ -230,7 +230,7 @@ namespace KinectMotionCapture
                 {
                     body.colorSpacePoints = pointPairs[body.TrackingId].Item1;
                     body.depthSpacePoints = pointPairs[body.TrackingId].Item2;
-                }catch(KeyNotFoundException e){
+                }catch(KeyNotFoundException e){                    
                     body.colorSpacePoints = null;
                     body.depthSpacePoints = null;
                 }
