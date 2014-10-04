@@ -1398,9 +1398,10 @@ namespace KinectMotionCapture
             //dest.UserTrackings = new Dictionary<int, UserTrackingState>();
             dest.bodies = new SerializableBody[source.bodies.Length];
 
+            /*
             foreach (SerializableBody body in source.bodies)
             {
-                /*
+                
                 UserTrackingState state = dest.UserTrackings[pair.Key] = new UserTrackingState();
                 //state.IsCalibrating = pair.Value.IsCalibrating;
                 //state.IsTracking = pair.Value.IsTracking;
@@ -1422,8 +1423,8 @@ namespace KinectMotionCapture
                         state.OriginalJoints[joint.Key] = newJointPos;
                     }
                 }
-                 * /
-            }
+                 
+            }*/
         }
     }
 }
