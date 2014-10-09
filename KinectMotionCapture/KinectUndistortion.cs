@@ -1338,7 +1338,7 @@ namespace KinectMotionCapture
 
         public void CorrectSingleTrackImage(MotionData dest, MotionData source)
         {
-
+            //結局こいつが何をしているのか呼び出し元を含めて何もわからん。よって放置する。
             if (_imageCorrectionMap == null)
             {
                 lock (_lockForCorrectionMap)
@@ -1379,7 +1379,6 @@ namespace KinectMotionCapture
                 CalcEx.SmoothDepthStep(ref depthMat2, depthMat, 9);
 
                 CalcEx.TrimEdgeDepthMat(ref depthMat, depthMat2, ref _tempMatArr);
-                //  depthMat2.Copy(depthMat);
                 undistortDepthMat(ref depthMat2, depthMat);
             }
 
@@ -1395,36 +1394,8 @@ namespace KinectMotionCapture
             });
 
             dest.TimeStamp = source.TimeStamp;
-            //dest.UserTrackings = new Dictionary<int, UserTrackingState>();
-            dest.bodies = new SerializableBody[source.bodies.Length];
-
-            /*
-            foreach (SerializableBody body in source.bodies)
-            {
-                
-                UserTrackingState state = dest.UserTrackings[pair.Key] = new UserTrackingState();
-                //state.IsCalibrating = pair.Value.IsCalibrating;
-                //state.IsTracking = pair.Value.IsTracking;
-                state.UserIndex = pair.Value.UserIndex;
-                state.OriginalUserIndex = pair.Value.OriginalUserIndex;
-                state.Position = KinectUndistortion.GetOriginalScreenPosFromReal(this.GetRealFromScreenPos(pair.Value.Position.ToCvPoint3D(), source.DepthUserSize), source.DepthUserSize).ToOpenNIPoint3D();
-                if (pair.Value.OriginalJoints == null)
-                {
-                    state.OriginalJoints = null;
-                }
-                else
-                {
-                    state.OriginalJoints = new Dictionary<OpenNI.SkeletonJoint, OpenNI.SkeletonJointPosition>();
-                    foreach (var joint in pair.Value.OriginalJoints)
-                    {
-                        OpenNI.SkeletonJointPosition newJointPos = new OpenNI.SkeletonJointPosition();
-                        newJointPos.Position = KinectUndistortion.GetOriginalScreenPosFromReal(this.GetRealFromScreenPos(joint.Value.Position.ToCvPoint3D(), source.DepthUserSize), source.DepthUserSize).ToOpenNIPoint3D();
-                        newJointPos.Confidence = joint.Value.Confidence;
-                        state.OriginalJoints[joint.Key] = newJointPos;
-                    }
-                }
-                 
-            }*/
+            dest.bodies = source.bodies;
+            
         }
     }
 }
