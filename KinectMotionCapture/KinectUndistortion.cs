@@ -1338,7 +1338,6 @@ namespace KinectMotionCapture
 
         public void CorrectSingleTrackImage(MotionData dest, MotionData source)
         {
-            //結局こいつが何をしているのか呼び出し元を含めて何もわからん。よって放置する。
             if (_imageCorrectionMap == null)
             {
                 lock (_lockForCorrectionMap)
@@ -1371,17 +1370,16 @@ namespace KinectMotionCapture
             CvMat depthMat = null;
             CvMat depthMat2 = null;
             CvMat[] _tempMatArr = null;
-            if (true)
-            {
-                CalcEx.MedianDepthMat(ref depthMat, source.DepthMat, 7);
-                CalcEx.FillHoleDepthMat(ref depthMat2, depthMat, 15, 0.25, 0.75, 350);
-                CalcEx.FillHoleDepthMat(ref depthMat, depthMat2, 9, 0.25, 0.75, 180);
-                CalcEx.SmoothDepthStep(ref depthMat2, depthMat, 9);
 
-                CalcEx.TrimEdgeDepthMat(ref depthMat, depthMat2, ref _tempMatArr);
-                undistortDepthMat(ref depthMat2, depthMat);
-            }
+            CalcEx.MedianDepthMat(ref depthMat, source.DepthMat, 7);
+            CalcEx.FillHoleDepthMat(ref depthMat2, depthMat, 15, 0.25, 0.75, 350);
+            CalcEx.FillHoleDepthMat(ref depthMat, depthMat2, 9, 0.25, 0.75, 180);
+            CalcEx.SmoothDepthStep(ref depthMat2, depthMat, 9);
 
+            CalcEx.TrimEdgeDepthMat(ref depthMat, depthMat2, ref _tempMatArr);
+            undistortDepthMat(ref depthMat2, depthMat);
+
+            // Parallell.Invokeにしたほうが良いかも
             EventEx.SimultaneousInvoke(() =>
             {
                 correctImage(dest.ImageMat, source.ImageMat, _imageCorrectionMap, _imageMatSize);
@@ -1393,9 +1391,17 @@ namespace KinectMotionCapture
                 correctImage(dest.UserMat, source.UserMat, _depthCorrectionMap, _depthMatSize);
             });
 
-            dest.TimeStamp = source.TimeStamp;
+            dest.FrameNo = source.FrameNo;
+            dest.ImagePath = source.ImagePath;
+            dest.DepthPath = source.DepthPath;
+            dest.UserPath = source.UserPath;
+            dest.TimeStamp = source.TimeStamp;            
+            dest.ImageSize = source.ImageSize;
+            dest.DepthUserSize = source.DepthUserSize;
+            dest.depthLUT = source.depthLUT;
+
+            //座標の変換が必要だったのだ
             dest.bodies = source.bodies;
-            
         }
     }
 }

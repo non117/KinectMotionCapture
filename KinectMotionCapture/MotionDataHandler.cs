@@ -251,23 +251,35 @@ namespace KinectMotionCapture
 
         public CvSize ImageSize
         {
-            get{ return new CvSize(this.ColorWidth, this.ColorHeight); }
+            get { return new CvSize(this.ColorWidth, this.ColorHeight); }
+            set {
+                this.ColorWidth = value.Width;
+                this.ColorHeight = value.Height;
+            }
         }
         public CvSize DepthUserSize
         {
-            get{ return new CvSize(this.DepthUserWidth, this.DepthUserHeight); }
+            get { return new CvSize(this.DepthUserWidth, this.DepthUserHeight); }
+            set
+            {
+                this.DepthUserWidth = value.Width;
+                this.DepthUserHeight = value.Height;
+            }
         }
         public CvMat DepthMat
         {
             get { return CvMat.LoadImageM(this.DepthPath, LoadMode.Unchanged); }
+            set;
         }
         public CvMat ImageMat
         {
             get { return CvMat.LoadImageM(this.ImagePath, LoadMode.Unchanged); }
+            set;
         }
         public CvMat UserMat
         {
             get { return CvMat.LoadImageM(this.UserPath, LoadMode.Unchanged); }
+            set;
         }
     }
 
