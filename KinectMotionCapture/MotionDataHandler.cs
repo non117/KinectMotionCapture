@@ -86,7 +86,10 @@ namespace KinectMotionCapture
         /// </summary>
         public void ClearAll()
         {
-            this.motionDataList.Clear();
+            if (this.motionDataList != null)
+            {
+                this.motionDataList.Clear();
+            }
         }
 
         public string DataDir
@@ -223,7 +226,7 @@ namespace KinectMotionCapture
             this.DepthPath = Path.Combine(dataDir, frameNo.ToString() + "_depth.png");
             this.UserPath = Path.Combine(dataDir, frameNo.ToString() + "_user.png");
             this.TimeStamp = timeStamp;
-            this.bodies = bodies.Where(body => body.IsTracked).Select(body => new SerializableBody(ref body)).ToArray();
+            this.bodies = bodies.Where(body => body.IsTracked).Select(body => new SerializableBody(body)).ToArray();
             foreach (SerializableBody body in this.bodies)
             {
                 try
@@ -249,6 +252,14 @@ namespace KinectMotionCapture
         public int DepthUserHeight { get; set; }
         public PointF[] depthLUT { get; set; }
 
+        // 互換性のためのメンバ。シリアライズ不可能なので下記のメソッドでロードする。
+        [NonSerialized]
+        public CvMat depthMat = null;
+        [NonSerialized]
+        public CvMat imageMat = null;
+        [NonSerialized]
+        public CvMat userMat = null;
+
         public CvSize ImageSize
         {
             get { return new CvSize(this.ColorWidth, this.ColorHeight); }
@@ -266,26 +277,19 @@ namespace KinectMotionCapture
                 this.DepthUserHeight = value.Height;
             }
         }
-        public CvMat DepthMat
+
+        public void LoadImages()
         {
-            get { return CvMat.LoadImageM(this.DepthPath, LoadMode.Unchanged); }
-            set;
-        }
-        public CvMat ImageMat
-        {
-            get { return CvMat.LoadImageM(this.ImagePath, LoadMode.Unchanged); }
-            set;
-        }
-        public CvMat UserMat
-        {
-            get { return CvMat.LoadImageM(this.UserPath, LoadMode.Unchanged); }
-            set;
+            this.depthMat = CvMat.LoadImageM(this.DepthPath, LoadMode.Unchanged);
+            this.imageMat = CvMat.LoadImageM(this.ImagePath, LoadMode.Unchanged);
+            this.userMat = CvMat.LoadImageM(this.UserPath, LoadMode.Unchanged);
         }
     }
 
     /// <summary>
     /// BodyクラスはMsgPackでシリアライズできないので、勝手に定義
     /// </summary>
+    [Serializable]
     public class SerializableBody
     {
         /// <summary>
@@ -297,7 +301,7 @@ namespace KinectMotionCapture
         /// bodyがTrackされている場合にのみ格納する
         /// </summary>
         /// <param name="body"></param>
-        public SerializableBody(ref Body body)
+        public SerializableBody(Body body)
         {
             foreach (PropertyInfo bodyPropertyInfo in body.GetType().GetProperties())
             {
@@ -309,8 +313,8 @@ namespace KinectMotionCapture
                     }
                 }
             }
-
         }
+
         public Dictionary<Activity, DetectionResult> Activities { get; set; }
         public Dictionary<Appearance, DetectionResult> Appearance { get; set; }
         public FrameEdges ClippedEdges { get; set; }

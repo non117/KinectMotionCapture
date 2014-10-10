@@ -1371,7 +1371,7 @@ namespace KinectMotionCapture
             CvMat depthMat2 = null;
             CvMat[] _tempMatArr = null;
 
-            CalcEx.MedianDepthMat(ref depthMat, source.DepthMat, 7);
+            CalcEx.MedianDepthMat(ref depthMat, source.depthMat, 7);
             CalcEx.FillHoleDepthMat(ref depthMat2, depthMat, 15, 0.25, 0.75, 350);
             CalcEx.FillHoleDepthMat(ref depthMat, depthMat2, 9, 0.25, 0.75, 180);
             CalcEx.SmoothDepthStep(ref depthMat2, depthMat, 9);
@@ -1382,13 +1382,13 @@ namespace KinectMotionCapture
             // Parallell.Invokeにしたほうが良いかも
             EventEx.SimultaneousInvoke(() =>
             {
-                correctImage(dest.ImageMat, source.ImageMat, _imageCorrectionMap, _imageMatSize);
+                correctImage(dest.imageMat, source.imageMat, _imageCorrectionMap, _imageMatSize);
             }, () =>
             {
-                correctImage(dest.DepthMat, depthMat2, _depthCorrectionMap, _depthMatSize);
+                correctImage(dest.depthMat, depthMat2, _depthCorrectionMap, _depthMatSize);
             }, () =>
             {
-                correctImage(dest.UserMat, source.UserMat, _depthCorrectionMap, _depthMatSize);
+                correctImage(dest.userMat, source.userMat, _depthCorrectionMap, _depthMatSize);
             });
 
             dest.FrameNo = source.FrameNo;
@@ -1398,10 +1398,19 @@ namespace KinectMotionCapture
             dest.TimeStamp = source.TimeStamp;            
             dest.ImageSize = source.ImageSize;
             dest.DepthUserSize = source.DepthUserSize;
-            dest.depthLUT = source.depthLUT;
+            dest.depthLUT = source.depthLUT.CloneDeep();
 
             //座標の変換が必要だったのだ
-            dest.bodies = source.bodies;
+            dest.bodies = new SerializableBody[source.bodies.Length];
+            for (int i = 0; i < source.bodies.Length; i++)
+            {
+                SerializableBody destBody = source.bodies[i].CloneDeep();
+                foreach (JointType jointType in destBody.Joints.Keys)
+                {
+                    
+                    CameraSpacePoint position = destBody.Joints[jointType].Position;
+                }
+            }
         }
     }
 }

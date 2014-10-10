@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.IO;
 using System.Text;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -26,6 +27,26 @@ namespace KinectMotionCapture
     /// </summary>
     public static class Utility
     {
+        /// <summary>
+        /// ディープコピーを作成する
+        /// Serializableが必要。不要なフィールドはNonSerializedAttribute属性を
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="target"></param>
+        /// <returns></returns>
+        public static T CloneDeep<T>(this T target)
+        {
+            object clone = null;
+            using (MemoryStream stream = new MemoryStream())
+            {
+                BinaryFormatter formatter = new BinaryFormatter();
+                formatter.Serialize(stream, target);
+                stream.Position = 0;
+                clone = formatter.Deserialize(stream);
+            }
+            return (T)clone;
+        }
+
         /// <summary>
         /// 画像を読みまくり
         /// </summary>
