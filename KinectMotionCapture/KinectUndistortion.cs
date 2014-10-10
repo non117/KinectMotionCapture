@@ -1400,16 +1400,23 @@ namespace KinectMotionCapture
             dest.DepthUserSize = source.DepthUserSize;
             dest.depthLUT = source.depthLUT.CloneDeep();
 
-            //座標の変換が必要だったのだ
-            dest.bodies = new SerializableBody[source.bodies.Length];
+            // jointsの座標修正をしてるっぽい
+            dest.bodies = new SerializableBody[source.bodies.Length];            
             for (int i = 0; i < source.bodies.Length; i++)
             {
                 SerializableBody destBody = source.bodies[i].CloneDeep();
                 foreach (JointType jointType in destBody.Joints.Keys)
                 {
+                    // この時点ではsourceと同じ値
+                    CameraSpacePoint oldPosition = destBody.Joints[jointType].Position;
+                    CameraSpacePoint newPosition = KinectUndistortion.GetOriginalScreenPosFromReal(this.GetRealFromScreenPos(oldPosition.ToCvPoint3D(), source.DepthUserSize), source.DepthUserSize).ToCameraSpacePoint();                   
                     
-                    CameraSpacePoint position = destBody.Joints[jointType].Position;
+                    // deep copyがいるかわからんけど一応
+                    Joint joint = destBody.Joints[jointType].CloneDeep();
+                    joint.Position = newPosition;
+                    destBody.Joints.Add(jointType, joint);
                 }
+                dest.bodies[i] = destBody;
             }
         }
     }

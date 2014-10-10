@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using Media3D = System.Windows.Media.Media3D;
 using System.Runtime.InteropServices;
 using System.Linq;
+using Microsoft.Kinect;
 
 
 namespace KinectMotionCapture
@@ -16,16 +17,17 @@ namespace KinectMotionCapture
     /// </summary>
     public static class CvEx
     {
-        /*
+        
         /// <summary>
-        /// OpenNI.Point3DをCvPoint3D32fに変換します
+        /// CameraSpacePointをCvPoint3D32fに変換します
         /// </summary>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static CvPoint3D32f ToCvPoint3D(this OpenNI.Point3D point)
+        public static CvPoint3D32f ToCvPoint3D(this CameraSpacePoint point)
         {
             return new CvPoint3D32f(point.X, point.Y, point.Z);
         }
+        /*
         public static Microsoft.Xna.Framework.Vector3 ToVector3(this CvPoint3D64f point)
         {
             return new Microsoft.Xna.Framework.Vector3((float)point.X, (float)point.Y, (float)point.Z);
@@ -34,25 +36,27 @@ namespace KinectMotionCapture
         {
             return new Microsoft.Xna.Framework.Vector3(point.X, point.Y, point.Z);
         }
+         */
         /// <summary>
-        /// CvPoint3D32fをOpenNI.Point3Dに変換します
+        /// CvPoint3D32fをCameraSpacePointに変換します
         /// </summary>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static OpenNI.Point3D ToOpenNIPoint3D(this CvPoint3D32f point)
+        public static CameraSpacePoint ToCameraSpacePoint(this CvPoint3D32f point)
         {
-            return new OpenNI.Point3D(point.X, point.Y, point.Z);
+            return new CameraSpacePoint(){X = point.X, Y = point.Y, Z = point.Z};
         }
         /// <summary>
         /// CvPoint3D64fをOpenNI.Point3Dに変換します
         /// </summary>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static OpenNI.Point3D ToOpenNIPoint3D(this CvPoint3D64f point)
+        public static CameraSpacePoint ToCameraSpacePoint(this CvPoint3D64f point)
         {
-            return new OpenNI.Point3D((float)point.X, (float)point.Y, (float)point.Z);
+            return new CameraSpacePoint() { X = (float)point.X, Y = (float)point.Y, Z = (float)point.Z };
         }
 
+        /*
         public static Microsoft.Xna.Framework.Color ToXnaColor(this CvColor color)
         {
             return new Microsoft.Xna.Framework.Color(color.R, color.G, color.B);
