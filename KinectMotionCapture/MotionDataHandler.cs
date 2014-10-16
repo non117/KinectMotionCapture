@@ -44,6 +44,7 @@ namespace KinectMotionCapture
         public MotionDataHandler(string dataDir, int colorWidth, int colorHeight, int depthWidth, int depthHeight)
         {
             this.dataDir = dataDir;
+            // TODO: 上書き防止機能をつくる
             this.recordPath = Path.Combine(dataDir, this.bodyInfoFilename);
             Utility.CreateDirectories(this.dataDir);
             
