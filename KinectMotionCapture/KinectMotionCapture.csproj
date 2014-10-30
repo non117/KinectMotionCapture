@@ -150,11 +150,14 @@
     <Compile Include="CameraUndistortWindow.xaml.cs">
       <DependentUpon>CameraUndistortWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ColoredIterativePointMatching.cs" />
+    <Compile Include="CoordRotTransConversion.cs" />
     <Compile Include="CvEx.cs" />
     <Compile Include="EventEx.cs" />
     <Compile Include="InitWindow.xaml.cs">
       <DependentUpon>InitWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="KinectMerge.cs" />
     <Compile Include="KinectUndistortion.cs" />
     <Compile Include="ListEx.cs" />
     <Compile Include="MemorySavingLeastSquare.cs" />

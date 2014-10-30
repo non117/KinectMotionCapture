@@ -369,6 +369,14 @@ namespace KinectMotionCapture
                 this.motionDataHandler.DepthLUT = this.coordinateMapper.GetDepthFrameToCameraSpaceTable();
             }
 
+            // LUT検証用
+            DepthSpacePoint dsp = new DepthSpacePoint() { X = 511, Y = 423 };
+            for (ushort i = 1; i < 9; i++)
+            {
+                ColorSpacePoint csp = this.coordinateMapper.MapDepthPointToColorSpace(dsp, (ushort)(1000 * i));
+                Debug.WriteLine(csp.X.ToString() + ", " + csp.Y.ToString());
+            }
+
             MultiSourceFrame multiSourceFrame = e.FrameReference.AcquireFrame();
 
             if (multiSourceFrame != null)
