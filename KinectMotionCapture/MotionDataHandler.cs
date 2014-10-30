@@ -112,6 +112,7 @@ namespace KinectMotionCapture
 
         /// <summary>
         /// ファイルからBodyデータをデシリアライズする
+        /// #TODO メモリを食べ過ぎる問題があるため、リアルタイムにBinarySerializeするように変更する。優先度は低。
         /// </summary>
         /// <param name="filepath"></param>
         /// <returns></returns>
