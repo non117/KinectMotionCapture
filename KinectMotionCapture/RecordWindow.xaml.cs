@@ -370,20 +370,17 @@ namespace KinectMotionCapture
             }
 
             // CoordinateMapper検証用
-            ushort[] depths = new ushort[this.depthBuffer.Count()];
-            for (int i = 0; i < depths.Count(); i++)
-            {
-                depths[i] = 10;
-            }
-            CameraSpacePoint[] cameras = new CameraSpacePoint[this.depthBuffer.Count()];
-            this.coordinateMapper.MapDepthFrameToCameraSpace(depths, cameras);                               
-
             int x = 256, y = 123;
+            ushort d = 1000;
             DepthSpacePoint dsp = new DepthSpacePoint() { X = x, Y = y };
-            CameraSpacePoint csp = this.coordinateMapper.MapDepthPointToCameraSpace(dsp, 1000);
-            //ColorSpacePoint csp = this.coordinateMapper.MapDepthPointToColorSpace(dsp, (ushort)(1000));
-            //Debug.WriteLine(csp.X.ToString() + ", " + csp.Y.ToString());
-            
+            ColorSpacePoint csp = this.coordinateMapper.MapDepthPointToColorSpace(dsp, d);
+            CameraSpacePoint cam = this.coordinateMapper.MapDepthPointToCameraSpace(dsp, d);
+
+            LocalCoordinateMapper lcm = new LocalCoordinateMapper(this.coordinateMapper, this.depthWidth, this.depthHeight);
+            CameraSpacePoint camera = lcm.MapDepthPointToCameraSpace(dsp, d);
+            ColorSpacePoint color = lcm.MapDepthPointToColorSpace(dsp, d);
+            Debug.WriteLine(color);
+
 
             MultiSourceFrame multiSourceFrame = e.FrameReference.AcquireFrame();
 

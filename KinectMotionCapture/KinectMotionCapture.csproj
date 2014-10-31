@@ -151,6 +151,7 @@
       <DependentUpon>CameraUndistortWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="ColoredIterativePointMatching.cs" />
+    <Compile Include="LocalCoordinateMapper.cs" />
     <Compile Include="CoordRotTransConversion.cs" />
     <Compile Include="CvEx.cs" />
     <Compile Include="EventEx.cs" />
