@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.IO;
 using System.Text;
+using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading.Tasks;
 using System.Windows;
@@ -143,6 +144,36 @@ namespace KinectMotionCapture
             Directory.CreateDirectory(fullpath);
 
         }
+
+        /// <summary>
+        /// バイナリとして保存する
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <param name="path"></param>
+        public static void SaveToBinary(object obj, string path){
+            using (FileStream fs = new FileStream(path, FileMode.Create, FileAccess.Write))
+            {
+                BinaryFormatter bf = new BinaryFormatter();
+                bf.Serialize(fs, obj);
+            }
+        }
+
+        /// <summary>
+        /// バイナリから読み込む
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="T"></param>
+        /// <returns></returns>
+        public static object LoadFromBinary(string path, Type T)
+        {
+            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read))
+            {
+                BinaryFormatter f = new BinaryFormatter();
+                object obj = f.Deserialize(fs);
+                return Convert.ChangeType(obj, T);
+            }
+        }
+
     }
 
 }
