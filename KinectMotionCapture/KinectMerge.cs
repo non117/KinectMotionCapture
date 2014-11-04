@@ -8,9 +8,27 @@ using OpenCvSharp;
 
 namespace KinectMotionCapture
 {
+    class FrameSet
+    {
+        public long time;
+        public int recordNum;
+        public List<CvMat> colorMatList;
+        public List<CvMat> depthMatList;
+        public List<CvMat> convList;
+
+        public FrameSet(long time, int recordNum, List<CvMat> colorMatList, List<CvMat> depthMatList, List<CvMat> convList)
+        {
+            this.time = time;
+            this.recordNum = recordNum;
+            this.colorMatList = colorMatList;
+            this.depthMatList = depthMatList;
+            this.convList = convList;
+        }
+    }
+
     class KinectMerge
     {
-        // are
+        /*
         bool runOperationForEachFrameImage(string message, bool runInSelectedRange, bool isCancelEnabled, Action<DateTime, LockedTrackImageList> actionWithFrameIndexAndImages)
         {
             DateTime beginTime, endTime;
@@ -41,7 +59,7 @@ namespace KinectMotionCapture
                 }
                 _timePlayer.CurrentTime = previousTime;
             }, "Running...", isCancelEnabled);
-        }
+        }*/
         
         /// <summary>
         /// あるフレームにおける座標の補正行列を返す
@@ -50,7 +68,7 @@ namespace KinectMotionCapture
         /// <param name="depthMatList"></param>
         /// <param name="convList"></param>
         /// <returns></returns>
-        public static List<CvMat> AjustDepthPoints(List<CvMat> colorMatList, List<CvMat> depthMatList, List<CvMat> convList)
+        public static List<CvMat> AjustFrameFromDepth(List<CvMat> colorMatList, List<CvMat> depthMatList, List<CvMat> convList)
         {
             List<Func<CvPoint3D64f, CvPoint3D64f>> toReal = new List<Func<CvPoint3D64f, CvPoint3D64f>>();
             foreach (CvMat depthMat in depthMatList)
@@ -65,47 +83,27 @@ namespace KinectMotionCapture
             }
         }
 
-        // 深度マップから補正のフレーム版
-        private void menuPolygonAll_Click(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// あるフレームにおける座標の補正行列を骨から
+        /// </summary>
+        /// <param name="frames"></param>
+        public static void AjustFrameFromBone(ref List<FrameSet> frames)
         {
-            if (runOperationForEachFrameImage("深度マップからカメラ座標を補正しています...", true, true, (time, tracks) =>
+            foreach (FrameSet frameSet in frames)
             {
-                if (tracks.All(x => x != null))
+                List<Func<CvPoint3D64f, CvPoint3D64f>> toReal = new List<Func<CvPoint3D64f, CvPoint3D64f>>();
+                foreach (CvMat depthMat in frameSet.depthMatList)
                 {
-                    if (!tracks.All(x => x.DepthMat != null))
-                        return;
-                    List<DateTime> times = tracks.Select((x, i) => x.Timestamp).ToList();
-                    if (times.Max(x => x.Ticks) - times.Min(x => x.Ticks) > 10000000L / _project.Frequency / 2)
-                    {
-                        return;
-                    }
-                    List<CvMat> modelDepthMatList = new List<CvMat>();
-                    List<CvMat> modelColorMatList = new List<CvMat>();
-                    List<Func<CvPoint3D64f, CvPoint3D64f>> toReal = new List<Func<CvPoint3D64f, CvPoint3D64f>>();
-                    List<CvMat> convList = new List<CvMat>();
-                    for (int i = 0; i < _displayControls.Count; i++)
-                    {
-                        CvMat depthMat = tracks[i].DepthMat;
-                        CvMat colorMat = tracks[i].ImageMat;
-                        modelDepthMatList.Add(depthMat);
-                        modelColorMatList.Add(colorMat);
-                        toReal.Add((x) => KinectUndistortion.GetOriginalRealFromScreenPos(x, new CvSize(depthMat.Cols, depthMat.Rows)));
-                        convList.Add(_project.RecordList[i].ToWorldConversion);
-                    }
-                    Func<float, double> distance2weight = x => 1.0 / (x * 0 + 400);
-                    using (ColoredIterativePointMatching sipm = new ColoredIterativePointMatching(modelDepthMatList, modelColorMatList, toReal, convList, distance2weight, 200))
-                    {
-                        List<CvMat> conversions = sipm.CalculateTransformSequntially(0.1, 1);
-                        for (int i = 0; i < conversions.Count; i++)
-                        {
-                            _project.RecordList[i].ToWorldConversion = conversions[i];
-                            _project.RecordList[i].IsPositionCalibrated = true;
-                        }
-                    }
+                    toReal.Add((x) => KinectUndistortion.GetOriginalRealFromScreenPos(x, new CvSize(depthMat.Cols, depthMat.Rows)));
                 }
-            }))
-            {
+                Func<float, double> distance2weight = x => 1.0 / (x * 0 + 400);
+                using (ColoredIterativePointMatching sipm = new ColoredIterativePointMatching(frameSet.depthMatList, frameSet.colorMatList, toReal, frameSet.convList, distance2weight, 200))
+                {
+                    List<CvMat> conversions = sipm.CalculateTransformSequntially(0.1, 1);
+                    frameSet.convList = conversions;
+                }
             }
+
         }
 
         // 骨のマージ
