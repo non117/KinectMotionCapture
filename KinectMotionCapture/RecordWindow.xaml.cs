@@ -369,19 +369,6 @@ namespace KinectMotionCapture
                 this.motionDataHandler.DepthLUT = this.coordinateMapper.GetDepthFrameToCameraSpaceTable();
             }
 
-            // CoordinateMapper検証用
-            int x = 256, y = 123;
-            ushort d = 1000;
-            DepthSpacePoint dsp = new DepthSpacePoint() { X = x, Y = y };
-            ColorSpacePoint csp = this.coordinateMapper.MapDepthPointToColorSpace(dsp, d);
-            CameraSpacePoint cam = this.coordinateMapper.MapDepthPointToCameraSpace(dsp, d);
-
-            LocalCoordinateMapper lcm = new LocalCoordinateMapper(this.coordinateMapper, this.depthWidth, this.depthHeight);
-            CameraSpacePoint camera = lcm.MapDepthPointToCameraSpace(dsp, d);
-            ColorSpacePoint color = lcm.MapDepthPointToColorSpace(dsp, d);
-            Debug.WriteLine(color);
-
-
             MultiSourceFrame multiSourceFrame = e.FrameReference.AcquireFrame();
 
             if (multiSourceFrame != null)
