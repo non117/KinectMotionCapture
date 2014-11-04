@@ -12,7 +12,6 @@ namespace KinectMotionCapture
     [Serializable]
     class LocalCoordinateMapper
     {
-        private int depthMax = 8000;
         // Kinect2の内部パラメータを推定したやつ
         private double D = 56231.3471302;
         private PointF[] depthFrameToCameraSpaceTable = null;
@@ -113,6 +112,15 @@ namespace KinectMotionCapture
                 this.depthFrameToColorSpacfeTable[i] = tempP;
             }
             Debug.WriteLine(1);
+        }
+
+        public void dump(string path = "")
+        {
+            if (path == "")
+            {
+                path = "coordmapper.dump";
+            }
+            Utility.SaveToBinary(this, path);
         }
     }
 }

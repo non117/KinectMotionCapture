@@ -164,13 +164,13 @@ namespace KinectMotionCapture
         /// <param name="path"></param>
         /// <param name="T"></param>
         /// <returns></returns>
-        public static object LoadFromBinary(string path, Type T)
+        public static object LoadFromBinary(string path)
         {
             using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read))
             {
                 BinaryFormatter f = new BinaryFormatter();
                 object obj = f.Deserialize(fs);
-                return Convert.ChangeType(obj, T);
+                return obj;
             }
         }
 
