@@ -8,21 +8,37 @@ using OpenCvSharp;
 
 namespace KinectMotionCapture
 {
-    class FrameSet
+    /// <summary>
+    /// ある瞬間における複数レコードをまとめて管理するクラス
+    /// </summary>
+    class Frame
     {
-        public long time;
         public int recordNum;
-        public List<CvMat> colorMatList;
-        public List<CvMat> depthMatList;
-        public List<CvMat> convList;
-
-        public FrameSet(long time, int recordNum, List<CvMat> colorMatList, List<CvMat> depthMatList, List<CvMat> convList)
+        private List<MotionData> motionDataList;
+        public List<CvMat> ColorMatList
         {
-            this.time = time;
-            this.recordNum = recordNum;
-            this.colorMatList = colorMatList;
-            this.depthMatList = depthMatList;
-            this.convList = convList;
+            get { return this.motionDataList.Select((m) => m.imageMat).ToList(); }
+        }
+        public List<CvMat> DepthMatList
+        {
+            get { return this.motionDataList.Select((m) => m.depthMat).ToList(); }
+        }
+        public List<CvMat> ConvList
+        {
+            get { return this.motionDataList.Select((m) => m.ToWorldConversion).ToList(); }
+            set
+            {
+                for (int i = 0; i < this.recordNum; i++)
+                {
+                    this.motionDataList[i].ToWorldConversion = value[i];
+                }
+            }
+        }
+
+        public Frame(List<MotionData> motionDataList)
+        {
+            this.recordNum = motionDataList.Count();
+            this.motionDataList = motionDataList;
         }
     }
 
@@ -62,45 +78,42 @@ namespace KinectMotionCapture
         }*/
         
         /// <summary>
-        /// あるフレームにおける座標の補正行列を返す
+        /// あるフレームにおける座標変換行列を計算する
         /// </summary>
-        /// <param name="colorMatList"></param>
-        /// <param name="depthMatList"></param>
-        /// <param name="convList"></param>
-        /// <returns></returns>
-        public static List<CvMat> AjustFrameFromDepth(List<CvMat> colorMatList, List<CvMat> depthMatList, List<CvMat> convList)
+        /// <param name="frame"></param>
+        public static void AjustFrameFromDepth(Frame frame)
         {
             List<Func<CvPoint3D64f, CvPoint3D64f>> toReal = new List<Func<CvPoint3D64f, CvPoint3D64f>>();
-            foreach (CvMat depthMat in depthMatList)
+            foreach (CvMat depthMat in frame.DepthMatList)
             {
                 toReal.Add((x) => KinectUndistortion.GetOriginalRealFromScreenPos(x, new CvSize(depthMat.Cols, depthMat.Rows)));
             }
             Func<float, double> distance2weight = x => 1.0 / (x * 0 + 400);
-            using (ColoredIterativePointMatching sipm = new ColoredIterativePointMatching(depthMatList, colorMatList, toReal, convList, distance2weight, 200))
+            using (ColoredIterativePointMatching sipm = new ColoredIterativePointMatching(frame.DepthMatList, frame.ColorMatList, toReal, frame.ConvList, distance2weight, 200))
             {
                 List<CvMat> conversions = sipm.CalculateTransformSequntially(0.2, 3);
-                return conversions;
+                frame.ConvList = conversions;
             }
         }
 
         /// <summary>
-        /// あるフレームにおける座標の補正行列を骨から
+        /// フレーム範囲における座標変換行列を計算する
         /// </summary>
         /// <param name="frames"></param>
-        public static void AjustFrameFromBone(ref List<FrameSet> frames)
+        public static void AjustFramesFromDepth(List<Frame> frames)
         {
-            foreach (FrameSet frameSet in frames)
+            foreach (Frame frame in frames)
             {
                 List<Func<CvPoint3D64f, CvPoint3D64f>> toReal = new List<Func<CvPoint3D64f, CvPoint3D64f>>();
-                foreach (CvMat depthMat in frameSet.depthMatList)
+                foreach (CvMat depthMat in frame.DepthMatList)
                 {
                     toReal.Add((x) => KinectUndistortion.GetOriginalRealFromScreenPos(x, new CvSize(depthMat.Cols, depthMat.Rows)));
                 }
                 Func<float, double> distance2weight = x => 1.0 / (x * 0 + 400);
-                using (ColoredIterativePointMatching sipm = new ColoredIterativePointMatching(frameSet.depthMatList, frameSet.colorMatList, toReal, frameSet.convList, distance2weight, 200))
+                using (ColoredIterativePointMatching sipm = new ColoredIterativePointMatching(frame.DepthMatList, frame.ColorMatList, toReal, frame.ConvList, distance2weight, 200))
                 {
                     List<CvMat> conversions = sipm.CalculateTransformSequntially(0.1, 1);
-                    frameSet.convList = conversions;
+                    frame.ConvList = conversions;
                 }
             }
 

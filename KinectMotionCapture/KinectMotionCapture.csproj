@@ -162,6 +162,9 @@
     <Compile Include="KinectUndistortion.cs" />
     <Compile Include="ListEx.cs" />
     <Compile Include="MemorySavingLeastSquare.cs" />
+    <Compile Include="MergeRecordWindow.xaml.cs">
+      <DependentUpon>MergeRecordWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="MotionDataHandler.cs" />
     <Compile Include="ProgressData.cs" />
     <Compile Include="ProgressWindow.xaml.cs">
@@ -174,6 +177,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="InitWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="MergeRecordWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

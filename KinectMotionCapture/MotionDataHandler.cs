@@ -254,6 +254,10 @@ namespace KinectMotionCapture
         public int DepthUserHeight { get; set; }
         public PointF[] depthLUT { get; set; }
 
+        // シリアライズできるやつも作らないといけない。互換性も含めて要検証
+        [NonSerialized]
+        public CvMat ToWorldConversion = CvMat.Identity(4, 4, MatrixType.F64C1);
+
         // 互換性のためのメンバ。シリアライズ不可能なので下記のメソッドでロードする。
         [NonSerialized]
         public CvMat depthMat = null;

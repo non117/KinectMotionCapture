@@ -38,5 +38,12 @@ namespace KinectMotionCapture
             wnd.Show();
             this.Close();
         }
+
+        private void MergeRecordButton_Click(object sender, RoutedEventArgs e)
+        {
+            MergeRecordWindow wnd = new MergeRecordWindow();
+            wnd.Show();
+            this.Close();
+        }
     }
 }

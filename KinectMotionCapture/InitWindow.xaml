@@ -8,10 +8,12 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="100"/>
                 <RowDefinition Height="100"/>
+                <RowDefinition Height="100"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <Button Grid.Row="0" Content="Record Motions" Margin="20" Name="RecordMotionButton" Click="RecordMotionButton_Click" />
             <Button Grid.Row="1" Content="Calibrate Kinect" Margin="20" Name="CalibrateCameraButton" Click="CalibrateCameraButton_Click" />
+            <Button Grid.Row="2" Content="Merge Records" Margin="20" Name="MergeRecordButton" Click="MergeRecordButton_Click"/>
         </Grid>
     </Border>
 </Window>
