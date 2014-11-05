@@ -1,21 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Kinect;
 
+using MsgPack.Serialization;
 using OpenCvSharp;
 
 namespace KinectMotionCapture
 {
     class FrameSequence
     {
+        private List<CvMat> convList = null;
+        private List<KinectUndistortion> undistortionDataList;
+        
         public int recordNum;
         // TODO: IEnumerableにしても良さそう。イテレータブロックとか使うらしい。
         public List<Frame> frames;
-        private List<CvMat> convList = null;
-        private List<KinectUndistortion> undistortionDataList;
         
         public List<CvMat> ToWorldConversions
         {
@@ -42,9 +45,59 @@ namespace KinectMotionCapture
             get { return this.undistortionDataList; }
         }
 
-        public FrameSequence()
+        private List<MotionData> GetMotionDataFromFile(string filepath)
         {
-            // todo
+            var serializer = MessagePackSerializer.Get<List<MotionData>>();
+            using (FileStream fs = File.Open(filepath, FileMode.Open))
+            {
+                return serializer.Unpack(fs);
+            }
+        }
+
+        private List<List<MotionData>> SliceFrames(List<List<MotionData>> records, DateTime minTime, DateTime maxTime)
+        {
+            List<List<MotionData>> newRecords = new List<List<MotionData>>();
+            foreach (List<MotionData> record in records)
+            {
+                List<MotionData> newRecord = record.Where((r) => minTime <= r.TimeStamp && r.TimeStamp <= maxTime).ToList();
+                newRecords.Add(newRecord);
+            }
+            return newRecords;
+        }
+
+        private List<List<MotionData>> SearchDupFrames(List<List<MotionData>> records)
+        {
+            DateTime minTime = DateTime.MinValue;
+            DateTime maxTime = DateTime.MaxValue;
+            foreach (List<MotionData> record in records)
+            {
+                if (record.First().TimeStamp > minTime)
+                {
+                    minTime = record.First().TimeStamp;
+                }
+                if (record.Last().TimeStamp < maxTime)
+                {
+                    maxTime = record.Last().TimeStamp;
+                }
+            }
+            return this.SliceFrames(records, minTime, maxTime);
+        }
+
+        public FrameSequence(List<string> dataDirs)
+        {
+            List<List<MotionData>> records = new List<List<MotionData>>();
+            foreach (string dataDir in dataDirs)
+            {
+                string metaDataFilePath = Path.Combine(dataDir, "BodyInfo.mpac");
+                records.Add(this.GetMotionDataFromFile(dataDir));
+            }
+            records = this.SearchDupFrames(records);
+            // 近いレコード取ってくるやつを実装する
+            // ListEx.GetMaxLessEqualIndexFromBinarySearch(record.RecordData.GetIndexBinarySearch(time));
+            // public int GetIndexBinarySearch(DateTime timestamp) {
+            //     timeInfoのインデックスを返す
+            //     return _timeInfo.Keys.BinarySearch(timestamp - this.TimeOffset);
+        }
         }
 
     }

@@ -21,6 +21,8 @@ namespace KinectMotionCapture
     {
         public MergeRecordWindow()
         {
+            List<string> datadir = new List<string>() { @"C:\Users\non\Desktop\master" };
+            FrameSequence fs = new FrameSequence(datadir);
 
             InitializeComponent();
         }
