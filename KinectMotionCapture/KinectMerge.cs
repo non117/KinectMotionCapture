@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Kinect;
 
 using OpenCvSharp;
 
@@ -15,23 +16,40 @@ namespace KinectMotionCapture
     {
         public int recordNum;
         private List<MotionData> motionDataList;
+        
         public List<CvMat> ColorMatList
         {
             get { return this.motionDataList.Select((m) => m.imageMat).ToList(); }
         }
+        
         public List<CvMat> DepthMatList
         {
             get { return this.motionDataList.Select((m) => m.depthMat).ToList(); }
         }
+        
         public List<CvMat> ConvList
         {
-            get { return this.motionDataList.Select((m) => m.ToWorldConversion).ToList(); }
+            get { return this.motionDataList.Select((m) => m.toWorldConversion).ToList(); }
             set
             {
                 for (int i = 0; i < this.recordNum; i++)
                 {
-                    this.motionDataList[i].ToWorldConversion = value[i];
+                    this.motionDataList[i].toWorldConversion = value[i];
                 }
+            }
+        }
+
+        public List<SerializableBody> SelectedBodyList
+        {
+            get
+            {
+                List<SerializableBody> bodies = new List<SerializableBody>();
+                foreach (MotionData data in this.motionDataList)
+                {
+                    SerializableBody body = data.bodies.Where((b) => b.TrackingId == data.SelectedUserId).First();
+                    bodies.Add(body);
+                }
+                return bodies;
             }
         }
 
@@ -78,7 +96,7 @@ namespace KinectMotionCapture
         }*/
         
         /// <summary>
-        /// あるフレームにおける座標変換行列を計算する
+        /// あるフレームにおける座標変換行列を深度情報から計算する
         /// </summary>
         /// <param name="frame"></param>
         public static void AjustFrameFromDepth(Frame frame)
@@ -97,7 +115,7 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
-        /// フレーム範囲における座標変換行列を計算する
+        /// フレーム範囲における座標変換行列を深度情報から計算する
         /// </summary>
         /// <param name="frames"></param>
         public static void AjustFramesFromDepth(List<Frame> frames)
@@ -119,51 +137,44 @@ namespace KinectMotionCapture
 
         }
 
-        // 骨のマージ
-        private void buttonCalibUser_Click(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// あるフレームにおける座標変換行列を骨格情報から計算する
+        /// </summary>
+        /// <param name="frame"></param>
+        public void AjustFrameFromeBone(Frame frame)
         {
-            if (_project.RecordList.Any(r => r.SelectedUser == -1))
+            List<SerializableBody> bodies = frame.SelectedBodyList;
+            List<CvMat> convList = frame.ConvList;
+            if ( bodies.Count() != frame.recordNum )
             {
                 System.Windows.MessageBox.Show("ユーザが選択されていないレコードがあります");
                 return;
             }
 
-            for (int j = 1; j < _project.RecordList.Count; j++)
+            for (int j = 1; j < frame.recordNum; j++)
             {
-                using (LockedBuffer<TrackImageFrame> buf1 = _project.RecordList[0].RecordData.GetLockedImage(_timePlayer.CurrentTime))
-                using (LockedBuffer<TrackImageFrame> buf2 = _project.RecordList[j].RecordData.GetLockedImage(_timePlayer.CurrentTime))
+                Dictionary<JointType, Joint> joint1 = bodies[0].Joints;
+                Dictionary<JointType, Joint> joint2 = bodies[j].Joints;
+
+                ICoordConversion3D crtc = new CoordRotTransConversion();
+                foreach (JointType jointType in Enum.GetValues(typeof(JointType)))
                 {
-                    int user1 = _project.RecordList[0].SelectedUser;
-                    int user2 = _project.RecordList[j].SelectedUser;
-                    TrackImageFrame trackImage1 = buf1.Data;
-                    TrackImageFrame trackImage2 = buf2.Data;
-                    if (!trackImage1.UserTrackings.ContainsKey(user1) || !trackImage2.UserTrackings.ContainsKey(user2))
-                    {
-                        System.Windows.MessageBox.Show("joint not found");
-                        return;
-                    }
-                    UserTrackingState state1 = buf1.Data.UserTrackings[user1];
-                    UserTrackingState state2 = buf2.Data.UserTrackings[user2];
-                    ICoordConversion3D crtc = new CoordRotTransConversion();
-                    foreach (OpenNI.SkeletonJoint joint in Enum.GetValues(typeof(OpenNI.SkeletonJoint)))
-                    {
-                        if (!state1.OriginalJoints.ContainsKey(joint))
-                            continue;
-                        if (!state2.OriginalJoints.ContainsKey(joint))
-                            continue;
-                        CvPoint3D64f from = state2.OriginalJoints[joint].Position.ToCvPoint3D();
-                        CvPoint3D64f target = CvEx.ConvertPoint3D(state1.OriginalJoints[joint].Position.ToCvPoint3D(), _project.RecordList[0].ToWorldConversion);
-                        bool valid1 = buf1.Data.IsOriginalJointValid(user1, joint);
-                        bool valid2 = buf2.Data.IsOriginalJointValid(user2, joint);
-                        if (valid1 && valid2)
-                        {
-                            crtc.PutPoint(from, target, 1);
-                        }
-                    }
-                    _project.RecordList[j].ToWorldConversion = crtc.Solve();
-                    _project.RecordList[j].IsPositionCalibrated = true;
+                    if (!joint1.ContainsKey(jointType))
+                        continue;
+                    if (!joint2.ContainsKey(jointType))
+                        continue;
+                    CvPoint3D64f from = joint2[jointType].Position.ToCvPoint3D();
+                    CvPoint3D64f target = CvEx.ConvertPoint3D(joint1[jointType].Position.ToCvPoint3D(), convList[0]);
+                    //bool valid1 = buf1.Data.IsOriginalJointValid(user1, jointType);
+                    //bool valid2 = buf2.Data.IsOriginalJointValid(user2, jointType);
+                    //if (valid1 && valid2)
+                    //{
+                    crtc.PutPoint(from, target, 1);
+                    //}
                 }
+                convList[j] = crtc.Solve();
             }
+            frame.ConvList = convList;
         }
 
         // 骨のマージフレーム版
