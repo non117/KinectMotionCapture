@@ -9,8 +9,48 @@ using OpenCvSharp;
 
 namespace KinectMotionCapture
 {
+    class FrameSequence
+    {
+        public int recordNum;
+        // TODO: IEnumerableにしても良さそう。イテレータブロックとか使うらしい。
+        public List<Frame> frames;
+        private List<CvMat> convList = null;
+        private List<KinectUndistortion> undistortionDataList;
+        
+        public List<CvMat> ToWorldConversions
+        {
+            get
+            {
+                if (this.convList == null)
+                {
+                    this.convList = new List<CvMat>();
+                    for (int i = 0; i < this.recordNum; i++)
+                    {
+                        this.convList[i] = CvMat.Identity(4, 4, MatrixType.F64C1);
+                    }
+                }
+                return this.convList;
+            }
+            set
+            {
+                this.convList = value;
+            }
+        }
+
+        public List<KinectUndistortion> UndistortionDataList
+        {
+            get { return this.undistortionDataList; }
+        }
+
+        public FrameSequence()
+        {
+            // todo
+        }
+
+    }
+
     /// <summary>
-    /// ある瞬間における複数レコードをまとめて管理するクラス
+    /// あるフレームにおける複数レコードをまとめて管理するクラス
     /// </summary>
     class Frame
     {
@@ -25,18 +65,11 @@ namespace KinectMotionCapture
         public List<CvMat> DepthMatList
         {
             get { return this.motionDataList.Select((m) => m.depthMat).ToList(); }
-        }
-        
-        public List<CvMat> ConvList
+        }       
+
+        public List<CvSize> DepthUserSize
         {
-            get { return this.motionDataList.Select((m) => m.toWorldConversion).ToList(); }
-            set
-            {
-                for (int i = 0; i < this.recordNum; i++)
-                {
-                    this.motionDataList[i].toWorldConversion = value[i];
-                }
-            }
+            get { return this.motionDataList.Select((m) => m.DepthUserSize).ToList(); }
         }
 
         public List<SerializableBody> SelectedBodyList
@@ -61,45 +94,12 @@ namespace KinectMotionCapture
     }
 
     class KinectMerge
-    {
-        /*
-        bool runOperationForEachFrameImage(string message, bool runInSelectedRange, bool isCancelEnabled, Action<DateTime, LockedTrackImageList> actionWithFrameIndexAndImages)
-        {
-            DateTime beginTime, endTime;
-            TimeSpan period = getPeriodFromFrequency();
-            if (runInSelectedRange)
-            {
-                _timePlayer.GetSelectedTime(out beginTime, out endTime);
-            }
-            else
-            {
-                beginTime = _timePlayer.BeginTime;
-                endTime = _timePlayer.EndTime;
-            }
-            return ProgressData.DoAction((progress) =>
-            {
-                long tickCount = (endTime - beginTime).Ticks / period.Ticks;
-                progress.InitProgress(message, tickCount);
-                DateTime previousTime = _timePlayer.CurrentTime;
-                for (DateTime time = beginTime; time <= endTime; time += period)
-                {
-                    _timePlayer.CurrentTime = time;
-                    using (LockedTrackImageList tracks = _project.GetReadLockAllPlayer(_timePlayer.CurrentTime))
-                    {
-                        actionWithFrameIndexAndImages(time, tracks);
-                    }
-                    progress.CurrentValue++;
-
-                }
-                _timePlayer.CurrentTime = previousTime;
-            }, "Running...", isCancelEnabled);
-        }*/
-        
+    {        
         /// <summary>
         /// あるフレームにおける座標変換行列を深度情報から計算する
         /// </summary>
         /// <param name="frame"></param>
-        public static void AjustFrameFromDepth(Frame frame)
+        public static List<CvMat> AjustFrameFromDepth(Frame frame, List<CvMat> convList)
         {
             List<Func<CvPoint3D64f, CvPoint3D64f>> toReal = new List<Func<CvPoint3D64f, CvPoint3D64f>>();
             foreach (CvMat depthMat in frame.DepthMatList)
@@ -107,10 +107,10 @@ namespace KinectMotionCapture
                 toReal.Add((x) => KinectUndistortion.GetOriginalRealFromScreenPos(x, new CvSize(depthMat.Cols, depthMat.Rows)));
             }
             Func<float, double> distance2weight = x => 1.0 / (x * 0 + 400);
-            using (ColoredIterativePointMatching sipm = new ColoredIterativePointMatching(frame.DepthMatList, frame.ColorMatList, toReal, frame.ConvList, distance2weight, 200))
+            using (ColoredIterativePointMatching sipm = new ColoredIterativePointMatching(frame.DepthMatList, frame.ColorMatList, toReal, convList, distance2weight, 200))
             {
                 List<CvMat> conversions = sipm.CalculateTransformSequntially(0.2, 3);
-                frame.ConvList = conversions;
+                return conversions;
             }
         }
 
@@ -118,9 +118,9 @@ namespace KinectMotionCapture
         /// フレーム範囲における座標変換行列を深度情報から計算する
         /// </summary>
         /// <param name="frames"></param>
-        public static void AjustFramesFromDepth(List<Frame> frames)
+        public static void AjustFramesFromDepth(FrameSequence frameSeq)
         {
-            foreach (Frame frame in frames)
+            foreach (Frame frame in frameSeq.frames)
             {
                 List<Func<CvPoint3D64f, CvPoint3D64f>> toReal = new List<Func<CvPoint3D64f, CvPoint3D64f>>();
                 foreach (CvMat depthMat in frame.DepthMatList)
@@ -128,10 +128,10 @@ namespace KinectMotionCapture
                     toReal.Add((x) => KinectUndistortion.GetOriginalRealFromScreenPos(x, new CvSize(depthMat.Cols, depthMat.Rows)));
                 }
                 Func<float, double> distance2weight = x => 1.0 / (x * 0 + 400);
-                using (ColoredIterativePointMatching sipm = new ColoredIterativePointMatching(frame.DepthMatList, frame.ColorMatList, toReal, frame.ConvList, distance2weight, 200))
+                using (ColoredIterativePointMatching sipm = new ColoredIterativePointMatching(frame.DepthMatList, frame.ColorMatList, toReal, frameSeq.ToWorldConversions, distance2weight, 200))
                 {
                     List<CvMat> conversions = sipm.CalculateTransformSequntially(0.1, 1);
-                    frame.ConvList = conversions;
+                    frameSeq.ToWorldConversions = conversions;
                 }
             }
 
@@ -141,14 +141,13 @@ namespace KinectMotionCapture
         /// あるフレームにおける座標変換行列を骨格情報から計算する
         /// </summary>
         /// <param name="frame"></param>
-        public void AjustFrameFromeBone(Frame frame)
+        public List<CvMat> AjustFrameFromeBone(Frame frame, List<CvMat> convList)
         {
             List<SerializableBody> bodies = frame.SelectedBodyList;
-            List<CvMat> convList = frame.ConvList;
             if ( bodies.Count() != frame.recordNum )
             {
                 System.Windows.MessageBox.Show("ユーザが選択されていないレコードがあります");
-                return;
+                return convList;
             }
 
             for (int j = 1; j < frame.recordNum; j++)
@@ -174,38 +173,29 @@ namespace KinectMotionCapture
                 }
                 convList[j] = crtc.Solve();
             }
-            frame.ConvList = convList;
+            return convList;
         }
 
-        // 骨のマージフレーム版
-        private void menuCalibUserAll_Click(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// フレーム範囲における座標変換行列を骨格情報から計算する
+        /// </summary>
+        /// <param name="frames"></param>
+        public void AjustFramesFromBone(FrameSequence frameSeq)
         {
             Dictionary<Tuple<int, int>, int> cooccurenceCount = new Dictionary<Tuple<int, int>, int>();
-            if (_project.RecordList.Any(r => r.SelectedUser == -1))
+            //System.Windows.MessageBox.Show("ユーザが選択されていないレコードがあります");
+            //return;
+            foreach (Frame frame in frameSeq.frames)
             {
-                System.Windows.MessageBox.Show("ユーザが選択されていないレコードがあります");
-                return;
-            }
-            if (runOperationForEachFrame("骨格データの解析中...", true, true, (time, imagePairs) =>
-            {
-                for (int i = 0; i < imagePairs.Count; i++)
-                {
-                    int user1 = _project.RecordList[i].SelectedUser;
-                    TrackFrame trackImage1 = imagePairs[i];
-                    if (trackImage1 == null || !trackImage1.UserTrackings.ContainsKey(user1))
-                        continue;
-                    UserTrackingState state1 = trackImage1.UserTrackings[user1];
-                    for (int j = i + 1; j < imagePairs.Count; j++)
+                List<SerializableBody> bodies = frame.SelectedBodyList;
+                for (int i = 0; i < frame.recordNum; i++)
+                {;
+                    for (int j = i + 1; j < frame.recordNum; j++)
                     {
-                        int user2 = _project.RecordList[j].SelectedUser;
-                        TrackFrame trackImage2 = imagePairs[j];
-                        if (!trackImage2.UserTrackings.ContainsKey(user2))
-                            continue;
+                        Dictionary<JointType, Joint> joint1 = bodies[i].Joints;
+                        Dictionary<JointType, Joint> joint2 = bodies[j].Joints;
 
-                        Dictionary<SkeletonJoint, Point3D> joints1 = trackImage1.GetValidJoints(user1);
-                        Dictionary<SkeletonJoint, Point3D> joints2 = trackImage2.GetValidJoints(user2);
-
-                        foreach (SkeletonJoint joint in joints1.Keys.Intersect(joints2.Keys))
+                        foreach (JointType jointType in joint1.Keys.Intersect(joint2.Keys))
                         {
                             Tuple<int, int> key = new Tuple<int, int>(i, j);
                             int count;
@@ -217,70 +207,60 @@ namespace KinectMotionCapture
                         }
                     }
                 }
-            }))
+            }//))
+            //{
+            // 依存関係のツリーを作る
+            int baseRecordIndex;
+            Dictionary<int, int> dependencies;
+            //if (!CalcEx.GetDependencyTree(_project.RecordList.Count, cooccurenceCount, list => list.Sum(), out  baseRecordIndex, out dependencies))
+            // とりあえず先頭フレームのレコード数にしてるけど、プロジェクトとかが持つべき値
+            if (!CalcEx.GetDependencyTree(frameSeq.recordNum, cooccurenceCount, list => list.Sum(), out  baseRecordIndex, out dependencies))
             {
-                // 依存関係のツリーを作る
-                int baseRecordIndex;
-                Dictionary<int, int> dependencies;
-                if (!CalcEx.GetDependencyTree(_project.RecordList.Count, cooccurenceCount, list => list.Sum(), out  baseRecordIndex, out dependencies))
+                System.Windows.MessageBox.Show("骨格が他のレコードと同時に映っているフレームがないレコードがあるため計算できませんでした");
+            }
+            else
+            {
+                Dictionary<int, ICoordConversion3D> conversionsPerDependencyKey = new Dictionary<int, ICoordConversion3D>();
+                foreach (Frame frame in frameSeq.frames)
                 {
-                    System.Windows.MessageBox.Show("骨格が他のレコードと同時に映っているフレームがないレコードがあるため計算できませんでした");
-                }
-                else
-                {
-                    Dictionary<int, ICoordConversion3D> conversionsPerDependencyKey = new Dictionary<int, ICoordConversion3D>();
-                    if (runOperationForEachFrame("座標間の計算中...", true, true, (time, imagePairs) =>
+                    List<SerializableBody> bodies = frame.SelectedBodyList;
+                    List<KinectUndistortion> undistortions = frameSeq.UndistortionDataList;
+                    List<CvSize> depthUsersizeList = frame.DepthUserSize;
+
+                    foreach (KeyValuePair<int, int> dependencyPair in CalcEx.EnumerateDependencyPairs(baseRecordIndex, dependencies))
                     {
-                        foreach (KeyValuePair<int, int> dependencyPair in CalcEx.EnumerateDependencyPairs(baseRecordIndex, dependencies))
+                        CvSize imageSize1 = depthUsersizeList[dependencyPair.Key];
+                        CvSize imageSize2 = depthUsersizeList[dependencyPair.Value];
+                        KinectUndistortion undist1 = undistortions[dependencyPair.Key];
+                        KinectUndistortion undist2 = undistortions[dependencyPair.Value];
+
+                        // 変換計算用オブジェクトを拾ってくる
+                        ICoordConversion3D conv;
+                        if (!conversionsPerDependencyKey.TryGetValue(dependencyPair.Key, out conv))
                         {
-
-                            TrackFrame trackImage1 = imagePairs[dependencyPair.Key];
-                            TrackFrame trackImage2 = imagePairs[dependencyPair.Value];
-                            int user1 = _project.RecordList[dependencyPair.Key].SelectedUser;
-                            int user2 = _project.RecordList[dependencyPair.Value].SelectedUser;
-
-                            if (trackImage1 == null || !trackImage1.UserTrackings.ContainsKey(user1))
-                                continue;
-                            if (trackImage2 == null || !trackImage2.UserTrackings.ContainsKey(user2))
-                                continue;
-
-                            CvSize imageSize1 = trackImage1.DepthUserSize;
-                            CvSize imageSize2 = trackImage2.DepthUserSize;
-                            KinectUndistortion undist1 = _project.RecordList[dependencyPair.Key].UndistortionData;
-                            KinectUndistortion undist2 = _project.RecordList[dependencyPair.Value].UndistortionData;
-
-                            // 変換計算用オブジェクトを拾ってくる
-                            ICoordConversion3D conv;
-                            if (!conversionsPerDependencyKey.TryGetValue(dependencyPair.Key, out conv))
-                            {
-                                conversionsPerDependencyKey[dependencyPair.Key] = conv = new CoordRotTransConversion();
-                            }
-
-                            Dictionary<SkeletonJoint, Point3D> joints1 = trackImage1.GetValidJoints(user1);
-                            Dictionary<SkeletonJoint, Point3D> joints2 = trackImage2.GetValidJoints(user2);
-
-                            foreach (SkeletonJoint joint in joints1.Keys.Intersect(joints2.Keys))
-                            {
-                                CvPoint3D64f camPoint1 = undist1.GetRealFromScreenPos(joints1[joint].ToCvPoint3D(), imageSize1);
-                                CvPoint3D64f camPoint2 = undist2.GetRealFromScreenPos(joints2[joint].ToCvPoint3D(), imageSize2);
-                                // それぞれのカメラ座標系におけるそれぞれの対応点をセットに入れる
-                                conv.PutPoint(camPoint1, camPoint2, 1);
-                            }
+                            conversionsPerDependencyKey[dependencyPair.Key] = conv = new CoordRotTransConversion();
                         }
-                    }))
-                    {
-                        foreach (KeyValuePair<int, int> dependencyPair in CalcEx.EnumerateDependencyPairs(baseRecordIndex, dependencies))
+
+                        Dictionary<JointType, Joint> joint1 = bodies[dependencyPair.Key].Joints;
+                        Dictionary<JointType, Joint> joint2 = bodies[dependencyPair.Value].Joints;
+
+                        foreach (JointType jointType in joint1.Keys.Intersect(joint2.Keys))
                         {
-                            CvMat relConv = conversionsPerDependencyKey[dependencyPair.Key].Solve();
-                            CvMat baseConversion = _project.RecordList[dependencyPair.Value].ToWorldConversion;
-                            _project.RecordList[dependencyPair.Key].ToWorldConversion = baseConversion * relConv;
-                        }
-                        foreach (TrackImageRecordProperty record in _project.RecordList)
-                        {
-                            record.IsPositionCalibrated = true;
+                            CvPoint3D64f camPoint1 = undist1.GetRealFromScreenPos(joint1[jointType].Position.ToCvPoint3D(), imageSize1);
+                            CvPoint3D64f camPoint2 = undist2.GetRealFromScreenPos(joint2[jointType].Position.ToCvPoint3D(), imageSize2);
+                            // それぞれのカメラ座標系におけるそれぞれの対応点をセットに入れる
+                            conv.PutPoint(camPoint1, camPoint2, 1);
                         }
                     }
                 }
+                List<CvMat> convList = frameSeq.ToWorldConversions;
+                foreach (KeyValuePair<int, int> dependencyPair in CalcEx.EnumerateDependencyPairs(baseRecordIndex, dependencies))
+                {
+                    CvMat relConv = conversionsPerDependencyKey[dependencyPair.Key].Solve();
+                    CvMat baseConversion = convList[dependencyPair.Value];
+                    convList[dependencyPair.Key] = baseConversion * relConv;
+                }
+                frameSeq.ToWorldConversions = convList;
             }
         }
     }

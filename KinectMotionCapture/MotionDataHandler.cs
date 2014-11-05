@@ -257,10 +257,6 @@ namespace KinectMotionCapture
         // 互換性チェック
         public ulong SelectedUserId { get; set; }
 
-        // シリアライズできるやつも作らないといけない。互換性も含めて要検証
-        [NonSerialized]
-        public CvMat toWorldConversion = CvMat.Identity(4, 4, MatrixType.F64C1);
-
         // 互換性のためのメンバ。シリアライズ不可能なので下記のメソッドでロードする。
         [NonSerialized]
         public CvMat depthMat = null;
