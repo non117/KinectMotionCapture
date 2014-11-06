@@ -254,9 +254,6 @@ namespace KinectMotionCapture
         public int DepthUserHeight { get; set; }
         public PointF[] depthLUT { get; set; }
 
-        // 互換性チェック
-        public ulong SelectedUserId { get; set; }
-
         // 互換性のためのメンバ。シリアライズ不可能なので下記のメソッドでロードする。
         [NonSerialized]
         public CvMat depthMat = null;
@@ -264,24 +261,6 @@ namespace KinectMotionCapture
         public CvMat imageMat = null;
         [NonSerialized]
         public CvMat userMat = null;
-
-        public CvSize ImageSize
-        {
-            get { return new CvSize(this.ColorWidth, this.ColorHeight); }
-            set {
-                this.ColorWidth = value.Width;
-                this.ColorHeight = value.Height;
-            }
-        }
-        public CvSize DepthUserSize
-        {
-            get { return new CvSize(this.DepthUserWidth, this.DepthUserHeight); }
-            set
-            {
-                this.DepthUserWidth = value.Width;
-                this.DepthUserHeight = value.Height;
-            }
-        }
 
         public void LoadImages()
         {

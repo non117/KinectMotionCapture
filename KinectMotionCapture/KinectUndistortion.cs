@@ -1338,6 +1338,8 @@ namespace KinectMotionCapture
 
         public void CorrectSingleTrackImage(MotionData dest, MotionData source)
         {
+            CvSize ImageSize = new CvSize(source.ColorWidth, source.ColorHeight);
+            CvSize DepthUserSize = new CvSize(source.DepthUserWidth, source.DepthUserHeight);
             if (_imageCorrectionMap == null)
             {
                 lock (_lockForCorrectionMap)
@@ -1346,7 +1348,7 @@ namespace KinectMotionCapture
                     {
                         if (_imageMatSize == CvSize.Empty)
                         {
-                            _imageMatSize = source.ImageSize;
+                            _imageMatSize = ImageSize;
                         }
                         _imageCorrectionMap = getCorrectionMap(_imageMatSize);
                     }
@@ -1360,7 +1362,7 @@ namespace KinectMotionCapture
                     {
                         if (_depthMatSize == CvSize.Empty)
                         {
-                            _depthMatSize = source.DepthUserSize;
+                            _depthMatSize = DepthUserSize;
                         }
                         _depthCorrectionMap = getCorrectionMap(_depthMatSize);
                     }
@@ -1395,9 +1397,11 @@ namespace KinectMotionCapture
             dest.ImagePath = source.ImagePath;
             dest.DepthPath = source.DepthPath;
             dest.UserPath = source.UserPath;
-            dest.TimeStamp = source.TimeStamp;            
-            dest.ImageSize = source.ImageSize;
-            dest.DepthUserSize = source.DepthUserSize;
+            dest.TimeStamp = source.TimeStamp;
+            dest.DepthUserHeight = source.DepthUserHeight;
+            dest.DepthUserWidth = source.DepthUserWidth;
+            dest.ColorHeight = source.ColorHeight;
+            dest.ColorWidth = source.ColorWidth;
             dest.depthLUT = source.depthLUT.CloneDeep();
 
             // jointsの座標修正をしてるっぽい
@@ -1409,8 +1413,9 @@ namespace KinectMotionCapture
                 {
                     // この時点ではsourceと同じ値
                     CameraSpacePoint oldPosition = destBody.Joints[jointType].Position;
-                    CameraSpacePoint newPosition = KinectUndistortion.GetOriginalScreenPosFromReal(this.GetRealFromScreenPos(oldPosition.ToCvPoint3D(), source.DepthUserSize), source.DepthUserSize).ToCameraSpacePoint();                   
+                    CameraSpacePoint newPosition = KinectUndistortion.GetOriginalScreenPosFromReal(this.GetRealFromScreenPos(oldPosition.ToCvPoint3D(), DepthUserSize), DepthUserSize).ToCameraSpacePoint();                   
                     
+                    // 実際に使う前にちょっと確認が必要
                     // deep copyがいるかわからんけど一応
                     Joint joint = destBody.Joints[jointType].CloneDeep();
                     joint.Position = newPosition;

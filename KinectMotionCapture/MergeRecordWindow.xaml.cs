@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -25,6 +26,16 @@ namespace KinectMotionCapture
             FrameSequence fs = new FrameSequence(datadir);
 
             InitializeComponent();
+        }
+
+        /// <summary>
+        /// Execute shutdown tasks
+        /// </summary>
+        /// <param name="sender">object sending the event</param>
+        /// <param name="e">event arguments</param>
+
+        private void MainWindow_Closing(object sender, CancelEventArgs e)
+        {
         }
     }
 }

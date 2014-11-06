@@ -11,15 +11,23 @@ using OpenCvSharp;
 
 namespace KinectMotionCapture
 {
+    /// <summary>
+    /// フレームの集合
+    /// </summary>
     class FrameSequence
     {
         private List<CvMat> convList = null;
         private List<KinectUndistortion> undistortionDataList;
         
         public int recordNum;
+        public DateTime startTime;
+        public DateTime endTime;
         // TODO: IEnumerableにしても良さそう。イテレータブロックとか使うらしい。
         public List<Frame> frames;
         
+        /// <summary>
+        /// 座標系を統合するための変換行列、各レコードに対して
+        /// </summary>
         public List<CvMat> ToWorldConversions
         {
             get
@@ -40,11 +48,19 @@ namespace KinectMotionCapture
             }
         }
 
+        /// <summary>
+        /// 各レコードのキャリブレーションデータ
+        /// </summary>
         public List<KinectUndistortion> UndistortionDataList
         {
             get { return this.undistortionDataList; }
         }
 
+        /// <summary>
+        /// レコードのメタデータをデシリアライズしてくる
+        /// </summary>
+        /// <param name="filepath"></param>
+        /// <returns></returns>
         private List<MotionData> GetMotionDataFromFile(string filepath)
         {
             var serializer = MessagePackSerializer.Get<List<MotionData>>();
@@ -54,6 +70,13 @@ namespace KinectMotionCapture
             }
         }
 
+        /// <summary>
+        /// レコードを切り出してくるやつ
+        /// </summary>
+        /// <param name="records"></param>
+        /// <param name="minTime"></param>
+        /// <param name="maxTime"></param>
+        /// <returns></returns>
         private List<List<MotionData>> SliceFrames(List<List<MotionData>> records, DateTime minTime, DateTime maxTime)
         {
             List<List<MotionData>> newRecords = new List<List<MotionData>>();
@@ -65,6 +88,11 @@ namespace KinectMotionCapture
             return newRecords;
         }
 
+        /// <summary>
+        /// 重複した領域だけに区切る
+        /// </summary>
+        /// <param name="records"></param>
+        /// <returns></returns>
         private List<List<MotionData>> SearchDupFrames(List<List<MotionData>> records)
         {
             DateTime minTime = DateTime.MinValue;
@@ -80,6 +108,8 @@ namespace KinectMotionCapture
                     maxTime = record.Last().TimeStamp;
                 }
             }
+            this.startTime = minTime;
+            this.endTime = maxTime;
             return this.SliceFrames(records, minTime, maxTime);
         }
 
@@ -89,7 +119,7 @@ namespace KinectMotionCapture
             foreach (string dataDir in dataDirs)
             {
                 string metaDataFilePath = Path.Combine(dataDir, "BodyInfo.mpac");
-                records.Add(this.GetMotionDataFromFile(dataDir));
+                records.Add(this.GetMotionDataFromFile(metaDataFilePath));
             }
             records = this.SearchDupFrames(records);
             // 近いレコード取ってくるやつを実装する
@@ -97,7 +127,7 @@ namespace KinectMotionCapture
             // public int GetIndexBinarySearch(DateTime timestamp) {
             //     timeInfoのインデックスを返す
             //     return _timeInfo.Keys.BinarySearch(timestamp - this.TimeOffset);
-        }
+        
         }
 
     }
@@ -122,7 +152,7 @@ namespace KinectMotionCapture
 
         public List<CvSize> DepthUserSize
         {
-            get { return this.motionDataList.Select((m) => m.DepthUserSize).ToList(); }
+            get { return this.motionDataList.Select((m) => new CvSize(m.DepthUserWidth, m.DepthUserHeight)).ToList(); }
         }
 
         public List<SerializableBody> SelectedBodyList
@@ -132,7 +162,8 @@ namespace KinectMotionCapture
                 List<SerializableBody> bodies = new List<SerializableBody>();
                 foreach (MotionData data in this.motionDataList)
                 {
-                    SerializableBody body = data.bodies.Where((b) => b.TrackingId == data.SelectedUserId).First();
+                    // あとでなおす
+                    SerializableBody body = data.bodies.First();//data.bodies.Where((b) => b.TrackingId == data.SelectedUserId).First();
                     bodies.Add(body);
                 }
                 return bodies;
