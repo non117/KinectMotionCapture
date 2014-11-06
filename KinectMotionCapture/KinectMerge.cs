@@ -17,7 +17,7 @@ namespace KinectMotionCapture
     class FrameSequence
     {
         private List<CvMat> convList = null;
-        private List<KinectUndistortion> undistortionDataList;
+        private int frameRate = 30;
         
         public int recordNum;
         public DateTime startTime;
@@ -53,10 +53,13 @@ namespace KinectMotionCapture
         /// </summary>
         public List<KinectUndistortion> UndistortionDataList
         {
-            get { return this.undistortionDataList; }
+            get;
+            set;
         }
 
-
+        /// <summary>
+        /// 各レコードの選択されたユーザ
+        /// </summary>
         public List<ulong> SelectedUserIdList
         {
             get;
@@ -122,6 +125,8 @@ namespace KinectMotionCapture
 
         public FrameSequence(List<string> dataDirs)
         {
+            // TODO 例外処理
+            this.recordNum = dataDirs.Count();
             List<List<MotionData>> records = new List<List<MotionData>>();
             foreach (string dataDir in dataDirs)
             {
@@ -134,6 +139,7 @@ namespace KinectMotionCapture
             // public int GetIndexBinarySearch(DateTime timestamp) {
             //     timeInfoのインデックスを返す
             //     return _timeInfo.Keys.BinarySearch(timestamp - this.TimeOffset);
+            // framesにぶちこむ
         
         }
 
