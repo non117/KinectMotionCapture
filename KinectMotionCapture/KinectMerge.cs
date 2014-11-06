@@ -56,6 +56,13 @@ namespace KinectMotionCapture
             get { return this.undistortionDataList; }
         }
 
+
+        public List<ulong> SelectedUserIdList
+        {
+            get;
+            set;
+        }
+
         /// <summary>
         /// レコードのメタデータをデシリアライズしてくる
         /// </summary>
@@ -155,19 +162,21 @@ namespace KinectMotionCapture
             get { return this.motionDataList.Select((m) => new CvSize(m.DepthUserWidth, m.DepthUserHeight)).ToList(); }
         }
 
-        public List<SerializableBody> SelectedBodyList
+        /// <summary>
+        /// idの一致するBodyを返す
+        /// </summary>
+        /// <param name="selectedUserIdList"></param>
+        /// <returns></returns>
+        public List<SerializableBody> SelectedBodyList(List<ulong> selectedUserIdList)
         {
-            get
+            List<SerializableBody> bodies = new List<SerializableBody>();
+            for (int i = 0; i < this.recordNum; i++)
             {
-                List<SerializableBody> bodies = new List<SerializableBody>();
-                foreach (MotionData data in this.motionDataList)
-                {
-                    // あとでなおす
-                    SerializableBody body = data.bodies.First();//data.bodies.Where((b) => b.TrackingId == data.SelectedUserId).First();
-                    bodies.Add(body);
-                }
-                return bodies;
+                // あとでなおす
+                SerializableBody body = this.motionDataList[i].bodies.Where((b) => b.TrackingId == selectedUserIdList[i]).First();
+                bodies.Add(body);
             }
+            return bodies;
         }
 
         public Frame(List<MotionData> motionDataList)
@@ -225,9 +234,9 @@ namespace KinectMotionCapture
         /// あるフレームにおける座標変換行列を骨格情報から計算する
         /// </summary>
         /// <param name="frame"></param>
-        public List<CvMat> AjustFrameFromeBone(Frame frame, List<CvMat> convList)
+        public List<CvMat> AjustFrameFromeBone(Frame frame, List<CvMat> convList, List<ulong> selectedUserIdList)
         {
-            List<SerializableBody> bodies = frame.SelectedBodyList;
+            List<SerializableBody> bodies = frame.SelectedBodyList(selectedUserIdList);
             if ( bodies.Count() != frame.recordNum )
             {
                 System.Windows.MessageBox.Show("ユーザが選択されていないレコードがあります");
@@ -271,7 +280,7 @@ namespace KinectMotionCapture
             //return;
             foreach (Frame frame in frameSeq.frames)
             {
-                List<SerializableBody> bodies = frame.SelectedBodyList;
+                List<SerializableBody> bodies = frame.SelectedBodyList(frameSeq.SelectedUserIdList);
                 for (int i = 0; i < frame.recordNum; i++)
                 {;
                     for (int j = i + 1; j < frame.recordNum; j++)
@@ -307,7 +316,7 @@ namespace KinectMotionCapture
                 Dictionary<int, ICoordConversion3D> conversionsPerDependencyKey = new Dictionary<int, ICoordConversion3D>();
                 foreach (Frame frame in frameSeq.frames)
                 {
-                    List<SerializableBody> bodies = frame.SelectedBodyList;
+                    List<SerializableBody> bodies = frame.SelectedBodyList(frameSeq.SelectedUserIdList);
                     List<KinectUndistortion> undistortions = frameSeq.UndistortionDataList;
                     List<CvSize> depthUsersizeList = frame.DepthUserSize;
 
