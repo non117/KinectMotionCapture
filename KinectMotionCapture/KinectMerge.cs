@@ -17,14 +17,16 @@ namespace KinectMotionCapture
     /// </summary>
     class FrameSequence
     {
-        private List<CvMat> convList = null;
-        private int frameRate = 30;
-        
+        private List<CvMat> convList;
+        private List<string> dataDirs;
+        private TimeSpan timePeriod;
+
         public int recordNum;
+        public double frameRate = 30;
         public DateTime startTime;
         public DateTime endTime;
         // TODO: IEnumerableにしても良さそう。イテレータブロックとか使うらしい。
-        public List<Frame> frames;
+        public List<Frame> frames { get; set; }
         
         /// <summary>
         /// 座標系を統合するための変換行列、各レコードに対して
@@ -82,7 +84,7 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
-        /// レコードを切り出してくるやつ
+        /// レコードを切り出してくるやつ. TODO: 長さ0のを返す場合
         /// </summary>
         /// <param name="records"></param>
         /// <param name="minTime"></param>
@@ -124,10 +126,47 @@ namespace KinectMotionCapture
             return this.SliceFrames(records, minTime, maxTime);
         }
 
+        /// <summary>
+        /// 時刻を少しずつ進めながらフレームを作っていく
+        /// </summary>
+        /// <param name="records"></param>
+        /// <returns></returns>
+        private List<Frame> GenerateFrames(List<List<MotionData>> records)
+        {
+            List<Frame> frames = new List<Frame>();
+
+            for (DateTime time = this.startTime; time <= this.endTime; time += this.timePeriod)
+            {
+                // 同時刻のフレーム集合. Kinectの数だけ入るはず.
+                List<MotionData> tempRecords = new List<MotionData>();
+                foreach(List<MotionData> record in records)
+                {
+                    SortedList<DateTime, int> timeInfo = new SortedList<DateTime, int>();
+                    foreach (var dataSet in record.Select((value, index) => new {value, index}))
+                    {
+                        timeInfo.Add(dataSet.value.TimeStamp, dataSet.index);
+                    }
+                    int frameIndex = ListEx.GetMaxLessEqualIndexFromBinarySearch(timeInfo.Keys.BinarySearch(time));
+                    tempRecords.Add(record[frameIndex]);
+                }
+                Frame frame = new Frame(tempRecords);
+                frame.Time = time;
+                frames.Add(frame);
+            }
+            return frames;
+        }
+
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        /// <param name="dataDirs"></param>
         public FrameSequence(List<string> dataDirs)
         {
+            this.timePeriod = new TimeSpan((long)(10000000L / this.frameRate));
             // TODO 例外処理
             this.recordNum = dataDirs.Count();
+            this.dataDirs = dataDirs;
+            // 外側がKinectの数だけあるレコード、内側がフレーム数分
             List<List<MotionData>> records = new List<List<MotionData>>();
             foreach (string dataDir in dataDirs)
             {
@@ -135,12 +174,7 @@ namespace KinectMotionCapture
                 records.Add(this.GetMotionDataFromFile(metaDataFilePath));
             }
             records = this.SearchDupFrames(records);
-            // 近いレコード取ってくるやつを実装する
-            // ListEx.GetMaxLessEqualIndexFromBinarySearch(record.RecordData.GetIndexBinarySearch(time));
-            // public int GetIndexBinarySearch(DateTime timestamp) {
-            //     timeInfoのインデックスを返す
-            //     return _timeInfo.Keys.BinarySearch(timestamp - this.TimeOffset);
-            // framesにぶちこむ
+            this.frames = this.GenerateFrames(records);
         
         }
 
@@ -152,25 +186,22 @@ namespace KinectMotionCapture
     class Frame
     {
         public int recordNum;
-        private List<MotionData> motionDataList;
+        private List<MotionData> records;
+        public DateTime Time { get; set; }
         
         public List<CvMat> ColorMatList
         {
-            get
-            {
-
-                return this.motionDataList.Select((m) => m.imageMat).ToList();
-            }
+            get { return this.records.Select((m) => m.imageMat).ToList(); }
         }
         
         public List<CvMat> DepthMatList
         {
-            get { return this.motionDataList.Select((m) => m.depthMat).ToList(); }
+            get { return this.records.Select((m) => m.depthMat).ToList(); }
         }       
 
         public List<CvSize> DepthUserSize
         {
-            get { return this.motionDataList.Select((m) => new CvSize(m.DepthUserWidth, m.DepthUserHeight)).ToList(); }
+            get { return this.records.Select((m) => new CvSize(m.DepthUserWidth, m.DepthUserHeight)).ToList(); }
         }
 
         /// <summary>
@@ -184,16 +215,16 @@ namespace KinectMotionCapture
             for (int i = 0; i < this.recordNum; i++)
             {
                 // あとでなおす
-                SerializableBody body = this.motionDataList[i].bodies.Where((b) => b.TrackingId == selectedUserIdList[i]).First();
+                SerializableBody body = this.records[i].bodies.Where((b) => b.TrackingId == selectedUserIdList[i]).First();
                 bodies.Add(body);
             }
             return bodies;
         }
 
-        public Frame(List<MotionData> motionDataList)
+        public Frame(List<MotionData> records)
         {
-            this.recordNum = motionDataList.Count();
-            this.motionDataList = motionDataList;
+            this.recordNum = records.Count();
+            this.records = records;
         }
     }
 
