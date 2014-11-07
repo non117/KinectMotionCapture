@@ -16,6 +16,8 @@ namespace KinectMotionCapture
         private double D = 56231.3471302;
         private PointF[] depthFrameToCameraSpaceTable = null;
         private PointF[] depthFrameToColorSpacfeTable = null;
+        private int originalColorWidth = 1920;
+        private int originalColorHeight = 1080;
         private int depthWidth = 0;
         private int depthHeight = 0;
 
@@ -65,6 +67,22 @@ namespace KinectMotionCapture
             tempP.Y = lut.Y;
             tempP.X = lut.X + (float)(this.D / depth);
             return tempP;
+        }
+
+        /// <summary>
+        /// 縮小されてた場合に対応する深度TOカラー変換
+        /// </summary>
+        /// <param name="depthSpacePoint"></param>
+        /// <param name="depth"></param>
+        /// <param name="colorWidth"></param>
+        /// <param name="colorHeight"></param>
+        /// <returns></returns>
+        public ColorSpacePoint MapDepthPointToColorSpace(DepthSpacePoint depthSpacePoint, ushort depth, int colorWidth, int colorHeight)
+        {
+            ColorSpacePoint csp = this.MapDepthPointToColorSpace(depthSpacePoint, depth);
+            csp.X = csp.X * colorWidth / this.originalColorWidth;
+            csp.Y = csp.Y * colorHeight / this.originalColorHeight;
+            return csp;
         }
 
         /// <summary>

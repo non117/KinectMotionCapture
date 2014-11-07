@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -155,7 +156,11 @@ namespace KinectMotionCapture
         
         public List<CvMat> ColorMatList
         {
-            get { return this.motionDataList.Select((m) => m.imageMat).ToList(); }
+            get
+            {
+
+                return this.motionDataList.Select((m) => m.imageMat).ToList();
+            }
         }
         
         public List<CvMat> DepthMatList

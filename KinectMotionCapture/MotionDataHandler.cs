@@ -262,6 +262,59 @@ namespace KinectMotionCapture
         [NonSerialized]
         public CvMat userMat = null;
 
+        /// <summary>
+        /// setを定義するとデシリアライズできなくなって死ぬ
+        /// メモリを食べまくるのであんまりメンバとして画像を持ちたくない
+        /// 複数回呼ばれることが前提だったらLoadしておいてもらうとか？
+        /// </summary>
+        public CvMat DepthMat
+        {
+            get 
+            {
+                if (this.depthMat != null)
+                {
+                    return this.depthMat;
+                }
+                return CvMat.LoadImageM(this.DepthPath, LoadMode.Unchanged); 
+            }
+        }
+        public CvMat ImageMat
+        {
+            get
+            {
+                if (this.imageMat != null)
+                {
+                    return this.imageMat;
+                }
+                return CvMat.LoadImageM(this.ImagePath, LoadMode.Unchanged);
+            }
+        }
+        public CvMat UserMat
+        {
+            get
+            {
+                if (this.userMat != null)
+                {
+                    return this.userMat;
+                }
+                return CvMat.LoadImageM(this.UserPath, LoadMode.Unchanged);
+            }
+        }
+
+        /// <summary>
+        /// pathをフルパスで保存してしまってたのでつくった。つらい。
+        /// </summary>
+        /// <param name="dataDir"></param>
+        public void ReConstructPaths(string dataDir)
+        {
+            this.ImagePath = Path.Combine(dataDir, Path.GetFileName(this.ImagePath));
+            this.DepthPath = Path.Combine(dataDir, Path.GetFileName(this.DepthPath));
+            this.UserPath = Path.Combine(dataDir, Path.GetFileName(this.UserPath));
+        }
+
+        /// <summary>
+        /// undistortionでのみ使われる特殊ケースなので分けたほうが良いかも
+        /// </summary>
         public void LoadImages()
         {
             this.depthMat = CvMat.LoadImageM(this.DepthPath, LoadMode.Unchanged);
