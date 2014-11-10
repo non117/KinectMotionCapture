@@ -47,6 +47,33 @@ namespace KinectMotionCapture
             return list;
         }
 
+        public FlannColoredModelPoints(CvMat modelDepthMat, CvMat modelColorMat, LocalCoordinateMapper localCoordinateMapper, IndexParams indexParams, SearchParams searchParams, double colorScale)
+        {
+            _modelPoints = localCoordinateMapper.DepthColorMatToRealPoints(modelDepthMat, modelColorMat);
+
+            _modelMat = new CvMat(_modelPoints.Count, 6, MatrixType.F32C1);
+            unsafe
+            {
+                float* modelArr = _modelMat.DataSingle;
+                foreach (var tuple in _modelPoints)
+                {
+                    *(modelArr++) = (float)tuple.Item1.X;
+                    *(modelArr++) = (float)tuple.Item1.Y;
+                    *(modelArr++) = (float)tuple.Item1.Z;
+                    *(modelArr++) = (float)(tuple.Item2.R * colorScale / 255);
+                    *(modelArr++) = (float)(tuple.Item2.G * colorScale / 255);
+                    *(modelArr++) = (float)(tuple.Item2.B * colorScale / 255);
+                }
+            }
+            _colorScale = colorScale;
+            _modelDataMat = new Mat(_modelMat);
+            _indexParam = indexParams;
+            _searchParam = searchParams;
+            _indexParam.IsEnabledDispose = false;
+            _searchParam.IsEnabledDispose = false;
+            _flannIndex = new Index(_modelDataMat, _indexParam);
+        }
+
         public FlannColoredModelPoints(CvMat modelDepthMat, CvMat modelColorMat, Func<CvPoint3D64f, CvPoint3D64f> modelMatProjectToRealWorld, IndexParams indexParams, SearchParams searchParams, double colorScale)
         {
             _modelPoints = DepthColorMatToRealPoints(modelDepthMat, modelColorMat, modelMatProjectToRealWorld);
@@ -160,6 +187,29 @@ namespace KinectMotionCapture
             for (int i = 0; i < modelDepthMatList.Count; i++)
             {
                 FlannColoredModelPoints model = new FlannColoredModelPoints(modelDepthMatList[i], modelColorMatList[i], modelMatProjectToRealWorldList[i], new KDTreeIndexParams(), new SearchParams(), colorScale);
+                _flannModels.Add(model);
+            }
+            if (_flannModels.Count != initialModelTransforms.Count)
+            {
+                throw new ArgumentException("transform list length must be same as model list length");
+            }
+            _modelTransforms = initialModelTransforms.ToList();
+            _weightFromDistanceSq = weightFromDistanceSq;
+        }
+
+        public ColoredIterativePointMatching(IList<CvMat> modelDepthMatList, IList<CvMat> modelColorMatList, LocalCoordinateMapper localCoordinateMapper, IList<CvMat> initialModelTransforms, Func<float, double> weightFromDistanceSq, double colorScale)
+        {
+            if (weightFromDistanceSq == null)
+            {
+                throw new ArgumentNullException("weightFromDistanceSq");
+            }
+            if (modelDepthMatList.Count != modelColorMatList.Count)
+            {
+                throw new ArgumentException("list length mismatch");
+            }
+            for (int i = 0; i < modelDepthMatList.Count; i++)
+            {
+                FlannColoredModelPoints model = new FlannColoredModelPoints(modelDepthMatList[i], modelColorMatList[i], localCoordinateMapper, new KDTreeIndexParams(), new SearchParams(), colorScale);
                 _flannModels.Add(model);
             }
             if (_flannModels.Count != initialModelTransforms.Count)

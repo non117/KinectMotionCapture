@@ -26,7 +26,8 @@ namespace KinectMotionCapture
         public DateTime startTime;
         public DateTime endTime;
         // TODO: IEnumerableにしても良さそう。イテレータブロックとか使うらしい。
-        public List<Frame> frames { get; set; }
+        public List<Frame> Frames { get; set; }
+        public LocalCoordinateMapper LocalCoordinateMapper { get; set; }
         
         /// <summary>
         /// 座標系を統合するための変換行列、各レコードに対して
@@ -225,7 +226,7 @@ namespace KinectMotionCapture
             int shortestRecordLength = records.Select((List<MotionData> record) => record.Count()).Min();
             this.timePeriod = new TimeSpan((this.endTime - this.startTime).Ticks / shortestRecordLength);
 
-            this.frames = this.GenerateFrames(records);
+            this.Frames = this.GenerateFrames(records);
             Debug.WriteLine("hoge");
         }
 
@@ -282,7 +283,7 @@ namespace KinectMotionCapture
         {
             foreach (JointType jointType in Enum.GetValues(typeof(JointType)))
             {
-
+                //実装する
             }
         }
     }
@@ -293,17 +294,10 @@ namespace KinectMotionCapture
         /// あるフレームにおける座標変換行列を深度情報から計算する
         /// </summary>
         /// <param name="frame"></param>
-        public static List<CvMat> AjustFrameFromDepth(Frame frame, List<CvMat> convList)
+        public static List<CvMat> AjustFrameFromDepth(Frame frame, List<CvMat> convList, LocalCoordinateMapper localCoordinateMapper)
         {
-            /*
-            List<Func<CvPoint3D64f, CvPoint3D64f>> toReal = new List<Func<CvPoint3D64f, CvPoint3D64f>>();
-            foreach (CvMat depthMat in frame.DepthMatList)
-            {
-                toReal.Add((x) => KinectUndistortion.GetOriginalRealFromScreenPos(x, new CvSize(depthMat.Cols, depthMat.Rows)));
-            }
-             */
             Func<float, double> distance2weight = x => 1.0 / (x * 0 + 400);
-            using (ColoredIterativePointMatching sipm = new ColoredIterativePointMatching(frame.DepthMatList, frame.ColorMatList, toReal, convList, distance2weight, 200))
+            using (ColoredIterativePointMatching sipm = new ColoredIterativePointMatching(frame.DepthMatList, frame.ColorMatList, localCoordinateMapper, convList, distance2weight, 200))
             {
                 List<CvMat> conversions = sipm.CalculateTransformSequntially(0.2, 3);
                 return conversions;
@@ -316,17 +310,10 @@ namespace KinectMotionCapture
         /// <param name="frames"></param>
         public static void AjustFramesFromDepth(FrameSequence frameSeq)
         {
-            foreach (Frame frame in frameSeq.frames)
+            foreach (Frame frame in frameSeq.Frames)
             {
-                /*
-                List<Func<CvPoint3D64f, CvPoint3D64f>> toReal = new List<Func<CvPoint3D64f, CvPoint3D64f>>();
-                foreach (CvMat depthMat in frame.DepthMatList)
-                {
-                    toReal.Add((x) => KinectUndistortion.GetOriginalRealFromScreenPos(x, new CvSize(depthMat.Cols, depthMat.Rows)));
-                }
-                 */
                 Func<float, double> distance2weight = x => 1.0 / (x * 0 + 400);
-                using (ColoredIterativePointMatching sipm = new ColoredIterativePointMatching(frame.DepthMatList, frame.ColorMatList, toReal, frameSeq.ToWorldConversions, distance2weight, 200))
+                using (ColoredIterativePointMatching sipm = new ColoredIterativePointMatching(frame.DepthMatList, frame.ColorMatList, frameSeq.LocalCoordinateMapper, frameSeq.ToWorldConversions, distance2weight, 200))
                 {
                     List<CvMat> conversions = sipm.CalculateTransformSequntially(0.1, 1);
                     frameSeq.ToWorldConversions = conversions;
@@ -383,7 +370,7 @@ namespace KinectMotionCapture
             Dictionary<Tuple<int, int>, int> cooccurenceCount = new Dictionary<Tuple<int, int>, int>();
             //System.Windows.MessageBox.Show("ユーザが選択されていないレコードがあります");
             //return;
-            foreach (Frame frame in frameSeq.frames)
+            foreach (Frame frame in frameSeq.Frames)
             {
                 List<SerializableBody> bodies = frame.SelectedBodyList(frameSeq.SelectedUserIdList);
                 for (int i = 0; i < frame.recordNum; i++)
@@ -419,7 +406,7 @@ namespace KinectMotionCapture
             else
             {
                 Dictionary<int, ICoordConversion3D> conversionsPerDependencyKey = new Dictionary<int, ICoordConversion3D>();
-                foreach (Frame frame in frameSeq.frames)
+                foreach (Frame frame in frameSeq.Frames)
                 {
                     List<SerializableBody> bodies = frame.SelectedBodyList(frameSeq.SelectedUserIdList);
                     List<KinectUndistortion> undistortions = frameSeq.UndistortionDataList;

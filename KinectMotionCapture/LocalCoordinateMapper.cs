@@ -11,7 +11,7 @@ using OpenCvSharp;
 namespace KinectMotionCapture
 {
     [Serializable]
-    class LocalCoordinateMapper
+    public class LocalCoordinateMapper
     {
         // Kinect2の内部パラメータを推定したやつ
         private double D = 56231.3471302;
@@ -54,6 +54,13 @@ namespace KinectMotionCapture
             return new CameraSpacePoint() { X = cameraPoint.X * distance, Y = cameraPoint.Y * distance, Z = distance };
         }
 
+        /// <summary>
+        /// 深度画像座標からワールド空間座標へ
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="depth"></param>
+        /// <returns></returns>
         public CameraSpacePoint MapDepthPointToCameraSpace(int x, int y, ushort depth)
         {
             return this.MapDepthPointToCameraSpace(new DepthSpacePoint() { X = x, Y = y }, depth);
@@ -75,6 +82,13 @@ namespace KinectMotionCapture
             return tempP;
         }
 
+        /// <summary>
+        /// 深度画像座標からカラー画像座標へ
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="depth"></param>
+        /// <returns></returns>
         public ColorSpacePoint MapDepthPointToColorSpace(int x, int y, ushort depth)
         {
             return this.MapDepthPointToColorSpace(new DepthSpacePoint() { X = x, Y = y }, depth);
@@ -96,11 +110,26 @@ namespace KinectMotionCapture
             return csp;
         }
 
+        /// <summary>
+        /// 縮小対策入り深度TOカラー
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="depth"></param>
+        /// <param name="colorWidth"></param>
+        /// <param name="colorHeight"></param>
+        /// <returns></returns>
         public ColorSpacePoint MapDepthPointToColorSpace(int x, int y, ushort depth, int colorWidth, int colorHeight)
         {
             return this.MapDepthPointToColorSpace(new DepthSpacePoint() { X = x, Y = y }, depth, colorWidth, colorHeight);
         }
 
+        /// <summary>
+        /// 深度とカラーMatから点群の座標と色を返す
+        /// </summary>
+        /// <param name="depthMat"></param>
+        /// <param name="colorMat"></param>
+        /// <returns></returns>
         public List<Tuple<CvPoint3D64f, CvColor>> DepthColorMatToRealPoints(CvMat depthMat, CvMat colorMat)
         {
             List<Tuple<CvPoint3D64f, CvColor>> list = new List<Tuple<CvPoint3D64f, CvColor>>();
