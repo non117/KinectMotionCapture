@@ -28,7 +28,14 @@ namespace KinectMotionCapture
 
         public MergeRecordWindow()
         {
-            //List<string> datadir = new List<string>() { @"C:\Users\non\Desktop\data\1015_kinect4\mite1" };
+            List<string> datadir = new List<string>() {
+                                                    @"F:\0922\0922_kinect1\mitemite2",  
+                                                    @"F:\0922\0922_kinect2\mitemite2", 
+                                                    @"F:\0922\0922_kinect3\mitemite2", 
+                                                    @"F:\0922\0922_kinect4\mitemite2", 
+            };
+            FrameSequence fs = new FrameSequence(datadir);
+            Environment.Exit(0);
             InitializeComponent();
         }
 

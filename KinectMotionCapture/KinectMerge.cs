@@ -134,19 +134,66 @@ namespace KinectMotionCapture
         private List<Frame> GenerateFrames(List<List<MotionData>> records)
         {
             List<Frame> frames = new List<Frame>();
+            List<SortedList<DateTime, int>> timeInfos = new List<SortedList<DateTime, int>>();
+
+            foreach (List<MotionData> record in records)
+            {
+                SortedList<DateTime, int> timeInfo = new SortedList<DateTime, int>();
+                // 以下2つは時刻被り対策. マシンスペックが遅いとよく発生するので, 線形に補完する.
+                DateTime prevTime = DateTime.MinValue;
+                List<int> depIndexes = new List<int>();
+                
+                foreach (var dataSet in record.Select((value, index) => new { value, index }))
+                {
+                    // キー:時刻がかぶってたらためておく
+                    if (timeInfo.Keys.Contains(dataSet.value.TimeStamp))
+                    {
+                        depIndexes.Add(dataSet.index);
+                        continue;
+                    }
+                    else
+                    {
+                        timeInfo.Add(dataSet.value.TimeStamp, dataSet.index);
+                        // 時刻がちゃんと進んだら貯まってたデータをならして記録する
+                        if (dataSet.value.TimeStamp != prevTime && depIndexes.Count > 0)
+                        {
+                            TimeSpan diff = dataSet.value.TimeStamp - prevTime;
+                            for (int i = 1; i < depIndexes.Count(); i++)
+                            {
+                                int msec = diff.Milliseconds * (i + 1) / (depIndexes.Count() + 1);
+                                if (msec > 1)
+                                {
+                                    DateTime time = prevTime + new TimeSpan(0, 0, 0, 0, msec);
+                                    timeInfo.Add(time, i);
+                                }
+                            }
+                            // ちゃんとたまったデータを消す
+                            depIndexes.Clear();
+
+                        }
+                    }
+                    prevTime = dataSet.value.TimeStamp;
+                }
+                timeInfos.Add(timeInfo);
+            }
 
             for (DateTime time = this.startTime; time <= this.endTime; time += this.timePeriod)
             {
                 // 同時刻のフレーム集合. Kinectの数だけ入るはず.
                 List<MotionData> tempRecords = new List<MotionData>();
-                foreach(List<MotionData> record in records)
+                for (int i = 0; i < this.recordNum;i++ )
                 {
-                    SortedList<DateTime, int> timeInfo = new SortedList<DateTime, int>();
-                    foreach (var dataSet in record.Select((value, index) => new {value, index}))
-                    {
-                        timeInfo.Add(dataSet.value.TimeStamp, dataSet.index);
-                    }
+                    List<MotionData> record = records[i];
+                    SortedList<DateTime, int> timeInfo = timeInfos[i];
                     int frameIndex = ListEx.GetMaxLessEqualIndexFromBinarySearch(timeInfo.Keys.BinarySearch(time));
+                    if (frameIndex < 0)
+                    {
+                        frameIndex = 0;
+                    }
+                    if (frameIndex > record.Count())
+                    {
+                        frameIndex = record.Count() - 1;
+                    }
                     tempRecords.Add(record[frameIndex]);
                 }
                 Frame frame = new Frame(tempRecords);
@@ -162,7 +209,6 @@ namespace KinectMotionCapture
         /// <param name="dataDirs"></param>
         public FrameSequence(List<string> dataDirs)
         {
-            this.timePeriod = new TimeSpan((long)(10000000L / this.frameRate));
             // TODO 例外処理
             this.recordNum = dataDirs.Count();
             this.dataDirs = dataDirs;
@@ -174,8 +220,13 @@ namespace KinectMotionCapture
                 records.Add(this.GetMotionDataFromFile(metaDataFilePath));
             }
             records = this.SearchDupFrames(records);
+
+            // いちばん短いレコードに合わせて単位時刻を決定する
+            int shortestRecordLength = records.Select((List<MotionData> record) => record.Count()).Min();
+            this.timePeriod = new TimeSpan((this.endTime - this.startTime).Ticks / shortestRecordLength);
+
             this.frames = this.GenerateFrames(records);
-        
+            Debug.WriteLine("hoge");
         }
 
     }

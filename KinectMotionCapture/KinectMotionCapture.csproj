@@ -171,7 +171,7 @@
     <Compile Include="View\ProgressWindow.xaml.cs">
       <DependentUpon>ProgressWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="SerializableCvMat.cs" />
+    <Compile Include="Model\SerializableCvMat.cs" />
     <Compile Include="Utility.cs" />
     <Page Include="View\CameraUndistortWindow.xaml">
       <SubType>Designer</SubType>
