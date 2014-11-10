@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Microsoft.Kinect;
+using OpenCvSharp;
 
 namespace KinectMotionCapture
 {
@@ -53,6 +54,11 @@ namespace KinectMotionCapture
             return new CameraSpacePoint() { X = cameraPoint.X * distance, Y = cameraPoint.Y * distance, Z = distance };
         }
 
+        public CameraSpacePoint MapDepthPointToCameraSpace(int x, int y, ushort depth)
+        {
+            return this.MapDepthPointToCameraSpace(new DepthSpacePoint() { X = x, Y = y }, depth);
+        }
+
         /// <summary>
         /// 深度画像座標からカラー画像座標へ変換するやつ
         /// </summary>
@@ -69,6 +75,11 @@ namespace KinectMotionCapture
             return tempP;
         }
 
+        public ColorSpacePoint MapDepthPointToColorSpace(int x, int y, ushort depth)
+        {
+            return this.MapDepthPointToColorSpace(new DepthSpacePoint() { X = x, Y = y }, depth);
+        }
+
         /// <summary>
         /// 縮小されてた場合に対応する深度TOカラー変換
         /// </summary>
@@ -83,6 +94,38 @@ namespace KinectMotionCapture
             csp.X = csp.X * colorWidth / this.originalColorWidth;
             csp.Y = csp.Y * colorHeight / this.originalColorHeight;
             return csp;
+        }
+
+        public ColorSpacePoint MapDepthPointToColorSpace(int x, int y, ushort depth, int colorWidth, int colorHeight)
+        {
+            return this.MapDepthPointToColorSpace(new DepthSpacePoint() { X = x, Y = y }, depth, colorWidth, colorHeight);
+        }
+
+        public List<Tuple<CvPoint3D64f, CvColor>> DepthColorMatToRealPoints(CvMat depthMat, CvMat colorMat)
+        {
+            List<Tuple<CvPoint3D64f, CvColor>> list = new List<Tuple<CvPoint3D64f, CvColor>>();
+            unsafe
+            {
+                short* depthArr = depthMat.DataInt16;
+                byte* colorArr = colorMat.DataByte;
+                for (int y = 0; y < depthMat.Rows; y++)
+                {
+                    int offset = y * depthMat.Cols;                    
+                    for (int x = 0; x < depthMat.Cols; x++)
+                    {
+                        ushort depth = (ushort)depthArr[offset + x];
+                        if (depth == 0)
+                            continue;
+                        ColorSpacePoint csp = this.MapDepthPointToColorSpace(x, y, depth, depthMat.Cols, depthMat.Rows);
+                        CvPoint3D64f point = this.MapDepthPointToCameraSpace(x, y, depth).ToCvPoint3D();
+                        int offsetXColor = (int)Math.Round(csp.X) * colorMat.ElemChannels;
+                        int offsetColor = (int)Math.Round(csp.Y) * colorMat.Cols * colorMat.ElemChannels;
+                        CvColor col = new CvColor(colorArr[offsetColor + offsetXColor + 0], colorArr[offsetColor + offsetXColor + 1], colorArr[offsetColor + offsetXColor + 2]);
+                        list.Add(new Tuple<CvPoint3D64f, CvColor>(point, col));
+                    }
+                }
+            }
+            return list;
         }
 
         /// <summary>

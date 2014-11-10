@@ -277,6 +277,14 @@ namespace KinectMotionCapture
             this.recordNum = records.Count();
             this.records = records;
         }
+
+        public void ApplyConversions(CvMat conversions)
+        {
+            foreach (JointType jointType in Enum.GetValues(typeof(JointType)))
+            {
+
+            }
+        }
     }
 
     class KinectMerge
@@ -287,11 +295,13 @@ namespace KinectMotionCapture
         /// <param name="frame"></param>
         public static List<CvMat> AjustFrameFromDepth(Frame frame, List<CvMat> convList)
         {
+            /*
             List<Func<CvPoint3D64f, CvPoint3D64f>> toReal = new List<Func<CvPoint3D64f, CvPoint3D64f>>();
             foreach (CvMat depthMat in frame.DepthMatList)
             {
                 toReal.Add((x) => KinectUndistortion.GetOriginalRealFromScreenPos(x, new CvSize(depthMat.Cols, depthMat.Rows)));
             }
+             */
             Func<float, double> distance2weight = x => 1.0 / (x * 0 + 400);
             using (ColoredIterativePointMatching sipm = new ColoredIterativePointMatching(frame.DepthMatList, frame.ColorMatList, toReal, convList, distance2weight, 200))
             {
@@ -308,11 +318,13 @@ namespace KinectMotionCapture
         {
             foreach (Frame frame in frameSeq.frames)
             {
+                /*
                 List<Func<CvPoint3D64f, CvPoint3D64f>> toReal = new List<Func<CvPoint3D64f, CvPoint3D64f>>();
                 foreach (CvMat depthMat in frame.DepthMatList)
                 {
                     toReal.Add((x) => KinectUndistortion.GetOriginalRealFromScreenPos(x, new CvSize(depthMat.Cols, depthMat.Rows)));
                 }
+                 */
                 Func<float, double> distance2weight = x => 1.0 / (x * 0 + 400);
                 using (ColoredIterativePointMatching sipm = new ColoredIterativePointMatching(frame.DepthMatList, frame.ColorMatList, toReal, frameSeq.ToWorldConversions, distance2weight, 200))
                 {
