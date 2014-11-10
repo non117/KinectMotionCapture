@@ -147,7 +147,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="CalcEx.cs" />
-    <Compile Include="CameraUndistortWindow.xaml.cs">
+    <Compile Include="View\CameraUndistortWindow.xaml.cs">
       <DependentUpon>CameraUndistortWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="ColoredIterativePointMatching.cs" />
@@ -155,40 +155,41 @@
     <Compile Include="CoordRotTransConversion.cs" />
     <Compile Include="CvEx.cs" />
     <Compile Include="EventEx.cs" />
-    <Compile Include="InitWindow.xaml.cs">
+    <Compile Include="View\InitWindow.xaml.cs">
       <DependentUpon>InitWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="KinectMerge.cs" />
     <Compile Include="KinectUndistortion.cs" />
     <Compile Include="ListEx.cs" />
     <Compile Include="MemorySavingLeastSquare.cs" />
-    <Compile Include="MergeRecordWindow.xaml.cs">
+    <Compile Include="View\MergeRecordWindow.xaml.cs">
       <DependentUpon>MergeRecordWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="MotionDataHandler.cs" />
+    <Compile Include="Test\MotionDataChecker.cs" />
+    <Compile Include="Model\MotionDataHandler.cs" />
     <Compile Include="ProgressData.cs" />
-    <Compile Include="ProgressWindow.xaml.cs">
+    <Compile Include="View\ProgressWindow.xaml.cs">
       <DependentUpon>ProgressWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="SerializableCvMat.cs" />
     <Compile Include="Utility.cs" />
-    <Page Include="CameraUndistortWindow.xaml">
+    <Page Include="View\CameraUndistortWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="InitWindow.xaml">
+    <Page Include="View\InitWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="MergeRecordWindow.xaml">
+    <Page Include="View\MergeRecordWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="ProgressWindow.xaml">
+    <Page Include="View\ProgressWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="RecordWindow.xaml">
+    <Page Include="View\RecordWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -196,7 +197,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="RecordWindow.xaml.cs">
+    <Compile Include="View\RecordWindow.xaml.cs">
       <DependentUpon>RecordWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
