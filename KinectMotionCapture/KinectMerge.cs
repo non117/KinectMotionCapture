@@ -5,8 +5,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Kinect;
+using System.Windows;
 
+using Microsoft.Kinect;
 using MsgPack.Serialization;
 using OpenCvSharp;
 
@@ -234,6 +235,10 @@ namespace KinectMotionCapture
             {
                 string metaDataFilePath = Path.Combine(dataDir, "BodyInfo.mpac");
                 List<MotionData> mdList = this.GetMotionDataFromFile(metaDataFilePath).OrderBy(md => md.TimeStamp).ToList();
+                foreach (MotionData md in mdList)
+                {
+                    md.ReConstructPaths(dataDir);
+                }
                 records.Add(mdList);
             }
             records = this.SearchDupFrames(records);
@@ -268,7 +273,12 @@ namespace KinectMotionCapture
         public int recordNum;
         private List<MotionData> records;
         public DateTime Time { get; set; }
-        
+
+        public List<string> ColorImagePathList
+        {
+            get { return this.records.Select((m) => m.ImagePath).ToList(); }
+        }
+
         public List<CvMat> ColorMatList
         {
             get { return this.records.Select((m) => m.imageMat).ToList(); }
@@ -282,6 +292,24 @@ namespace KinectMotionCapture
         public List<CvSize> DepthUserSize
         {
             get { return this.records.Select((m) => new CvSize(m.DepthUserWidth, m.DepthUserHeight)).ToList(); }
+        }
+
+        public List<string> BodyIdList(int recordIndex)
+        {
+            // 要修正
+            return new List<SerializableBody>(this.records[recordIndex].bodies).Select((b) => b.TrackingId.ToString()).ToList();
+        }
+
+        public List<Point> BodyCenterPointList(int recordIndex)
+        {
+            try
+            {
+                return new List<SerializableBody>(this.records[recordIndex].bodies).Select((b) => b.colorSpacePoints[JointType.SpineBase]).ToList();
+            }
+            catch (Exception e)
+            {
+                return new List<Point>();
+            }
         }
 
         /// <summary>
