@@ -26,8 +26,9 @@ namespace KinectMotionCapture
         public double frameRate = 30;
         public DateTime startTime;
         public DateTime endTime;
+        public List<ulong> selectedUserIdList;
         // TODO: IEnumerableにしても良さそう。イテレータブロックとか使うらしい。
-        public List<List<ulong>> UserIdList { get; set; }
+        public List<List<ulong>> userIdList;
         public List<Frame> Frames { get; set; }
         public LocalCoordinateMapper LocalCoordinateMapper { get; set; }
         
@@ -61,15 +62,11 @@ namespace KinectMotionCapture
         {
             get;
             set;
-        }
+        }        
 
-        /// <summary>
-        /// 各レコードの選択されたユーザ
-        /// </summary>
-        public List<ulong> SelectedUserIdList
+        public void SetUserID(int recordIndex, ulong bodyId)
         {
-            get;
-            set;
+            this.selectedUserIdList[recordIndex] = bodyId;
         }
 
         /// <summary>
@@ -228,6 +225,12 @@ namespace KinectMotionCapture
         {
             // TODO 例外処理
             this.recordNum = dataDirs.Count();
+            this.selectedUserIdList = new List<ulong>();
+            for (int i = 0; i < this.recordNum; i++)
+            {
+                this.selectedUserIdList.Add(ulong.MaxValue);
+            }
+            
             this.dataDirs = dataDirs;
             // 外側がKinectの数だけあるレコード、内側がフレーム数分
             List<List<MotionData>> records = new List<List<MotionData>>();
@@ -250,7 +253,7 @@ namespace KinectMotionCapture
             this.Frames = this.GenerateFrames(records);
 
             // レコードごとに含まれるidを列挙する
-            this.UserIdList = new List<List<ulong>>();
+            this.userIdList = new List<List<ulong>>();
             foreach (List<MotionData> record in records)
             {
                 List<ulong> idList = new List<ulong>();
@@ -259,7 +262,7 @@ namespace KinectMotionCapture
                     idList.AddRange(new List<SerializableBody>(md.bodies).Select((SerializableBody body) => body.TrackingId));
                 }
                 idList = idList.Distinct().ToList();
-                this.UserIdList.Add(idList);
+                this.userIdList.Add(idList);
             }
         }
 
@@ -296,7 +299,6 @@ namespace KinectMotionCapture
 
         public List<string> BodyIdList(int recordIndex)
         {
-            // 要修正
             return new List<SerializableBody>(this.records[recordIndex].bodies).Select((b) => b.TrackingId.ToString()).ToList();
         }
 
@@ -446,7 +448,7 @@ namespace KinectMotionCapture
             //return;
             foreach (Frame frame in frameSeq.Frames)
             {
-                List<SerializableBody> bodies = frame.SelectedBodyList(frameSeq.SelectedUserIdList);
+                List<SerializableBody> bodies = frame.SelectedBodyList(frameSeq.selectedUserIdList);
                 for (int i = 0; i < frame.recordNum; i++)
                 {;
                     for (int j = i + 1; j < frame.recordNum; j++)
@@ -482,7 +484,7 @@ namespace KinectMotionCapture
                 Dictionary<int, ICoordConversion3D> conversionsPerDependencyKey = new Dictionary<int, ICoordConversion3D>();
                 foreach (Frame frame in frameSeq.Frames)
                 {
-                    List<SerializableBody> bodies = frame.SelectedBodyList(frameSeq.SelectedUserIdList);
+                    List<SerializableBody> bodies = frame.SelectedBodyList(frameSeq.selectedUserIdList);
                     List<KinectUndistortion> undistortions = frameSeq.UndistortionDataList;
                     List<CvSize> depthUsersizeList = frame.DepthUserSize;
 

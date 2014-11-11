@@ -29,7 +29,7 @@ namespace KinectMotionCapture
         private BackgroundWorker worker;
         private bool isPlaying;
 
-        public MergeRecordWindow()
+        private void NewProject()
         {
             List<string> datadir = new List<string>() {
                                                     @"F:\1015\1015_kinect1\master",  
@@ -38,6 +38,12 @@ namespace KinectMotionCapture
                                                     @"F:\1015\1015_kinect4\master", 
             };
             this.frameSequence = new FrameSequence(datadir);
+            this.Initialize();
+        }
+
+        public MergeRecordWindow()
+        {
+            this.NewProject();
             this.frameSequence.LocalCoordinateMapper = (LocalCoordinateMapper)Utility.LoadFromBinary(@"C:\Users\non\Desktop\coordmapper.dump");
 
             this.worker = new BackgroundWorker();
@@ -60,11 +66,20 @@ namespace KinectMotionCapture
             Utility.SaveToBinary(this.frameSequence, @"C:\Users\non\Desktop\frameSeq.dump");
         }
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+        private void Initialize()
         {
-
+            ComboBox[] boxes = { UserIdBox1, UserIdBox2, UserIdBox3, UserIdBox4 };
+            for (int i = 0; i < frameSequence.recordNum; i++)
+            {
+                boxes[i].Items.Add(frameSequence.userIdList[i]);
+            }
         }
 
+        /// <summary>
+        /// BackgroundWorkerの処理内容
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void worker_DoWork(object sender, DoWorkEventArgs e)
         {
             BackgroundWorker bw = (BackgroundWorker)sender;
@@ -85,6 +100,11 @@ namespace KinectMotionCapture
             PlayStop.Content = "Play";
         }
 
+        /// <summary>
+        /// BackgroundWorkerの描画系の処理
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
             Frame frame = (Frame)e.UserState;
@@ -97,6 +117,11 @@ namespace KinectMotionCapture
             }
         }
 
+        /// <summary>
+        /// 再生制御
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void PlayStop_Click(object sender, RoutedEventArgs e)
         {
             if (this.isPlaying)
@@ -110,6 +135,14 @@ namespace KinectMotionCapture
                 PlayStop.Content = "Stop";
                 this.worker.RunWorkerAsync();
             }
+        }
+
+        private void UserIdBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ComboBox box = (ComboBox)sender;
+            int index = int.Parse(box.Name.Substring(box.Name.Length - 2));
+            ulong bodyId = (ulong)((ComboBoxItem)box.SelectedItem).Content;
+            this.frameSequence.SetUserID(index, bodyId);
         }
     }
 }
