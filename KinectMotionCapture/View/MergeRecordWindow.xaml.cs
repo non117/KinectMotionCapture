@@ -13,8 +13,6 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-
-using System.IO;
 using MsgPack.Serialization;
 
 namespace KinectMotionCapture
@@ -24,18 +22,18 @@ namespace KinectMotionCapture
     /// </summary>
     public partial class MergeRecordWindow : Window
     {
-
+        private FrameSequence frameSequence;
 
         public MergeRecordWindow()
         {
             List<string> datadir = new List<string>() {
-                                                    @"F:\0922\0922_kinect1\mitemite2",  
-                                                    @"F:\0922\0922_kinect2\mitemite2", 
-                                                    @"F:\0922\0922_kinect3\mitemite2", 
-                                                    @"F:\0922\0922_kinect4\mitemite2", 
+                                                    @"F:\0922\0922_kinect1\mitemite1",  
+                                                    @"F:\0922\0922_kinect2\mitemite1", 
+                                                    @"F:\0922\0922_kinect3\mitemite1", 
+                                                    @"F:\0922\0922_kinect4\mitemite1", 
             };
-            FrameSequence fs = new FrameSequence(datadir);
-            Environment.Exit(0);
+            this.frameSequence = new FrameSequence(datadir);
+            this.frameSequence.LocalCoordinateMapper = (LocalCoordinateMapper)Utility.LoadFromBinary(@"C:\Users\non\Desktop\coordmapper.dump");
             InitializeComponent();
         }
 

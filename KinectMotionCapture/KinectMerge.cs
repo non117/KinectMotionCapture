@@ -26,6 +26,7 @@ namespace KinectMotionCapture
         public DateTime startTime;
         public DateTime endTime;
         // TODO: IEnumerableにしても良さそう。イテレータブロックとか使うらしい。
+        public List<List<ulong>> UserIdList { get; set; }
         public List<Frame> Frames { get; set; }
         public LocalCoordinateMapper LocalCoordinateMapper { get; set; }
         
@@ -68,6 +69,18 @@ namespace KinectMotionCapture
         {
             get;
             set;
+        }
+
+        /// <summary>
+        /// 座標変換を適用する
+        /// </summary>
+        private void ApplyConversion()
+        {
+            List<CvMat> conversions = this.ToWorldConversions;
+            for (int i = 0; i < this.recordNum; i++)
+            {
+                this.Frames[i].ApplyConversions(conversions[i]);
+            }
         }
 
         /// <summary>
@@ -165,7 +178,9 @@ namespace KinectMotionCapture
                                 if (msec > 1)
                                 {
                                     DateTime time = prevTime + new TimeSpan(0, 0, 0, 0, msec);
-                                    timeInfo.Add(time, i);
+                                    // それでもかぶったら諦める
+                                    if (!timeInfo.Keys.Contains(time))
+                                        timeInfo.Add(time, i);
                                 }
                             }
                             // ちゃんとたまったデータを消す
@@ -218,7 +233,8 @@ namespace KinectMotionCapture
             foreach (string dataDir in dataDirs)
             {
                 string metaDataFilePath = Path.Combine(dataDir, "BodyInfo.mpac");
-                records.Add(this.GetMotionDataFromFile(metaDataFilePath));
+                List<MotionData> mdList = this.GetMotionDataFromFile(metaDataFilePath).OrderBy(md => md.TimeStamp).ToList();
+                records.Add(mdList);
             }
             records = this.SearchDupFrames(records);
 
@@ -227,7 +243,19 @@ namespace KinectMotionCapture
             this.timePeriod = new TimeSpan((this.endTime - this.startTime).Ticks / shortestRecordLength);
 
             this.Frames = this.GenerateFrames(records);
-            Debug.WriteLine("hoge");
+
+            // レコードごとに含まれるidを列挙する
+            this.UserIdList = new List<List<ulong>>();
+            foreach (List<MotionData> record in records)
+            {
+                List<ulong> idList = new List<ulong>();
+                foreach(MotionData md in record)
+                {
+                    idList.AddRange(new List<SerializableBody>(md.bodies).Select((SerializableBody body) => body.TrackingId));
+                }
+                idList = idList.Distinct().ToList();
+                this.UserIdList.Add(idList);
+            }
         }
 
     }
@@ -279,11 +307,29 @@ namespace KinectMotionCapture
             this.records = records;
         }
 
-        public void ApplyConversions(CvMat conversions)
+        /// <summary>
+        /// 座標変換をBodyに適用する
+        /// </summary>
+        /// <param name="conversion"></param>
+        public void ApplyConversions(CvMat conversion)
         {
-            foreach (JointType jointType in Enum.GetValues(typeof(JointType)))
-            {
-                //実装する
+            foreach (MotionData md in this.records)
+            {                
+                foreach (SerializableBody body in md.bodies)
+                {
+                    Dictionary<JointType, Joint> newJoints = new Dictionary<JointType, Joint>();
+                    foreach (JointType jointType in body.Joints.Keys)
+                    {
+                        Joint originalJoint = body.Joints[jointType];
+                        CvPoint3D64f fromPoint = originalJoint.Position.ToCvPoint3D();
+                        CameraSpacePoint newPoint = CvEx.ConvertPoint3D(fromPoint, conversion).ToCameraSpacePoint();
+                        originalJoint.Position = newPoint;
+                        //Joint newJoint = originalJoint.CloneDeep();
+                        //newJoint.Position = newPoint;
+                        //newJoints[jointType] = newJoint;
+                    }
+                    body.Joints = newJoints;
+                }
             }
         }
     }

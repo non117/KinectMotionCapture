@@ -153,6 +153,7 @@ namespace KinectMotionCapture
             this.kinectSensor.Open();
 
             this.DataContext = this;
+
             this.InitializeComponent();
         }
 
@@ -367,6 +368,7 @@ namespace KinectMotionCapture
             if (this.motionDataHandler.DepthLUT == null)
             {
                 this.motionDataHandler.DepthLUT = this.coordinateMapper.GetDepthFrameToCameraSpaceTable();
+                //TODO: world to colorの式を予想する
             }
 
             MultiSourceFrame multiSourceFrame = e.FrameReference.AcquireFrame();
