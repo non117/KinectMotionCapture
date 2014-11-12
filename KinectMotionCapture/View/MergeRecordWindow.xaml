@@ -9,7 +9,7 @@
                 <RowDefinition Height="150"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
-            <Button Name="PlayStop" Click="PlayStop_Click" Grid.Row="0" Content="Play" Width="50" Height="25" />
+            <Button Name="PlayPause" Click="PlayPause_Click" Grid.Row="0" Content="Play" Width="50" Height="25" />
             
             <Grid Grid.Row="1">
                 <Grid.RowDefinitions>

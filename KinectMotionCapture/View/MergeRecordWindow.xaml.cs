@@ -27,8 +27,14 @@ namespace KinectMotionCapture
     public partial class MergeRecordWindow : Window
     {
         private FrameSequence frameSequence;
+        private List<Frame> frameList;
+        
         private BackgroundWorker worker;
+
+        private int playingIndex;
         private bool isPlaying;
+
+
         private DrawingGroup drawingGroup1;
         private DrawingImage bodyImageSource1;
         private DrawingGroup drawingGroup2;
@@ -54,6 +60,7 @@ namespace KinectMotionCapture
                                                     @"E:\kinect4", 
             };
             this.frameSequence = new FrameSequence(datadir);
+            this.frameList = frameSequence.Frames;
             this.Initialize();
         }
 
@@ -119,11 +126,11 @@ namespace KinectMotionCapture
         {
             if (this.isPlaying)
             {
-                PlayStop.Content = "□";
+                PlayPause.Content = "||";
             }
             else
             {
-                PlayStop.Content = "▷";
+                PlayPause.Content = "▷";
             }
 
         }
@@ -132,6 +139,7 @@ namespace KinectMotionCapture
         {
             CompositionTarget.Rendering += this.CompositionTargetRendering;
             this.NewProject();
+            this.playingIndex = 0;
             this.frameSequence.LocalCoordinateMapper = (LocalCoordinateMapper)Utility.LoadFromBinary(@"C:\Users\non\Desktop\coordmapper.dump");
         }
 
@@ -167,19 +175,21 @@ namespace KinectMotionCapture
         {
             BackgroundWorker bw = (BackgroundWorker)sender;
             int interval = (int)(1000 / this.frameSequence.frameRate);
-            foreach (Frame frame in frameSequence.Frames)
+            
+            while (this.isPlaying)
             {
-                if (this.isPlaying)
+                if (this.playingIndex == this.frameList.Count())
                 {
-                    bw.ReportProgress(0, frame);
-                    System.Threading.Thread.Sleep(interval);
+                    this.isPlaying = false;
+                    this.playingIndex = 0;
+                    continue;
                 }
-                else
-                {
-                    return;
-                }
+
+                Frame frame = this.frameList[this.playingIndex];
+                this.playingIndex++;
+                bw.ReportProgress(0, frame);
+                System.Threading.Thread.Sleep(interval);
             }
-            this.isPlaying = false;
         }
 
         /// <summary>
@@ -268,7 +278,7 @@ namespace KinectMotionCapture
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void PlayStop_Click(object sender, RoutedEventArgs e)
+        private void PlayPause_Click(object sender, RoutedEventArgs e)
         {
             if (this.isPlaying)
             {

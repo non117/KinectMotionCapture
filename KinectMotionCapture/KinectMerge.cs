@@ -223,6 +223,18 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
+        /// 時間を切り出す
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        public List<Frame> ResetTimeSpan(DateTime start, DateTime end)
+        {
+            this.startTime = start;
+            this.endTime = end;
+            return this.Frames.Where((r) => start <= r.Time && r.Time <= end).ToList();
+        }
+
+        /// <summary>
         /// コンストラクタ
         /// </summary>
         /// <param name="dataDirs"></param>
