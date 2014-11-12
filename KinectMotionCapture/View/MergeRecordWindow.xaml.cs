@@ -29,8 +29,15 @@ namespace KinectMotionCapture
         private FrameSequence frameSequence;
         private BackgroundWorker worker;
         private bool isPlaying;
-        private DrawingGroup drawingGroup;
+        private DrawingGroup drawingGroup1;
         private DrawingImage bodyImageSource1;
+        private DrawingGroup drawingGroup2;
+        private DrawingImage bodyImageSource2;
+        private DrawingGroup drawingGroup3;
+        private DrawingImage bodyImageSource3;
+        private DrawingGroup drawingGroup4;
+        private DrawingImage bodyImageSource4;
+
         private List<Tuple<JointType, JointType>> bones;
 
         private readonly Pen inferredBonePen = new Pen(Brushes.Gray, 1);
@@ -52,8 +59,14 @@ namespace KinectMotionCapture
 
         public MergeRecordWindow()
         {
-            this.drawingGroup = new DrawingGroup();
-            this.bodyImageSource1 = new DrawingImage(this.drawingGroup);
+            this.drawingGroup1 = new DrawingGroup();
+            this.bodyImageSource1 = new DrawingImage(this.drawingGroup1);
+            this.drawingGroup2 = new DrawingGroup();
+            this.bodyImageSource2 = new DrawingImage(this.drawingGroup2);
+            this.drawingGroup3 = new DrawingGroup();
+            this.bodyImageSource3 = new DrawingImage(this.drawingGroup3);
+            this.drawingGroup4 = new DrawingGroup();
+            this.bodyImageSource4 = new DrawingImage(this.drawingGroup4);
 
             this.worker = new BackgroundWorker();
             this.worker.WorkerReportsProgress = true;
@@ -98,6 +111,7 @@ namespace KinectMotionCapture
             this.bones.Add(new Tuple<JointType, JointType>(JointType.KneeLeft, JointType.AnkleLeft));
             this.bones.Add(new Tuple<JointType, JointType>(JointType.AnkleLeft, JointType.FootLeft));
 
+            this.DataContext = this;
             InitializeComponent();
         }
 
@@ -177,24 +191,25 @@ namespace KinectMotionCapture
         {
             Frame frame = (Frame)e.UserState;
             Label[] labels = { UserIdLabel1, UserIdLabel2, UserIdLabel3, UserIdLabel4 };
-            //Image[] images = { Image1, Image2, Image3, Image4 };
+            Image[] images = { Image1, Image2, Image3, Image4 };
+            DrawingGroup[] drawings = { drawingGroup1, drawingGroup2, drawingGroup3, drawingGroup4 };
             for (int i = 0; i < frameSequence.recordNum; i++)
             {
                 labels[i].Content = String.Join(",", frame.BodyIdList(i));
-                //images[i].Source = new BitmapImage(new Uri(frame.ColorImagePathList[i]));
-            }
+                images[i].Source = new BitmapImage(new Uri(frame.ColorImagePathList[i]));
 
-            using (DrawingContext dc = this.drawingGroup.Open())
-            {
-                CvSize colorSize = frame.ColorSize[0];
-                dc.DrawRectangle(Brushes.Transparent, null, new Rect(0.0, 0.0, colorSize.Width, colorSize.Height));
-
-                foreach (Dictionary<JointType, Point> points in frame.GetBodyPoints(0))
+                using (DrawingContext dc = drawings[i].Open())
                 {
-                    Pen drawPen = new Pen(Brushes.Red, 6);
-                    this.DrawBody(points, dc, drawPen);
+                    CvSize colorSize = frame.ColorSize[i];
+                    dc.DrawRectangle(Brushes.Transparent, null, new Rect(0.0, 0.0, colorSize.Width, colorSize.Height));
+
+                    foreach (Dictionary<JointType, Point> points in frame.GetBodyPoints(i))
+                    {
+                        Pen drawPen = new Pen(Brushes.Red, 6);
+                        this.DrawBody(points, dc, drawPen);
+                    }
+                    drawings[i].ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, colorSize.Width, colorSize.Height));
                 }
-                this.drawingGroup.ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, colorSize.Width, colorSize.Height));
             }
 
         }
@@ -224,6 +239,30 @@ namespace KinectMotionCapture
                 return this.bodyImageSource1;
             }
         }
+        public ImageSource BodyImageSource2
+        {
+            get
+            {
+                return this.bodyImageSource2;
+            }
+        }
+
+        public ImageSource BodyImageSource3
+        {
+            get
+            {
+                return this.bodyImageSource3;
+            }
+        }
+        public ImageSource BodyImageSource4
+        {
+            get
+            {
+                return this.bodyImageSource4;
+            }
+        }
+
+
 
         /// <summary>
         /// 再生制御
