@@ -292,7 +292,12 @@ namespace KinectMotionCapture
         public List<CvMat> DepthMatList
         {
             get { return this.records.Select((m) => m.depthMat).ToList(); }
-        }       
+        }
+
+        public List<CvSize> ColorSize
+        {
+            get { return this.records.Select((m) => new CvSize(m.ColorWidth, m.ColorHeight)).ToList(); }
+        }
 
         public List<CvSize> DepthUserSize
         {
@@ -314,6 +319,11 @@ namespace KinectMotionCapture
             {
                 return new List<Point>();
             }
+        }
+
+        public List<Dictionary<JointType, Point>> GetBodyPoints(int recordIndex)
+        {
+            return new List<SerializableBody>(this.records[recordIndex].bodies).Select((b) => b.colorSpacePoints).ToList();
         }
 
         /// <summary>

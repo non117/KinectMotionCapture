@@ -207,6 +207,7 @@ namespace KinectMotionCapture
     /// <summary>
     /// 動作のメタデータと骨格座標とかのモデルクラス
     /// </summary>
+    [Serializable]
     public class MotionData
     {
         /// <summary>

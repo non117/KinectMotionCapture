@@ -15,6 +15,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using MsgPack.Serialization;
 
+using Microsoft.Kinect;
 using OpenCvSharp;
 using OpenCvSharp.Extensions;
 
@@ -28,6 +29,14 @@ namespace KinectMotionCapture
         private FrameSequence frameSequence;
         private BackgroundWorker worker;
         private bool isPlaying;
+        private DrawingGroup drawingGroup;
+        private DrawingImage bodyImageSource1;
+        private List<Tuple<JointType, JointType>> bones;
+
+        private readonly Pen inferredBonePen = new Pen(Brushes.Gray, 1);
+        private readonly Brush trackedJointBrush = new SolidColorBrush(Color.FromArgb(255, 68, 192, 68));
+        private readonly Brush inferredJointBrush = Brushes.Yellow;
+        private const double JointThickness = 3;
 
         private void NewProject()
         {
@@ -43,11 +52,51 @@ namespace KinectMotionCapture
 
         public MergeRecordWindow()
         {
+            this.drawingGroup = new DrawingGroup();
+            this.bodyImageSource1 = new DrawingImage(this.drawingGroup);
+
             this.worker = new BackgroundWorker();
             this.worker.WorkerReportsProgress = true;
             this.worker.DoWork += new DoWorkEventHandler(this.worker_DoWork);
             this.worker.ProgressChanged += new ProgressChangedEventHandler(this.worker_ProgressChanged);
             this.worker.WorkerSupportsCancellation = true;
+
+            // a bone defined as a line between two joints
+            this.bones = new List<Tuple<JointType, JointType>>();
+
+            // Torso
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.Head, JointType.Neck));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.Neck, JointType.SpineShoulder));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.SpineShoulder, JointType.SpineMid));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.SpineMid, JointType.SpineBase));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.SpineShoulder, JointType.ShoulderRight));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.SpineShoulder, JointType.ShoulderLeft));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.SpineBase, JointType.HipRight));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.SpineBase, JointType.HipLeft));
+
+            // Right Arm
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.ShoulderRight, JointType.ElbowRight));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.ElbowRight, JointType.WristRight));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.WristRight, JointType.HandRight));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.HandRight, JointType.HandTipRight));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.WristRight, JointType.ThumbRight));
+
+            // Left Arm
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.ShoulderLeft, JointType.ElbowLeft));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.ElbowLeft, JointType.WristLeft));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.WristLeft, JointType.HandLeft));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.HandLeft, JointType.HandTipLeft));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.WristLeft, JointType.ThumbLeft));
+
+            // Right Leg
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.HipRight, JointType.KneeRight));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.KneeRight, JointType.AnkleRight));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.AnkleRight, JointType.FootRight));
+
+            // Left Leg
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.HipLeft, JointType.KneeLeft));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.KneeLeft, JointType.AnkleLeft));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.AnkleLeft, JointType.FootLeft));
 
             InitializeComponent();
         }
@@ -80,7 +129,7 @@ namespace KinectMotionCapture
 
         private void MainWindow_Closing(object sender, CancelEventArgs e)
         {
-            Utility.SaveToBinary(this.frameSequence, @"C:\Users\non\Desktop\frameSeq.dump");
+            //Utility.SaveToBinary(this.frameSequence, @"E:frameseq.dump");
         }
 
         private void Initialize()
@@ -128,11 +177,51 @@ namespace KinectMotionCapture
         {
             Frame frame = (Frame)e.UserState;
             Label[] labels = { UserIdLabel1, UserIdLabel2, UserIdLabel3, UserIdLabel4 };
-            Image[] images = { Image1, Image2, Image3, Image4 };
+            //Image[] images = { Image1, Image2, Image3, Image4 };
             for (int i = 0; i < frameSequence.recordNum; i++)
             {
                 labels[i].Content = String.Join(",", frame.BodyIdList(i));
-                images[i].Source = new BitmapImage(new Uri(frame.ColorImagePathList[i]));
+                //images[i].Source = new BitmapImage(new Uri(frame.ColorImagePathList[i]));
+            }
+
+            using (DrawingContext dc = this.drawingGroup.Open())
+            {
+                CvSize colorSize = frame.ColorSize[0];
+                dc.DrawRectangle(Brushes.Transparent, null, new Rect(0.0, 0.0, colorSize.Width, colorSize.Height));
+
+                foreach (Dictionary<JointType, Point> points in frame.GetBodyPoints(0))
+                {
+                    Pen drawPen = new Pen(Brushes.Red, 6);
+                    this.DrawBody(points, dc, drawPen);
+                }
+                this.drawingGroup.ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, colorSize.Width, colorSize.Height));
+            }
+
+        }
+
+        private void DrawBody(Dictionary<JointType, Point> points, DrawingContext drawingContext, Pen drawingPen)
+        {
+            // Draw the bones
+            foreach (var bone in this.bones)
+            {
+                if (points.Keys.Contains(bone.Item1) && points.Keys.Contains(bone.Item2))
+                {
+                    drawingContext.DrawLine(drawingPen, points[bone.Item1], points[bone.Item2]);
+                }
+            }
+
+            // Draw the joints
+            foreach (JointType jointType in points.Keys)
+            {
+                drawingContext.DrawEllipse(this.trackedJointBrush, null, points[jointType], JointThickness, JointThickness);
+            }
+        }
+
+        public ImageSource BodyImageSource1
+        {
+            get
+            {
+                return this.bodyImageSource1;
             }
         }
 
