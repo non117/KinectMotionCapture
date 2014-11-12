@@ -20,7 +20,6 @@
             <TextBox Height="24" Width="600" Name="RecordPathTextBox" Text="{Binding RecordPath, Mode=OneWay}" IsReadOnly="True"/>
             <Button Content="Open" Name="OpenFolderButton" Height="23" Width="50" HorizontalAlignment="Right" Click="OpenFolderButton_Click" Margin="10"/>
             
-            <Button Content="Play" Name="PlayButton" Height="23" Width="55" HorizontalAlignment="Center" Click="PlayButton_Click" Grid.Row="1" Margin="10"/>
             <Button Content="Record" Name="RecordButton" Height="23" Width="55" HorizontalAlignment="Right" Click="RecordButton_Click" Grid.Row="1" Margin="10" />
                         
             <Image Name="ColorImage" Source="{Binding BackgroundImage}" Stretch="UniformToFill" Grid.Row="2" />
