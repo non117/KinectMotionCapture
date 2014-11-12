@@ -108,7 +108,7 @@ namespace KinectMotionCapture
             List<List<MotionData>> newRecords = new List<List<MotionData>>();
             foreach (List<MotionData> record in records)
             {
-                List<MotionData> newRecord = record.Where((r) => minTime <= r.TimeStamp && r.TimeStamp <= maxTime).ToList();
+                List<MotionData> newRecord = record.Where((r) => minTime <= r.TimeStamp && r.TimeStamp <= maxTime).OrderBy(m => m.TimeStamp).ToList();
                 newRecords.Add(newRecord);
             }
             return newRecords;
@@ -168,6 +168,7 @@ namespace KinectMotionCapture
                     {
                         timeInfo.Add(dataSet.value.TimeStamp, dataSet.index);
                         // 時刻がちゃんと進んだら貯まってたデータをならして記録する
+                        /*
                         if (dataSet.value.TimeStamp != prevTime && depIndexes.Count > 0)
                         {
                             TimeSpan diff = dataSet.value.TimeStamp - prevTime;
@@ -179,13 +180,15 @@ namespace KinectMotionCapture
                                     DateTime time = prevTime + new TimeSpan(0, 0, 0, 0, msec);
                                     // それでもかぶったら諦める
                                     if (!timeInfo.Keys.Contains(time))
-                                        timeInfo.Add(time, i);
+                                        continue;
+                                        //timeInfo.Add(time, i);
                                 }
                             }
                             // ちゃんとたまったデータを消す
                             depIndexes.Clear();
 
                         }
+                         */
                     }
                     prevTime = dataSet.value.TimeStamp;
                 }
@@ -193,6 +196,7 @@ namespace KinectMotionCapture
             }
 
             for (DateTime time = this.startTime; time <= this.endTime; time += this.timePeriod)
+
             {
                 // 同時刻のフレーム集合. Kinectの数だけ入るはず.
                 List<MotionData> tempRecords = new List<MotionData>();
@@ -205,7 +209,7 @@ namespace KinectMotionCapture
                     {
                         frameIndex = 0;
                     }
-                    if (frameIndex > record.Count())
+                    if (frameIndex >= record.Count())
                     {
                         frameIndex = record.Count() - 1;
                     }
@@ -276,7 +280,8 @@ namespace KinectMotionCapture
     class Frame
     {
         public int recordNum;
-        private List<MotionData> records;
+        //private List<MotionData> records;
+        public List<MotionData> records;
         public DateTime Time { get; set; }
 
         public List<string> ColorImagePathList

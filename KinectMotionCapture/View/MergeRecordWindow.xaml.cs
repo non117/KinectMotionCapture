@@ -193,11 +193,13 @@ namespace KinectMotionCapture
             Label[] labels = { UserIdLabel1, UserIdLabel2, UserIdLabel3, UserIdLabel4 };
             Image[] images = { Image1, Image2, Image3, Image4 };
             DrawingGroup[] drawings = { drawingGroup1, drawingGroup2, drawingGroup3, drawingGroup4 };
+
             for (int i = 0; i < frameSequence.recordNum; i++)
             {
                 labels[i].Content = String.Join(",", frame.BodyIdList(i));
                 images[i].Source = new BitmapImage(new Uri(frame.ColorImagePathList[i]));
 
+                // Boneの描画
                 using (DrawingContext dc = drawings[i].Open())
                 {
                     CvSize colorSize = frame.ColorSize[i];
@@ -211,7 +213,6 @@ namespace KinectMotionCapture
                     drawings[i].ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, colorSize.Width, colorSize.Height));
                 }
             }
-
         }
 
         private void DrawBody(Dictionary<JointType, Point> points, DrawingContext drawingContext, Pen drawingPen)
@@ -261,8 +262,6 @@ namespace KinectMotionCapture
                 return this.bodyImageSource4;
             }
         }
-
-
 
         /// <summary>
         /// 再生制御
