@@ -32,10 +32,10 @@ namespace KinectMotionCapture
         private void NewProject()
         {
             List<string> datadir = new List<string>() {
-                                                    @"F:\1015\1015_kinect1\master",  
-                                                    @"F:\1015\1015_kinect2\master", 
-                                                    @"F:\1015\1015_kinect3\master", 
-                                                    @"F:\1015\1015_kinect4\master", 
+                                                    @"E:\kinect1",  
+                                                    @"E:\kinect2", 
+                                                    @"E:\kinect3", 
+                                                    @"E:\kinect4", 
             };
             this.frameSequence = new FrameSequence(datadir);
             this.Initialize();
@@ -43,9 +43,6 @@ namespace KinectMotionCapture
 
         public MergeRecordWindow()
         {
-            this.NewProject();
-            this.frameSequence.LocalCoordinateMapper = (LocalCoordinateMapper)Utility.LoadFromBinary(@"C:\Users\non\Desktop\coordmapper.dump");
-
             this.worker = new BackgroundWorker();
             this.worker.WorkerReportsProgress = true;
             this.worker.DoWork += new DoWorkEventHandler(this.worker_DoWork);
@@ -53,6 +50,26 @@ namespace KinectMotionCapture
             this.worker.WorkerSupportsCancellation = true;
 
             InitializeComponent();
+        }
+
+        private void CompositionTargetRendering(object sender, EventArgs e)
+        {
+            if (this.isPlaying)
+            {
+                PlayStop.Content = "□";
+            }
+            else
+            {
+                PlayStop.Content = "▷";
+            }
+
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            CompositionTarget.Rendering += this.CompositionTargetRendering;
+            this.NewProject();
+            this.frameSequence.LocalCoordinateMapper = (LocalCoordinateMapper)Utility.LoadFromBinary(@"C:\Users\non\Desktop\coordmapper.dump");
         }
 
         /// <summary>
@@ -71,7 +88,10 @@ namespace KinectMotionCapture
             ComboBox[] boxes = { UserIdBox1, UserIdBox2, UserIdBox3, UserIdBox4 };
             for (int i = 0; i < frameSequence.recordNum; i++)
             {
-                boxes[i].Items.Add(frameSequence.userIdList[i]);
+                foreach (ulong id in frameSequence.userIdList[i])
+                {
+                    boxes[i].Items.Add(id);
+                }
             }
         }
 
@@ -97,7 +117,6 @@ namespace KinectMotionCapture
                 }
             }
             this.isPlaying = false;
-            PlayStop.Content = "Play";
         }
 
         /// <summary>
@@ -127,12 +146,10 @@ namespace KinectMotionCapture
             if (this.isPlaying)
             {
                 this.isPlaying = false;
-                PlayStop.Content = "Play";
             }
             else
             {
                 this.isPlaying = true;
-                PlayStop.Content = "Stop";
                 this.worker.RunWorkerAsync();
             }
         }
@@ -140,8 +157,9 @@ namespace KinectMotionCapture
         private void UserIdBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             ComboBox box = (ComboBox)sender;
-            int index = int.Parse(box.Name.Substring(box.Name.Length - 2));
-            ulong bodyId = (ulong)((ComboBoxItem)box.SelectedItem).Content;
+            int i = box.Name.Length - 1;
+            int index = box.Name[i] - '0' - 1;
+            ulong bodyId = (ulong)box.SelectedItem;
             this.frameSequence.SetUserID(index, bodyId);
         }
     }

@@ -1,7 +1,7 @@
 ﻿<Window x:Class="KinectMotionCapture.MergeRecordWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MergeRecordWindow" Closing="MainWindow_Closing"
+        Title="MergeRecordWindow" Closing="MainWindow_Closing" Loaded="Window_Loaded"
         Height="960" Width="1300">
     <Border Background="WhiteSmoke" BorderBrush="Black" Padding="10">
         <Grid Margin="10">
@@ -37,7 +37,7 @@
 
                     </Grid>
                     <Image Name="Image1" Grid.Row="1" Margin="5"/>
-                    <Label Name="UserIdLabel1" Grid.Row="1" Height="40" Width="500"/>
+                    <Label Name="UserIdLabel1" Grid.Row="1" Height="40" Width="500" Foreground="White"/>
                 </Grid>
 
                 <Grid Grid.Row="0" Grid.Column="1" Name="Image2Grid">
@@ -52,11 +52,11 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <Label Name="Box2Text" Content="User Selection" Grid.Column="0" Margin="5" Height="25" Width="100"/>
-                        <ComboBox Name="UserIdBox2" Grid.Column="1" Margin="10" Height="25" Width="200" HorizontalAlignment="Left"/>
+                        <ComboBox Name="UserIdBox2" Grid.Column="1" Margin="10" Height="25" Width="200" HorizontalAlignment="Left" SelectionChanged="UserIdBox_SelectionChanged"/>
 
                     </Grid>
                     <Image Name="Image2" Grid.Row="1" Margin="5"/>
-                    <Label Name="UserIdLabel2" Grid.Row="1" Height="40" Width="500"/>
+                    <Label Name="UserIdLabel2" Grid.Row="1" Height="40" Width="500" Foreground="White"/>
                 </Grid>
 
                 <Grid Grid.Row="1" Grid.Column="0" Name="Image3Grid">
@@ -71,11 +71,11 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <Label Name="Box3Text" Content="User Selection" Grid.Column="0" Margin="5" Height="25" Width="100"/>
-                        <ComboBox Name="UserIdBox3" Grid.Column="1" Margin="10" Height="25" Width="200" HorizontalAlignment="Left"/>
+                        <ComboBox Name="UserIdBox3" Grid.Column="1" Margin="10" Height="25" Width="200" HorizontalAlignment="Left" SelectionChanged="UserIdBox_SelectionChanged"/>
 
                     </Grid>
                     <Image Name="Image3" Grid.Row="1" Margin="5"/>
-                    <Label Name="UserIdLabel3" Grid.Row="1" Height="40" Width="500"/>
+                    <Label Name="UserIdLabel3" Grid.Row="1" Height="40" Width="500" Foreground="White"/>
                 </Grid>
 
                 <Grid Grid.Row="1" Grid.Column="1" Name="Image4Grid">
@@ -90,11 +90,11 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <Label Name="Box4Text" Content="User Selection" Grid.Column="0" Margin="5" Height="25" Width="100"/>
-                        <ComboBox Name="UserIdBox4" Grid.Column="1" Margin="10" Height="25" Width="200" HorizontalAlignment="Left"/>
+                        <ComboBox Name="UserIdBox4" Grid.Column="1" Margin="10" Height="25" Width="200" HorizontalAlignment="Left" SelectionChanged="UserIdBox_SelectionChanged"/>
 
                     </Grid>
                     <Image Name="Image4" Grid.Row="1" Margin="5"/>
-                    <Label Name="UserIdLabel4" Grid.Row="1" Height="40" Width="500"/>
+                    <Label Name="UserIdLabel4" Grid.Row="1" Height="40" Width="500" Foreground="White"/>
                 </Grid>
 
 

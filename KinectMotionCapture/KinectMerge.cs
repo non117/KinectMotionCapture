@@ -16,6 +16,7 @@ namespace KinectMotionCapture
     /// <summary>
     /// フレームの集合
     /// </summary>
+    [Serializable]
     class FrameSequence
     {
         private List<CvMat> convList;
@@ -271,6 +272,7 @@ namespace KinectMotionCapture
     /// <summary>
     /// あるフレームにおける複数レコードをまとめて管理するクラス
     /// </summary>
+    [Serializable]
     class Frame
     {
         public int recordNum;
