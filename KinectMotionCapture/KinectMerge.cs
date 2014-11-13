@@ -45,7 +45,7 @@ namespace KinectMotionCapture
                     this.convList = new List<CvMat>();
                     for (int i = 0; i < this.recordNum; i++)
                     {
-                        this.convList[i] = CvMat.Identity(4, 4, MatrixType.F64C1);
+                        this.convList.Add(CvMat.Identity(4, 4, MatrixType.F64C1));
                     }
                 }
                 return this.convList;
@@ -75,10 +75,9 @@ namespace KinectMotionCapture
         /// </summary>
         private void ApplyConversion()
         {
-            List<CvMat> conversions = this.ToWorldConversions;
-            for (int i = 0; i < this.recordNum; i++)
+            foreach(Frame frame in Frames)
             {
-                this.Frames[i].ApplyConversions(conversions[i]);
+                frame.ApplyConversions(this.ToWorldConversions);
             }
         }
 
@@ -382,10 +381,12 @@ namespace KinectMotionCapture
         /// 座標変換をBodyに適用する
         /// </summary>
         /// <param name="conversion"></param>
-        public void ApplyConversions(CvMat conversion)
+        public void ApplyConversions(List<CvMat> conversions)
         {
-            foreach (MotionData md in this.records)
-            {                
+            for (int i = 0; i < this.recordNum; i++)
+            {
+                MotionData md = this.records[i];
+                CvMat conversion = conversions[i];
                 foreach (SerializableBody body in md.bodies)
                 {
                     Dictionary<JointType, Joint> newJoints = new Dictionary<JointType, Joint>();
@@ -395,9 +396,7 @@ namespace KinectMotionCapture
                         CvPoint3D64f fromPoint = originalJoint.Position.ToCvPoint3D();
                         CameraSpacePoint newPoint = CvEx.ConvertPoint3D(fromPoint, conversion).ToCameraSpacePoint();
                         originalJoint.Position = newPoint;
-                        //Joint newJoint = originalJoint.CloneDeep();
-                        //newJoint.Position = newPoint;
-                        //newJoints[jointType] = newJoint;
+                        newJoints[jointType] = originalJoint;
                     }
                     body.Joints = newJoints;
                 }
@@ -406,7 +405,7 @@ namespace KinectMotionCapture
     }
 
     class KinectMerge
-    {        
+    {
         /// <summary>
         /// あるフレームにおける座標変換行列を深度情報から計算する
         /// </summary>
@@ -444,7 +443,7 @@ namespace KinectMotionCapture
         /// あるフレームにおける座標変換行列を骨格情報から計算する
         /// </summary>
         /// <param name="frame"></param>
-        public List<CvMat> AjustFrameFromeBone(Frame frame, List<CvMat> convList, List<ulong> selectedUserIdList)
+        public static List<CvMat> AjustFrameFromeBone(Frame frame, List<CvMat> convList, List<ulong> selectedUserIdList)
         {
             List<SerializableBody> bodies = frame.SelectedBodyList(selectedUserIdList);
             if ( bodies.Count() != frame.recordNum )
@@ -483,7 +482,7 @@ namespace KinectMotionCapture
         /// フレーム範囲における座標変換行列を骨格情報から計算する
         /// </summary>
         /// <param name="frames"></param>
-        public void AjustFramesFromBone(FrameSequence frameSeq, int startIndex, int endIndex)
+        public static void AjustFramesFromBone(FrameSequence frameSeq, int startIndex, int endIndex)
         {
             Dictionary<Tuple<int, int>, int> cooccurenceCount = new Dictionary<Tuple<int, int>, int>();
             //System.Windows.MessageBox.Show("ユーザが選択されていないレコードがあります");

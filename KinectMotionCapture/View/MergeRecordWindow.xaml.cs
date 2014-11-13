@@ -342,5 +342,17 @@ namespace KinectMotionCapture
             this.endIndex = (int)this.PlaySlider.Value;
             this.PlaySlider.SelectionEnd = this.endIndex;
         }
+
+        private void MenuCalibBoneFrame_Click(object sender, RoutedEventArgs e)
+        {
+            Frame frame = frameSequence.Frames[playingIndex];
+            List<CvMat> conversions = frameSequence.ToWorldConversions;
+            List<ulong> selectedUsers = frameSequence.selectedUserIdList;
+            if (selectedUsers.Count == frameSequence.recordNum)
+            {
+                List<CvMat> convs = KinectMerge.AjustFrameFromeBone(frame, conversions, selectedUsers);
+                frame.ApplyConversions(convs);
+            }
+        }
     }
 }
