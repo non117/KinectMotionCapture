@@ -3,37 +3,46 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="MergeRecordWindow" Closing="MainWindow_Closing" Loaded="Window_Loaded"
         Height="960" Width="1300">
-    <Border Background="WhiteSmoke" BorderBrush="Black" Padding="10">
+    <Border Background="WhiteSmoke" BorderBrush="Black" Padding="5">
         <Grid Margin="10">
             <Grid.RowDefinitions>
                 <RowDefinition Height="150"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
-            
-            <Grid Name="Controller">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="50"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-                
-                <Grid Name="UpperController">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="75"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="100"/>
-                    </Grid.ColumnDefinitions>
-                    <Button Name="PlayPause" Grid.Column="0" Click="PlayPause_Click" Content="▷" Width="30" Height="30" FontSize="16" />
-                    <Slider Name="PlaySlider" Grid.Column="1" VerticalAlignment="Center" SmallChange="1"
-                            LargeChange="10" TickPlacement="Both" IsSelectionRangeEnabled="True" ValueChanged="PlaySlider_ValueChanged"/>
-                    <Label Name="TimeLabel" Grid.Column="2" Content="00:00:000" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="14"/>
-                </Grid>
 
-                
-            </Grid>
-            
-            
-            
-            <Grid Grid.Row="1">
+            <Border BorderThickness="2" Padding="10" BorderBrush="DarkGray" Grid.Row="0" Margin="3">
+                <Grid Name="Controller">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="50"/>
+                        <RowDefinition Height="50"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Name="UpperController">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="50"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="100"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Name="PlayPause" Grid.Column="0" Click="PlayPause_Click" Content="▷" Width="30" Height="30" FontSize="16" HorizontalAlignment="Left" />
+                        <Slider Name="PlaySlider" Grid.Column="1" VerticalAlignment="Center" SmallChange="1"
+                            LargeChange="10" TickPlacement="Both" IsSelectionRangeEnabled="True" ValueChanged="PlaySlider_ValueChanged"/>
+                        <Label Name="TimeLabel" Grid.Column="2" Content="00:00:000" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="14"/>
+                    </Grid>
+                    <Grid Name="MiddleController" Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="50"/>
+                            <ColumnDefinition Width="50"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Name="SetMinTime" Grid.Column="0" Content="|-" Width="30" Height="30" FontSize="16" HorizontalAlignment="Left" Click="SetMinTime_Click"/>
+                        <Button Name="SetMaxTime" Grid.Column="1" Content="-|" Width="30" Height="30" FontSize="16" HorizontalAlignment="Left" Click="SetMaxTime_Click"/>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <Border BorderThickness="2" Padding="10" BorderBrush="DarkGray" Grid.Row="1" Margin="3">
+                <Grid Grid.Row="1" Name="RecordDisplay">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="*"/>
@@ -125,6 +134,7 @@
 
 
             </Grid>
+            </Border>
         </Grid>
     </Border>
 </Window>

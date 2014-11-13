@@ -27,11 +27,13 @@ namespace KinectMotionCapture
     public partial class MergeRecordWindow : Window
     {
         private FrameSequence frameSequence;
-        private List<Frame> frameList;
+        //private List<Frame> frameList;
         
         private BackgroundWorker worker;
 
         private int playingIndex;
+        private int startIndex;
+        private int endIndex;
         private bool isPlaying;
 
 
@@ -62,7 +64,7 @@ namespace KinectMotionCapture
             this.frameSequence = new FrameSequence(datadir);
             this.frameSequence.LocalCoordinateMapper = (LocalCoordinateMapper)Utility.LoadFromBinary(@"C:\Users\non\Desktop\coordmapper.dump");
             
-            this.frameList = frameSequence.Frames;            
+            //this.frameList = frameSequence.Frames;            
         }
 
         public MergeRecordWindow()
@@ -140,7 +142,25 @@ namespace KinectMotionCapture
         {
             CompositionTarget.Rendering += this.CompositionTargetRendering;
             this.LoadFrames();
-            this.Initialize();
+            
+            // player関係
+            this.playingIndex = 0;
+            this.PlaySlider.Minimum = 0;
+            this.PlaySlider.Maximum = this.frameSequence.Frames.Count() - 1;
+            this.startIndex = 0;
+            this.endIndex = this.frameSequence.Frames.Count() - 1;
+            this.PlaySlider.SelectionStart = this.startIndex;
+            this.PlaySlider.SelectionEnd = this.endIndex;
+
+            ComboBox[] boxes = { UserIdBox1, UserIdBox2, UserIdBox3, UserIdBox4 };
+            for (int i = 0; i < frameSequence.recordNum; i++)
+            {
+                // TODO : frameListの狭い範囲に対するidの列挙が必要かも
+                foreach (ulong id in frameSequence.userIdList[i])
+                {
+                    boxes[i].Items.Add(id);
+                }
+            }
         }
 
         /// <summary>
@@ -155,27 +175,6 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
-        /// 初期化処理. UIまわりとか.
-        /// </summary>
-        private void Initialize()
-        {
-            ComboBox[] boxes = { UserIdBox1, UserIdBox2, UserIdBox3, UserIdBox4 };
-            for (int i = 0; i < frameSequence.recordNum; i++)
-            {
-                foreach (ulong id in frameSequence.userIdList[i])
-                {
-                    boxes[i].Items.Add(id);
-                }
-            }
-            this.playingIndex = 0;
-            this.PlaySlider.Minimum = 0;
-            this.PlaySlider.Maximum = this.frameList.Count() - 1;
-            this.PlaySlider.SelectionStart = 0;
-            this.PlaySlider.SelectionEnd = this.frameList.Count() - 1;
-            this.PlaySlider.Value = this.playingIndex;
-        }
-
-        /// <summary>
         /// BackgroundWorkerの処理内容
         /// </summary>
         /// <param name="sender"></param>
@@ -187,14 +186,14 @@ namespace KinectMotionCapture
             
             while (this.isPlaying)
             {
-                if (this.playingIndex == this.frameList.Count())
+                if (this.playingIndex == this.endIndex)
                 {
                     this.isPlaying = false;
-                    this.playingIndex = 0;
+                    this.playingIndex = this.startIndex;
                     continue;
                 }
 
-                Frame frame = this.frameList[this.playingIndex];
+                Frame frame = this.frameSequence.Frames[this.playingIndex];
                 this.playingIndex++;
                 bw.ReportProgress(0, frame);
                 System.Threading.Thread.Sleep(interval);
@@ -328,8 +327,20 @@ namespace KinectMotionCapture
             if (!this.isPlaying)
             {
                 this.playingIndex = (int)((Slider)sender).Value;
-                this.UpdateDisplay(frameList[this.playingIndex]);
+                this.UpdateDisplay(this.frameSequence.Frames[this.playingIndex]);
             }
+        }
+
+        private void SetMinTime_Click(object sender, RoutedEventArgs e)
+        {
+            this.startIndex = (int)this.PlaySlider.Value;
+            this.PlaySlider.SelectionStart = this.startIndex;
+        }
+
+        private void SetMaxTime_Click(object sender, RoutedEventArgs e)
+        {           
+            this.endIndex = (int)this.PlaySlider.Value;
+            this.PlaySlider.SelectionEnd = this.endIndex;
         }
     }
 }

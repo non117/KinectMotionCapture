@@ -235,6 +235,18 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
+        /// 時間を切り出す
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        public List<Frame> ResetTimeSpan(int startIndex, int endIndex)
+        {
+            DateTime startTime = this.Frames[startIndex].Time;
+            DateTime endTime = this.Frames[endIndex].Time;
+            return this.ResetTimeSpan(startTime, endTime);
+        }
+
+        /// <summary>
         /// コンストラクタ
         /// </summary>
         /// <param name="dataDirs"></param>
@@ -413,9 +425,10 @@ namespace KinectMotionCapture
         /// フレーム範囲における座標変換行列を深度情報から計算する
         /// </summary>
         /// <param name="frames"></param>
-        public static void AjustFramesFromDepth(FrameSequence frameSeq)
+        public static void AjustFramesFromDepth(FrameSequence frameSeq, int startIndex, int endIndex)
         {
-            foreach (Frame frame in frameSeq.Frames)
+            IEnumerable<Frame> frames = frameSeq.Frames.Skip(startIndex).Take(endIndex);
+            foreach (Frame frame in frames)
             {
                 Func<float, double> distance2weight = x => 1.0 / (x * 0 + 400);
                 using (ColoredIterativePointMatching sipm = new ColoredIterativePointMatching(frame.DepthMatList, frame.ColorMatList, frameSeq.LocalCoordinateMapper, frameSeq.ToWorldConversions, distance2weight, 200))
@@ -470,12 +483,13 @@ namespace KinectMotionCapture
         /// フレーム範囲における座標変換行列を骨格情報から計算する
         /// </summary>
         /// <param name="frames"></param>
-        public void AjustFramesFromBone(FrameSequence frameSeq)
+        public void AjustFramesFromBone(FrameSequence frameSeq, int startIndex, int endIndex)
         {
             Dictionary<Tuple<int, int>, int> cooccurenceCount = new Dictionary<Tuple<int, int>, int>();
             //System.Windows.MessageBox.Show("ユーザが選択されていないレコードがあります");
             //return;
-            foreach (Frame frame in frameSeq.Frames)
+            IEnumerable<Frame> frames = frameSeq.Frames.Skip(startIndex).Take(endIndex);
+            foreach (Frame frame in frames)
             {
                 List<SerializableBody> bodies = frame.SelectedBodyList(frameSeq.selectedUserIdList);
                 for (int i = 0; i < frame.recordNum; i++)
