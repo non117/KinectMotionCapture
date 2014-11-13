@@ -51,7 +51,7 @@ namespace KinectMotionCapture
         private readonly Brush inferredJointBrush = Brushes.Yellow;
         private const double JointThickness = 3;
 
-        private void NewProject()
+        private void LoadFrames()
         {
             List<string> datadir = new List<string>() {
                                                     @"E:\kinect1",  
@@ -60,8 +60,9 @@ namespace KinectMotionCapture
                                                     @"E:\kinect4", 
             };
             this.frameSequence = new FrameSequence(datadir);
-            this.frameList = frameSequence.Frames;
-            this.Initialize();
+            this.frameSequence.LocalCoordinateMapper = (LocalCoordinateMapper)Utility.LoadFromBinary(@"C:\Users\non\Desktop\coordmapper.dump");
+            
+            this.frameList = frameSequence.Frames;            
         }
 
         public MergeRecordWindow()
@@ -138,9 +139,8 @@ namespace KinectMotionCapture
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             CompositionTarget.Rendering += this.CompositionTargetRendering;
-            this.NewProject();
-            this.playingIndex = 0;
-            this.frameSequence.LocalCoordinateMapper = (LocalCoordinateMapper)Utility.LoadFromBinary(@"C:\Users\non\Desktop\coordmapper.dump");
+            this.LoadFrames();
+            this.Initialize();
         }
 
         /// <summary>
@@ -154,6 +154,9 @@ namespace KinectMotionCapture
             //Utility.SaveToBinary(this.frameSequence, @"E:frameseq.dump");
         }
 
+        /// <summary>
+        /// 初期化処理. UIまわりとか.
+        /// </summary>
         private void Initialize()
         {
             ComboBox[] boxes = { UserIdBox1, UserIdBox2, UserIdBox3, UserIdBox4 };
@@ -164,6 +167,10 @@ namespace KinectMotionCapture
                     boxes[i].Items.Add(id);
                 }
             }
+            this.playingIndex = 0;
+            this.PlaySlider.Minimum = 0;
+            this.PlaySlider.Maximum = this.frameList.Count();
+            this.PlaySlider.Value = this.playingIndex;
         }
 
         /// <summary>
@@ -223,6 +230,10 @@ namespace KinectMotionCapture
                     drawings[i].ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, colorSize.Width, colorSize.Height));
                 }
             }
+            // スライダーとか時間表示
+            this.PlaySlider.Value = this.playingIndex;
+            this.TimeLabel.Content = frame.Time.ToString((frame.Time - frameSequence.startTime).ToString(@"mm\:ss\:fff"));
+
         }
 
         private void DrawBody(Dictionary<JointType, Point> points, DrawingContext drawingContext, Pen drawingPen)
