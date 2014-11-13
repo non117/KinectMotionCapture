@@ -169,7 +169,9 @@ namespace KinectMotionCapture
             }
             this.playingIndex = 0;
             this.PlaySlider.Minimum = 0;
-            this.PlaySlider.Maximum = this.frameList.Count();
+            this.PlaySlider.Maximum = this.frameList.Count() - 1;
+            this.PlaySlider.SelectionStart = 0;
+            this.PlaySlider.SelectionEnd = this.frameList.Count() - 1;
             this.PlaySlider.Value = this.playingIndex;
         }
 
@@ -207,6 +209,15 @@ namespace KinectMotionCapture
         private void worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
             Frame frame = (Frame)e.UserState;
+            this.UpdateDisplay(frame);
+        }
+
+        /// <summary>
+        /// 画面を更新する
+        /// </summary>
+        /// <param name="frame"></param>
+        private void UpdateDisplay(Frame frame)
+        {
             Label[] labels = { UserIdLabel1, UserIdLabel2, UserIdLabel3, UserIdLabel4 };
             Image[] images = { Image1, Image2, Image3, Image4 };
             DrawingGroup[] drawings = { drawingGroup1, drawingGroup2, drawingGroup3, drawingGroup4 };
@@ -233,7 +244,6 @@ namespace KinectMotionCapture
             // スライダーとか時間表示
             this.PlaySlider.Value = this.playingIndex;
             this.TimeLabel.Content = frame.Time.ToString((frame.Time - frameSequence.startTime).ToString(@"mm\:ss\:fff"));
-
         }
 
         private void DrawBody(Dictionary<JointType, Point> points, DrawingContext drawingContext, Pen drawingPen)
@@ -286,6 +296,7 @@ namespace KinectMotionCapture
 
         /// <summary>
         /// 再生制御
+        /// TODO : Spaceで再生制御
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -309,6 +320,16 @@ namespace KinectMotionCapture
             int index = box.Name[i] - '0' - 1;
             ulong bodyId = (ulong)box.SelectedItem;
             this.frameSequence.SetUserID(index, bodyId);
+        }
+
+        private void PlaySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            // このイベントは全ての変更にフックされるっぽいので、人間が弄った時に再生止めて動かす、みたいな。
+            if (!this.isPlaying)
+            {
+                this.playingIndex = (int)((Slider)sender).Value;
+                this.UpdateDisplay(frameList[this.playingIndex]);
+            }
         }
     }
 }

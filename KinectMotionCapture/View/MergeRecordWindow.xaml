@@ -23,7 +23,8 @@
                         <ColumnDefinition Width="100"/>
                     </Grid.ColumnDefinitions>
                     <Button Name="PlayPause" Grid.Column="0" Click="PlayPause_Click" Content="▷" Width="30" Height="30" FontSize="16" />
-                    <Slider Name="PlaySlider" Grid.Column="1" VerticalAlignment="Center" />
+                    <Slider Name="PlaySlider" Grid.Column="1" VerticalAlignment="Center" SmallChange="1"
+                            LargeChange="10" TickPlacement="Both" IsSelectionRangeEnabled="True" ValueChanged="PlaySlider_ValueChanged"/>
                     <Label Name="TimeLabel" Grid.Column="2" Content="00:00:000" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="14"/>
                 </Grid>
 
