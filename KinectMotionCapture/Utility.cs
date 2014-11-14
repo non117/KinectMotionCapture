@@ -20,7 +20,6 @@ using System.Windows.Navigation;
 using Microsoft.Kinect;
 using KinectMotionCapture;
 using OpenCvSharp;
-using UnityLib;
 
 namespace KinectMotionCapture
 {
@@ -180,22 +179,20 @@ namespace KinectMotionCapture
         /// </summary>
         /// <param name="originalJoints"></param>
         /// <returns></returns>
-        public static List<Dictionary<UnityLib.JointType, Point3>> ConverToCompatibleJoint(List<Dictionary<Microsoft.Kinect.JointType, Joint>> originalJoints)
+        public static List<Dictionary<int, float[]>> ConverToCompatibleJoint(List<Dictionary<JointType, Joint>> originalJoints)
         {
-            List<Dictionary<UnityLib.JointType, Point3>> newJoints = new List<Dictionary<UnityLib.JointType, Point3>>();
-            foreach (Dictionary<Microsoft.Kinect.JointType, Joint> joints in originalJoints)
+            List<Dictionary<int, float[]>> newJoints = new List<Dictionary<int, float[]>>();
+            foreach (Dictionary<JointType, Joint> joints in originalJoints)
             {
-                Dictionary<UnityLib.JointType, Point3> body = new Dictionary<UnityLib.JointType, Point3>();
-                foreach (Microsoft.Kinect.JointType j in joints.Keys)
+                Dictionary<int, float[]> body = new Dictionary<int, float[]>();
+                foreach (JointType jointType in joints.Keys)
                 {
-                    CameraSpacePoint position = joints[j].Position;
-                    Point3 v = new Point3() { X = position.X, Y = position.Y, Z = position.Z };
-                    UnityLib.JointType jointType = (UnityLib.JointType)j;
-                    body.Add(jointType, v);
+                    CameraSpacePoint position = joints[jointType].Position;
+                    float[] points = new float[] { position.X, position.Y, position.Z };                    
+                    body.Add((int)jointType, points);
                 }
                 newJoints.Add(body);
             }
-
             return newJoints;
         }
     }

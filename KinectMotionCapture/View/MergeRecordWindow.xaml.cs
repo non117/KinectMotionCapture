@@ -353,7 +353,7 @@ namespace KinectMotionCapture
             }
             List<Dictionary<JointType, Joint>> aaa = new List<Dictionary<JointType, Joint>>();
             aaa.Add(frame.records[1].bodies[0].Joints);
-            List<Dictionary<UnityLib.JointType, UnityLib.Point3>> bbb = Utility.ConverToCompatibleJoint(aaa);
+            List<Dictionary<int, float[]>> bbb = Utility.ConverToCompatibleJoint(aaa);
             Utility.SaveToBinary(bbb, @"C:\Users\non\Desktop\joints.dump");
         }
     }

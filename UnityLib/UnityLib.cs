@@ -27,17 +27,6 @@ namespace UnityLib
     }
 
     /// <summary>
-    /// 外部へ出力するための3次元座標
-    /// </summary>
-    [Serializable]
-    public struct Point3
-    {
-        public float X;
-        public float Y;
-        public float Z;
-    }
-
-    /// <summary>
     /// Unityで読み込むためのJointType
     /// </summary>
     public enum JointType : byte
