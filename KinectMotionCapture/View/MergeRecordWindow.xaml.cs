@@ -63,8 +63,6 @@ namespace KinectMotionCapture
             };
             this.frameSequence = new FrameSequence(datadir);
             this.frameSequence.LocalCoordinateMapper = (LocalCoordinateMapper)Utility.LoadFromBinary(@"C:\Users\non\Desktop\coordmapper.dump");
-            
-            //this.frameList = frameSequence.Frames;            
         }
 
         public MergeRecordWindow()
@@ -353,6 +351,10 @@ namespace KinectMotionCapture
                 List<CvMat> convs = KinectMerge.AjustFrameFromeBone(frame, conversions, selectedUsers);
                 frame.ApplyConversions(convs);
             }
+            List<Dictionary<JointType, Joint>> aaa = new List<Dictionary<JointType, Joint>>();
+            aaa.Add(frame.records[1].bodies[0].Joints);
+            List<Dictionary<UnityLib.JointType, UnityLib.Point3>> bbb = Utility.ConverToCompatibleJoint(aaa);
+            Utility.SaveToBinary(bbb, @"C:\Users\non\Desktop\joints.dump");
         }
     }
 }

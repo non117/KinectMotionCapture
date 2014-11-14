@@ -16,10 +16,11 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using Microsoft.Kinect;
 
+using Microsoft.Kinect;
 using KinectMotionCapture;
 using OpenCvSharp;
+using UnityLib;
 
 namespace KinectMotionCapture
 {
@@ -179,33 +180,23 @@ namespace KinectMotionCapture
         /// </summary>
         /// <param name="originalJoints"></param>
         /// <returns></returns>
-        public static List<Dictionary<JointType, Point3>> ConverToCompatibleJoint(List<Dictionary<JointType, CameraSpacePoint>> originalJoints)
+        public static List<Dictionary<UnityLib.JointType, Point3>> ConverToCompatibleJoint(List<Dictionary<Microsoft.Kinect.JointType, Joint>> originalJoints)
         {
-            List<Dictionary<JointType, Point3>> newJoints = new List<Dictionary<JointType, Point3>>();
-            foreach (Dictionary<JointType, CameraSpacePoint> joints in originalJoints)
+            List<Dictionary<UnityLib.JointType, Point3>> newJoints = new List<Dictionary<UnityLib.JointType, Point3>>();
+            foreach (Dictionary<Microsoft.Kinect.JointType, Joint> joints in originalJoints)
             {
-                Dictionary<JointType, Point3> body = new Dictionary<JointType, Point3>();
-                foreach (JointType j in joints.Keys)
+                Dictionary<UnityLib.JointType, Point3> body = new Dictionary<UnityLib.JointType, Point3>();
+                foreach (Microsoft.Kinect.JointType j in joints.Keys)
                 {
-                    Point3 v = new Point3() { X = joints[j].X, Y = joints[j].Y, Z = joints[j].Z };
-                    body.Add(j, v);
+                    CameraSpacePoint position = joints[j].Position;
+                    Point3 v = new Point3() { X = position.X, Y = position.Y, Z = position.Z };
+                    UnityLib.JointType jointType = (UnityLib.JointType)j;
+                    body.Add(jointType, v);
                 }
                 newJoints.Add(body);
             }
 
             return newJoints;
         }
-
     }
-
-    /// <summary>
-    /// 外部へ出力するための3次元座標
-    /// </summary>
-    public struct Point3
-    {
-        public float X;
-        public float Y;
-        public float Z;
-    }
-
 }
