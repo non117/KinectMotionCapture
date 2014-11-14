@@ -174,6 +174,38 @@ namespace KinectMotionCapture
             }
         }
 
+        /// <summary>
+        /// Unityに吐くためのデータ変換
+        /// </summary>
+        /// <param name="originalJoints"></param>
+        /// <returns></returns>
+        public static List<Dictionary<JointType, Point3>> ConverToCompatibleJoint(List<Dictionary<JointType, CameraSpacePoint>> originalJoints)
+        {
+            List<Dictionary<JointType, Point3>> newJoints = new List<Dictionary<JointType, Point3>>();
+            foreach (Dictionary<JointType, CameraSpacePoint> joints in originalJoints)
+            {
+                Dictionary<JointType, Point3> body = new Dictionary<JointType, Point3>();
+                foreach (JointType j in joints.Keys)
+                {
+                    Point3 v = new Point3() { X = joints[j].X, Y = joints[j].Y, Z = joints[j].Z };
+                    body.Add(j, v);
+                }
+                newJoints.Add(body);
+            }
+
+            return newJoints;
+        }
+
+    }
+
+    /// <summary>
+    /// 外部へ出力するための3次元座標
+    /// </summary>
+    public struct Point3
+    {
+        public float X;
+        public float Y;
+        public float Z;
     }
 
 }
