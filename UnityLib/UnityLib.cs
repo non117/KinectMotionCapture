@@ -24,12 +24,27 @@ namespace UnityLib
                 return obj;
             }
         }
+
+        /// <summary>
+        /// JointTYpeを表す数値をJointTypeに変換する
+        /// </summary>
+        /// <param name="jointNum"></param>
+        /// <returns></returns>
+        public static JointType ConvertIntToJointTYpe(int jointNum)
+        {
+            Dictionary<int, JointType> mapping = new Dictionary<int, JointType>();
+            foreach (JointType jointType in Enum.GetValues(typeof(JointType)))
+            {
+                mapping.Add((int)jointType, jointType);
+            }
+            return mapping[jointNum];
+        }
     }
 
     /// <summary>
     /// Unityで読み込むためのJointType
     /// </summary>
-    public enum JointType : byte
+    public enum JointType
     {
         SpineBase = 0,
         SpineMid = 1,

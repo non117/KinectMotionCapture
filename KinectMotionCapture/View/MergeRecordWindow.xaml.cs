@@ -56,13 +56,13 @@ namespace KinectMotionCapture
         private void LoadFrames()
         {
             List<string> datadir = new List<string>() {
-                                                    @"E:\kinect1",  
-                                                    @"E:\kinect2", 
-                                                    @"E:\kinect3", 
-                                                    @"E:\kinect4", 
+                                                    @"F:\Nlab\kinect1",  
+                                                    @"F:\Nlab\kinect2", 
+                                                    @"F:\Nlab\kinect3", 
+                                                    @"F:\Nlab\kinect4", 
             };
             this.frameSequence = new FrameSequence(datadir);
-            this.frameSequence.LocalCoordinateMapper = (LocalCoordinateMapper)Utility.LoadFromBinary(@"C:\Users\non\Desktop\coordmapper.dump");
+            //this.frameSequence.LocalCoordinateMapper = (LocalCoordinateMapper)Utility.LoadFromBinary(@"C:\Users\non\Desktop\coordmapper.dump");
         }
 
         public MergeRecordWindow()
@@ -354,7 +354,7 @@ namespace KinectMotionCapture
             List<Dictionary<JointType, Joint>> aaa = new List<Dictionary<JointType, Joint>>();
             aaa.Add(frame.records[1].bodies[0].Joints);
             List<Dictionary<int, float[]>> bbb = Utility.ConverToCompatibleJoint(aaa);
-            Utility.SaveToBinary(bbb, @"C:\Users\non\Desktop\joints.dump");
+            Utility.SaveToBinary(bbb, @"C:\Users\Administrator\Desktop\joints.dump");
         }
     }
 }
