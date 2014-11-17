@@ -56,13 +56,13 @@ namespace KinectMotionCapture
         private void LoadFrames()
         {
             List<string> datadir = new List<string>() {
-                                                    @"E:\kinect1",  
-                                                    @"E:\kinect2", 
-                                                    @"E:\kinect3", 
-                                                    @"E:\kinect4", 
+                                                    @"F:\kinect1",  
+                                                    @"F:\kinect2", 
+                                                    @"F:\kinect3", 
+                                                    @"F:\kinect4", 
             };
             this.frameSequence = new FrameSequence(datadir);
-            this.frameSequence.LocalCoordinateMapper = (LocalCoordinateMapper)Utility.LoadFromBinary(@"C:\Users\non\Desktop\coordmapper.dump");
+            //this.frameSequence.LocalCoordinateMapper = (LocalCoordinateMapper)Utility.LoadFromBinary(@"C:\Users\non\Desktop\coordmapper.dump");
         }
 
         public MergeRecordWindow()
@@ -356,8 +356,8 @@ namespace KinectMotionCapture
             List<Frame> frames = frameSequence.Slice(this.startIndex, this.endIndex);
             for (int i = 0; i < frameSequence.recordNum; i++)
             {
-                List<Dictionary<JointType, Joint>> body = new List<Dictionary<JointType, Joint>>();
-                Utility.SaveBodySequence(body, string.Format(@"C:\Users\non\Desktop\joints{0}.dump", i + 1));
+                List<Dictionary<JointType, Joint>> body = frames.Select(f => f.records[i].bodies[0].Joints).ToList();
+                Utility.SaveBodySequence(body, string.Format(@"C:\Users\Administrator\Desktop\joints{0}.dump", i + 1));
             }
         }
     }
