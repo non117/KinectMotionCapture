@@ -427,14 +427,13 @@ namespace KinectMotionCapture
                         continue;
                     if (!joint2.ContainsKey(jointType))
                         continue;
-                    CvPoint3D64f from = joint2[jointType].Position.ToCvPoint3D();
-                    CvPoint3D64f target = CvEx.ConvertPoint3D(joint1[jointType].Position.ToCvPoint3D(), convList[0]);
-                    //bool valid1 = buf1.Data.IsOriginalJointValid(user1, jointType);
-                    //bool valid2 = buf2.Data.IsOriginalJointValid(user2, jointType);
-                    //if (valid1 && valid2)
-                    //{
-                    crtc.PutPoint(from, target, 1);
-                    //}
+                    if (joint1[jointType].TrackingState == TrackingState.Tracked && joint2[jointType].TrackingState == TrackingState.Tracked)
+                    {
+                        CvPoint3D64f from = joint2[jointType].Position.ToCvPoint3D();
+                        CvPoint3D64f target = CvEx.ConvertPoint3D(joint1[jointType].Position.ToCvPoint3D(), convList[0]);
+                        // IsOriginlJointValid相当の処理を入れるかどうか
+                        crtc.PutPoint(from, target, 1);
+                    }
                 }
                 convList[j] = crtc.Solve();
             }
@@ -455,7 +454,7 @@ namespace KinectMotionCapture
             {
                 List<SerializableBody> bodies = frame.SelectedBodyList(frameSeq.selectedUserIdList);
                 for (int i = 0; i < frame.recordNum; i++)
-                {;
+                {
                     for (int j = i + 1; j < frame.recordNum; j++)
                     {
                         Dictionary<JointType, Joint> joint1 = bodies[i].Joints;
