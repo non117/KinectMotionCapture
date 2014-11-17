@@ -56,13 +56,13 @@ namespace KinectMotionCapture
         private void LoadFrames()
         {
             List<string> datadir = new List<string>() {
-                                                    @"F:\Nlab\kinect1",  
-                                                    @"F:\Nlab\kinect2", 
-                                                    @"F:\Nlab\kinect3", 
-                                                    @"F:\Nlab\kinect4", 
+                                                    @"E:\kinect1",  
+                                                    @"E:\kinect2", 
+                                                    @"E:\kinect3", 
+                                                    @"E:\kinect4", 
             };
             this.frameSequence = new FrameSequence(datadir);
-            //this.frameSequence.LocalCoordinateMapper = (LocalCoordinateMapper)Utility.LoadFromBinary(@"C:\Users\non\Desktop\coordmapper.dump");
+            this.frameSequence.LocalCoordinateMapper = (LocalCoordinateMapper)Utility.LoadFromBinary(@"C:\Users\non\Desktop\coordmapper.dump");
         }
 
         public MergeRecordWindow()
@@ -216,6 +216,7 @@ namespace KinectMotionCapture
         private void UpdateDisplay(Frame frame)
         {
             Label[] labels = { UserIdLabel1, UserIdLabel2, UserIdLabel3, UserIdLabel4 };
+            Label[] timeLabels = { Box1Timer, Box2Timer, Box3Timer, Box4Timer };
             Image[] images = { Image1, Image2, Image3, Image4 };
             DrawingGroup[] drawings = { drawingGroup1, drawingGroup2, drawingGroup3, drawingGroup4 };
 
@@ -223,6 +224,7 @@ namespace KinectMotionCapture
             {
                 labels[i].Content = String.Join(",", frame.BodyIdList(i));
                 images[i].Source = new BitmapImage(new Uri(frame.ColorImagePathList[i]));
+                timeLabels[i].Content = frame.records[i].TimeStamp.ToString(@"ss\:fff");
 
                 // Boneの描画
                 using (DrawingContext dc = drawings[i].Open())
@@ -354,7 +356,7 @@ namespace KinectMotionCapture
             List<Dictionary<JointType, Joint>> aaa = new List<Dictionary<JointType, Joint>>();
             aaa.Add(frame.records[1].bodies[0].Joints);
             List<Dictionary<int, float[]>> bbb = Utility.ConverToCompatibleJoint(aaa);
-            Utility.SaveToBinary(bbb, @"C:\Users\Administrator\Desktop\joints.dump");
+            Utility.SaveToBinary(bbb, @"C:\Users\non\Desktop\joints.dump");
         }
     }
 }

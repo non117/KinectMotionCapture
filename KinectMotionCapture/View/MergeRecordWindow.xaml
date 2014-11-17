@@ -5,140 +5,146 @@
         Height="960" Width="1300">
     <Grid>
         <Border Background="WhiteSmoke" BorderBrush="Black" Padding="5">
-        <Grid Margin="10">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="150"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-
-
-            <Border BorderThickness="2" Padding="10" BorderBrush="DarkGray" Grid.Row="0" Margin="3">
-                <Grid Name="Controller">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="50"/>
-                        <RowDefinition Height="50"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-
-                    <Grid Name="UpperController">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="50"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="100"/>
-                        </Grid.ColumnDefinitions>
-                        <Button Name="PlayPause" Grid.Column="0" Click="PlayPause_Click" Content="▷" Width="30" Height="30" FontSize="16" HorizontalAlignment="Left" />
-                        <Slider Name="PlaySlider" Grid.Column="1" VerticalAlignment="Center" SmallChange="1"
-                            LargeChange="10" TickPlacement="Both" IsSelectionRangeEnabled="True" ValueChanged="PlaySlider_ValueChanged"/>
-                        <Label Name="TimeLabel" Grid.Column="2" Content="00:00:000" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="14"/>
-                    </Grid>
-                    <Grid Name="MiddleController" Grid.Row="1">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="50"/>
-                            <ColumnDefinition Width="50"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Button Name="SetMinTime" Grid.Column="0" Content="|-" Width="30" Height="30" FontSize="16" HorizontalAlignment="Left" Click="SetMinTime_Click"/>
-                        <Button Name="SetMaxTime" Grid.Column="1" Content="-|" Width="30" Height="30" FontSize="16" HorizontalAlignment="Left" Click="SetMaxTime_Click"/>
-                    </Grid>
-                </Grid>
-            </Border>
-
-            <Border BorderThickness="2" Padding="10" BorderBrush="DarkGray" Grid.Row="1" Margin="3">
-                <Grid Grid.Row="1" Name="RecordDisplay">
+            <Grid Margin="10">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="150"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
 
-                <Grid Grid.Row="0" Grid.Column="0" Name="Image1Grid">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="50"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
 
-                    <Grid Grid.Row="0">
+                <Border BorderThickness="2" Padding="10" BorderBrush="DarkGray" Grid.Row="0" Margin="3">
+                    <Grid Name="Controller">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="50"/>
+                            <RowDefinition Height="50"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <Grid Name="UpperController">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="50"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="100"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Name="PlayPause" Grid.Column="0" Click="PlayPause_Click" Content="▷" Width="30" Height="30" FontSize="16" HorizontalAlignment="Left" />
+                            <Slider Name="PlaySlider" Grid.Column="1" VerticalAlignment="Center" SmallChange="1"
+                            LargeChange="10" TickPlacement="Both" IsSelectionRangeEnabled="True" ValueChanged="PlaySlider_ValueChanged"/>
+                            <Label Name="TimeLabel" Grid.Column="2" Content="00:00:000" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="14"/>
+                        </Grid>
+                        <Grid Name="MiddleController" Grid.Row="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="50"/>
+                                <ColumnDefinition Width="50"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Name="SetMinTime" Grid.Column="0" Content="|-" Width="30" Height="30" FontSize="16" HorizontalAlignment="Left" Click="SetMinTime_Click"/>
+                            <Button Name="SetMaxTime" Grid.Column="1" Content="-|" Width="30" Height="30" FontSize="16" HorizontalAlignment="Left" Click="SetMaxTime_Click"/>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <Border BorderThickness="2" Padding="10" BorderBrush="DarkGray" Grid.Row="1" Margin="3">
+                    <Grid Grid.Row="1" Name="RecordDisplay">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="150"/>
+                            <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <Label Name="Box1Text" Content="User Selection" Grid.Column="0" Margin="5" Height="25" Width="100"/>
-                        <ComboBox Name="UserIdBox1" Grid.Column="1" Margin="10" Height="25" Width="200" HorizontalAlignment="Left" SelectionChanged="UserIdBox_SelectionChanged"/>
+
+                        <Grid Grid.Row="0" Grid.Column="0" Name="Image1Grid">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="50"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="220"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Label Name="Box1Text" Content="User Selection" Grid.Column="0" Margin="5" Height="25" Width="100"/>
+                                <ComboBox Name="UserIdBox1" Grid.Column="1" Margin="10" Height="25" Width="200" HorizontalAlignment="Left" SelectionChanged="UserIdBox_SelectionChanged"/>
+                                <Label Name="Box1Timer" Content="00:000" Grid.Column="2" Margin="5" Height="25" Width="60"/>
+
+                            </Grid>
+                            <Image Name="Image1" Grid.Row="1" Margin="5"/>
+                            <Image Name="BodyImage1" Grid.Row="1" Margin="5" Source="{Binding BodyImageSource1}"/>
+                            <Label Name="UserIdLabel1" Grid.Row="1" Height="40" Width="500" Foreground="White"/>
+                        </Grid>
+
+                        <Grid Grid.Row="0" Grid.Column="1" Name="Image2Grid">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="50"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="220"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Label Name="Box2Text" Content="User Selection" Grid.Column="0" Margin="5" Height="25" Width="100"/>
+                                <ComboBox Name="UserIdBox2" Grid.Column="1" Margin="10" Height="25" Width="200" HorizontalAlignment="Left" SelectionChanged="UserIdBox_SelectionChanged"/>
+                                <Label Name="Box2Timer" Content="00:000" Grid.Column="2" Margin="5" Height="25" Width="60"/>
+
+                            </Grid>
+                            <Image Name="Image2" Grid.Row="1" Margin="5"/>
+                            <Image Name="BodyImage2" Grid.Row="1" Margin="5" Source="{Binding BodyImageSource2}"/>
+                            <Label Name="UserIdLabel2" Grid.Row="1" Height="40" Width="500" Foreground="White"/>
+                        </Grid>
+
+                        <Grid Grid.Row="1" Grid.Column="0" Name="Image3Grid">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="50"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="220"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Label Name="Box3Text" Content="User Selection" Grid.Column="0" Margin="5" Height="25" Width="100"/>
+                                <ComboBox Name="UserIdBox3" Grid.Column="1" Margin="10" Height="25" Width="200" HorizontalAlignment="Left" SelectionChanged="UserIdBox_SelectionChanged"/>
+                                <Label Name="Box3Timer" Content="00:000" Grid.Column="2" Margin="5" Height="25" Width="60"/>
+                            </Grid>
+                            <Image Name="Image3" Grid.Row="1" Margin="5"/>
+                            <Image Name="BodyImage3" Grid.Row="1" Margin="5" Source="{Binding BodyImageSource3}"/>
+                            <Label Name="UserIdLabel3" Grid.Row="1" Height="40" Width="500" Foreground="White"/>
+                        </Grid>
+
+                        <Grid Grid.Row="1" Grid.Column="1" Name="Image4Grid">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="50"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="220"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Label Name="Box4Text" Content="User Selection" Grid.Column="0" Margin="5" Height="25" Width="100"/>
+                                <ComboBox Name="UserIdBox4" Grid.Column="1" Margin="10" Height="25" Width="200" HorizontalAlignment="Left" SelectionChanged="UserIdBox_SelectionChanged"/>
+                                <Label Name="Box4Timer" Content="00:000" Grid.Column="2" Margin="5" Height="25" Width="60"/>
+                            </Grid>
+                            <Image Name="Image4" Grid.Row="1" Margin="5"/>
+                            <Image Name="BodyImage4" Grid.Row="1" Margin="5" Source="{Binding BodyImageSource4}"/>
+                            <Label Name="UserIdLabel4" Grid.Row="1" Height="40" Width="500" Foreground="White"/>
+                        </Grid>
+
 
                     </Grid>
-                    <Image Name="Image1" Grid.Row="1" Margin="5"/>
-                    <Image Name="BodyImage1" Grid.Row="1" Margin="5" Source="{Binding BodyImageSource1}"/>
-                    <Label Name="UserIdLabel1" Grid.Row="1" Height="40" Width="500" Foreground="White"/>
-                </Grid>
-
-                <Grid Grid.Row="0" Grid.Column="1" Name="Image2Grid">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="50"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-
-                    <Grid Grid.Row="0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="150"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Label Name="Box2Text" Content="User Selection" Grid.Column="0" Margin="5" Height="25" Width="100"/>
-                        <ComboBox Name="UserIdBox2" Grid.Column="1" Margin="10" Height="25" Width="200" HorizontalAlignment="Left" SelectionChanged="UserIdBox_SelectionChanged"/>
-
-                    </Grid>
-                    <Image Name="Image2" Grid.Row="1" Margin="5"/>
-                    <Image Name="BodyImage2" Grid.Row="1" Margin="5" Source="{Binding BodyImageSource2}"/>
-                    <Label Name="UserIdLabel2" Grid.Row="1" Height="40" Width="500" Foreground="White"/>
-                </Grid>
-
-                <Grid Grid.Row="1" Grid.Column="0" Name="Image3Grid">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="50"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-
-                    <Grid Grid.Row="0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="150"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Label Name="Box3Text" Content="User Selection" Grid.Column="0" Margin="5" Height="25" Width="100"/>
-                        <ComboBox Name="UserIdBox3" Grid.Column="1" Margin="10" Height="25" Width="200" HorizontalAlignment="Left" SelectionChanged="UserIdBox_SelectionChanged"/>
-
-                    </Grid>
-                    <Image Name="Image3" Grid.Row="1" Margin="5"/>
-                    <Image Name="BodyImage3" Grid.Row="1" Margin="5" Source="{Binding BodyImageSource3}"/>
-                    <Label Name="UserIdLabel3" Grid.Row="1" Height="40" Width="500" Foreground="White"/>
-                </Grid>
-
-                <Grid Grid.Row="1" Grid.Column="1" Name="Image4Grid">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="50"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-
-                    <Grid Grid.Row="0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="150"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Label Name="Box4Text" Content="User Selection" Grid.Column="0" Margin="5" Height="25" Width="100"/>
-                        <ComboBox Name="UserIdBox4" Grid.Column="1" Margin="10" Height="25" Width="200" HorizontalAlignment="Left" SelectionChanged="UserIdBox_SelectionChanged"/>
-
-                    </Grid>
-                    <Image Name="Image4" Grid.Row="1" Margin="5"/>
-                    <Image Name="BodyImage4" Grid.Row="1" Margin="5" Source="{Binding BodyImageSource4}"/>
-                    <Label Name="UserIdLabel4" Grid.Row="1" Height="40" Width="500" Foreground="White"/>
-                </Grid>
-
-
+                </Border>
             </Grid>
-            </Border>
-        </Grid>
-    </Border>
+        </Border>
         <Menu Name="Menu" VerticalAlignment="Top">
             <MenuItem Name="MenuFile" Header="File"></MenuItem>
             <MenuItem Name="MenuCalib" Header="Calibration">
