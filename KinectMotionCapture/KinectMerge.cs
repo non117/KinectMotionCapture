@@ -73,7 +73,7 @@ namespace KinectMotionCapture
         /// <summary>
         /// 座標変換を適用する
         /// </summary>
-        private void ApplyConversion()
+        public void ApplyConversion()
         {
             foreach(Frame frame in Frames)
             {
@@ -188,7 +188,7 @@ namespace KinectMotionCapture
         /// </summary>
         /// <param name="start"></param>
         /// <param name="end"></param>
-        public List<Frame> ResetTimeSpan(DateTime start, DateTime end)
+        public List<Frame> Slice(DateTime start, DateTime end)
         {
             this.startTime = start;
             this.endTime = end;
@@ -200,11 +200,11 @@ namespace KinectMotionCapture
         /// </summary>
         /// <param name="start"></param>
         /// <param name="end"></param>
-        public List<Frame> ResetTimeSpan(int startIndex, int endIndex)
+        public List<Frame> Slice(int startIndex, int endIndex)
         {
             DateTime startTime = this.Frames[startIndex].Time;
             DateTime endTime = this.Frames[endIndex].Time;
-            return this.ResetTimeSpan(startTime, endTime);
+            return this.Slice(startTime, endTime);
         }
 
         /// <summary>
@@ -267,7 +267,7 @@ namespace KinectMotionCapture
     {
         public int recordNum;
         //private List<MotionData> records;
-        public List<MotionData> records;
+        public List<MotionData> records;  // for debug
         public DateTime Time { get; set; }
 
         public List<string> ColorImagePathList
@@ -295,26 +295,24 @@ namespace KinectMotionCapture
             get { return this.records.Select((m) => new CvSize(m.DepthUserWidth, m.DepthUserHeight)).ToList(); }
         }
 
-        public List<string> BodyIdList(int recordIndex)
+        /// <summary>
+        /// レコード番号からBody Idをとってくる
+        /// </summary>
+        /// <param name="recordNo"></param>
+        /// <returns></returns>
+        public List<string> BodyIdList(int recordNo)
         {
-            return new List<SerializableBody>(this.records[recordIndex].bodies).Select((b) => b.TrackingId.ToString()).ToList();
+            return new List<SerializableBody>(this.records[recordNo].bodies).Select((b) => b.TrackingId.ToString()).ToList();
         }
 
-        public List<Point> BodyCenterPointList(int recordIndex)
+        /// <summary>
+        /// レコード番号からカラー座標系の関節点群をとってくる
+        /// </summary>
+        /// <param name="recordNo"></param>
+        /// <returns></returns>
+        public List<Dictionary<JointType, Point>> GetBodyColorSpacePoints(int recordNo)
         {
-            try
-            {
-                return new List<SerializableBody>(this.records[recordIndex].bodies).Select((b) => b.colorSpacePoints[JointType.SpineBase]).ToList();
-            }
-            catch (Exception e)
-            {
-                return new List<Point>();
-            }
-        }
-
-        public List<Dictionary<JointType, Point>> GetBodyPoints(int recordIndex)
-        {
-            return new List<SerializableBody>(this.records[recordIndex].bodies).Select((b) => b.colorSpacePoints).ToList();
+            return new List<SerializableBody>(this.records[recordNo].bodies).Select((b) => b.colorSpacePoints).ToList();
         }
 
         /// <summary>
@@ -334,6 +332,10 @@ namespace KinectMotionCapture
             return bodies;
         }
 
+        /// <summary>
+        /// こんすとらくたん
+        /// </summary>
+        /// <param name="records"></param>
         public Frame(List<MotionData> records)
         {
             this.recordNum = records.Count();

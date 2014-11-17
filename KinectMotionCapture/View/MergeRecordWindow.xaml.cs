@@ -232,7 +232,7 @@ namespace KinectMotionCapture
                     CvSize colorSize = frame.ColorSize[i];
                     dc.DrawRectangle(Brushes.Transparent, null, new Rect(0.0, 0.0, colorSize.Width, colorSize.Height));
 
-                    foreach (Dictionary<JointType, Point> points in frame.GetBodyPoints(i))
+                    foreach (Dictionary<JointType, Point> points in frame.GetBodyColorSpacePoints(i))
                     {
                         Pen drawPen = new Pen(Brushes.Red, 6);
                         this.DrawBody(points, dc, drawPen);
@@ -277,7 +277,6 @@ namespace KinectMotionCapture
                 return this.bodyImageSource2;
             }
         }
-
         public ImageSource BodyImageSource3
         {
             get
@@ -346,15 +345,21 @@ namespace KinectMotionCapture
         private void MenuCalibBoneFrame_Click(object sender, RoutedEventArgs e)
         {
             Frame frame = frameSequence.Frames[playingIndex];
-            List<CvMat> conversions = frameSequence.ToWorldConversions;
             List<ulong> selectedUsers = frameSequence.selectedUserIdList;
             if (selectedUsers.Count == frameSequence.recordNum)
             {
-                List<CvMat> convs = KinectMerge.AjustFrameFromeBone(frame, conversions, selectedUsers);
-                frame.ApplyConversions(convs);
+                List<CvMat> convs = KinectMerge.AjustFrameFromeBone(frame, frameSequence.ToWorldConversions, selectedUsers);
+                frameSequence.ToWorldConversions = convs;
+                frameSequence.ApplyConversion();
             }
-            List<Dictionary<JointType, Joint>> aaa = new List<Dictionary<JointType, Joint>>();
-            aaa.Add(frame.records[1].bodies[0].Joints);
+            // DEBUG
+            List<Frame> frames = frameSequence.Slice(this.startIndex, this.endIndex);
+            for (int i = 0; i < frameSequence.recordNum; i++)
+            {
+                List<Dictionary<JointType, Joint>> body = new List<Dictionary<JointType, Joint>>();
+                frames.Select(f => f.GetBodyPoints)
+            }
+                aaa.Add(frame.records[1].bodies[0].Joints);
             List<Dictionary<int, float[]>> bbb = Utility.ConverToCompatibleJoint(aaa);
             Utility.SaveToBinary(bbb, @"C:\Users\non\Desktop\joints.dump");
         }
