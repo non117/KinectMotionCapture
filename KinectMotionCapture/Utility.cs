@@ -196,6 +196,14 @@ namespace KinectMotionCapture
             return newJoints;
         }
 
+        public static Dictionary<JointType, Joint> GetValidJoints(Dictionary<JointType, Joint> joints)
+        {
+            return joints.Where(j => j.Value.TrackingState == TrackingState.Tracked).ToDictionary(j => j.Key, j => j.Value);
+        }
+
+        /// <summary>
+        /// DPマッチングのための座標, Point2D使って書き直すべき
+        /// </summary>
         public class Point
         {
             public int x, y;
@@ -203,6 +211,9 @@ namespace KinectMotionCapture
             public Point(int x, int y){ this.x = x; this.y = y; }
         }
 
+        /// <summary>
+        /// DPマッチングのためのノード
+        /// </summary>
         public class Node
         {
             public float cost;
@@ -215,6 +226,14 @@ namespace KinectMotionCapture
             }
         }
 
+        /// <summary>
+        /// DPマッチングをジェネリックを使って。まだバグってる。
+        /// </summary>
+        /// <typeparam name="Type"></typeparam>
+        /// <param name="modelSeq"></param>
+        /// <param name="targetSeq"></param>
+        /// <param name="costFunc"></param>
+        /// <returns></returns>
         public static Tuple<float, int[]> DPmatching<Type>(List<Type> modelSeq, List<Type> targetSeq, Func<Type, Type, float> costFunc)
         {
             int m = modelSeq.Count();

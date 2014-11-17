@@ -417,8 +417,8 @@ namespace KinectMotionCapture
 
             for (int j = 1; j < frame.recordNum; j++)
             {
-                Dictionary<JointType, Joint> joint1 = bodies[0].Joints;
-                Dictionary<JointType, Joint> joint2 = bodies[j].Joints;
+                Dictionary<JointType, Joint> joint1 = Utility.GetValidJoints(bodies[0].Joints);
+                Dictionary<JointType, Joint> joint2 = Utility.GetValidJoints(bodies[j].Joints);
 
                 ICoordConversion3D crtc = new CoordRotTransConversion();
                 foreach (JointType jointType in Enum.GetValues(typeof(JointType)))
@@ -427,13 +427,10 @@ namespace KinectMotionCapture
                         continue;
                     if (!joint2.ContainsKey(jointType))
                         continue;
-                    if (joint1[jointType].TrackingState == TrackingState.Tracked && joint2[jointType].TrackingState == TrackingState.Tracked)
-                    {
-                        CvPoint3D64f from = joint2[jointType].Position.ToCvPoint3D();
-                        CvPoint3D64f target = CvEx.ConvertPoint3D(joint1[jointType].Position.ToCvPoint3D(), convList[0]);
-                        // IsOriginlJointValid相当の処理を入れるかどうか
-                        crtc.PutPoint(from, target, 1);
-                    }
+                    CvPoint3D64f from = joint2[jointType].Position.ToCvPoint3D();
+                    CvPoint3D64f target = CvEx.ConvertPoint3D(joint1[jointType].Position.ToCvPoint3D(), convList[0]);
+                    // IsOriginlJointValid相当の処理を入れるかどうか
+                    crtc.PutPoint(from, target, 1);
                 }
                 convList[j] = crtc.Solve();
             }
@@ -457,8 +454,8 @@ namespace KinectMotionCapture
                 {
                     for (int j = i + 1; j < frame.recordNum; j++)
                     {
-                        Dictionary<JointType, Joint> joint1 = bodies[i].Joints;
-                        Dictionary<JointType, Joint> joint2 = bodies[j].Joints;
+                        Dictionary<JointType, Joint> joint1 = Utility.GetValidJoints(bodies[i].Joints);
+                        Dictionary<JointType, Joint> joint2 = Utility.GetValidJoints(bodies[j].Joints);
 
                         foreach (JointType jointType in joint1.Keys.Intersect(joint2.Keys))
                         {
@@ -489,15 +486,15 @@ namespace KinectMotionCapture
                 foreach (Frame frame in frameSeq.Frames)
                 {
                     List<SerializableBody> bodies = frame.SelectedBodyList(frameSeq.selectedUserIdList);
-                    List<KinectUndistortion> undistortions = frameSeq.UndistortionDataList;
+                    //List<KinectUndistortion> undistortions = frameSeq.UndistortionDataList;
                     List<CvSize> depthUsersizeList = frame.DepthUserSize;
 
                     foreach (KeyValuePair<int, int> dependencyPair in CalcEx.EnumerateDependencyPairs(baseRecordIndex, dependencies))
                     {
                         CvSize imageSize1 = depthUsersizeList[dependencyPair.Key];
                         CvSize imageSize2 = depthUsersizeList[dependencyPair.Value];
-                        KinectUndistortion undist1 = undistortions[dependencyPair.Key];
-                        KinectUndistortion undist2 = undistortions[dependencyPair.Value];
+                        //KinectUndistortion undist1 = undistortions[dependencyPair.Key];
+                        //KinectUndistortion undist2 = undistortions[dependencyPair.Value];
 
                         // 変換計算用オブジェクトを拾ってくる
                         ICoordConversion3D conv;
@@ -506,13 +503,15 @@ namespace KinectMotionCapture
                             conversionsPerDependencyKey[dependencyPair.Key] = conv = new CoordRotTransConversion();
                         }
 
-                        Dictionary<JointType, Joint> joint1 = bodies[dependencyPair.Key].Joints;
-                        Dictionary<JointType, Joint> joint2 = bodies[dependencyPair.Value].Joints;
+                        Dictionary<JointType, Joint> joint1 = Utility.GetValidJoints(bodies[dependencyPair.Key].Joints);
+                        Dictionary<JointType, Joint> joint2 = Utility.GetValidJoints(bodies[dependencyPair.Value].Joints);
 
                         foreach (JointType jointType in joint1.Keys.Intersect(joint2.Keys))
                         {
-                            CvPoint3D64f camPoint1 = undist1.GetRealFromScreenPos(joint1[jointType].Position.ToCvPoint3D(), imageSize1);
-                            CvPoint3D64f camPoint2 = undist2.GetRealFromScreenPos(joint2[jointType].Position.ToCvPoint3D(), imageSize2);
+                            //CvPoint3D64f camPoint1 = undist1.GetRealFromScreenPos(joint1[jointType].Position.ToCvPoint3D(), imageSize1);
+                            //CvPoint3D64f camPoint2 = undist2.GetRealFromScreenPos(joint2[jointType].Position.ToCvPoint3D(), imageSize2);
+                            CvPoint3D64f camPoint1 = joint1[jointType].Position.ToCvPoint3D();
+                            CvPoint3D64f camPoint2 = joint2[jointType].Position.ToCvPoint3D();
                             // それぞれのカメラ座標系におけるそれぞれの対応点をセットに入れる
                             conv.PutPoint(camPoint1, camPoint2, 1);
                         }
