@@ -196,9 +196,25 @@ namespace KinectMotionCapture
             return newJoints;
         }
 
+        /// <summary>
+        /// Bodyの関節点をTrackedなものだけにフィルターして返す
+        /// </summary>
+        /// <param name="joints"></param>
+        /// <returns></returns>
         public static Dictionary<JointType, Joint> GetValidJoints(Dictionary<JointType, Joint> joints)
         {
             return joints.Where(j => j.Value.TrackingState == TrackingState.Tracked).ToDictionary(j => j.Key, j => j.Value);
+        }
+
+        /// <summary>
+        /// 時系列Bodyをシリアライズして保存する
+        /// </summary>
+        /// <param name="bodies"></param>
+        /// <param name="path"></param>
+        public static void SaveBodySequence(List<Dictionary<JointType, Joint>> bodies, string path)
+        {
+            List<Dictionary<int, float[]>> serializableBodies = Utility.ConverToCompatibleJoint(bodies);
+            Utility.SaveToBinary(serializableBodies, path);
         }
 
         /// <summary>

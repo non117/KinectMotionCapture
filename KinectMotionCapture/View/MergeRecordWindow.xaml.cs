@@ -357,11 +357,8 @@ namespace KinectMotionCapture
             for (int i = 0; i < frameSequence.recordNum; i++)
             {
                 List<Dictionary<JointType, Joint>> body = new List<Dictionary<JointType, Joint>>();
-                frames.Select(f => f.GetBodyPoints)
+                Utility.SaveBodySequence(body, string.Format(@"C:\Users\non\Desktop\joints{0}.dump", i + 1));
             }
-                aaa.Add(frame.records[1].bodies[0].Joints);
-            List<Dictionary<int, float[]>> bbb = Utility.ConverToCompatibleJoint(aaa);
-            Utility.SaveToBinary(bbb, @"C:\Users\non\Desktop\joints.dump");
         }
     }
 }

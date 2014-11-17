@@ -30,7 +30,7 @@ namespace UnityLib
         /// </summary>
         /// <param name="jointNum"></param>
         /// <returns></returns>
-        public static JointType ConvertIntToJointTYpe(int jointNum)
+        public static JointType ConvertIntToJointType(int jointNum)
         {
             Dictionary<int, JointType> mapping = new Dictionary<int, JointType>();
             foreach (JointType jointType in Enum.GetValues(typeof(JointType)))
