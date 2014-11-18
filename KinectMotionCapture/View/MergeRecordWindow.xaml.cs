@@ -56,13 +56,13 @@ namespace KinectMotionCapture
         private void LoadFrames()
         {
             List<string> datadir = new List<string>() {
-                                                    @"F:\kinect1",  
-                                                    @"F:\kinect2", 
-                                                    @"F:\kinect3", 
-                                                    @"F:\kinect4", 
+                                                    @"E:\kinect1",  
+                                                    @"E:\kinect2", 
+                                                    @"E:\kinect3", 
+                                                    @"E:\kinect4", 
             };
             this.frameSequence = new FrameSequence(datadir);
-            //this.frameSequence.LocalCoordinateMapper = (LocalCoordinateMapper)Utility.LoadFromBinary(@"C:\Users\non\Desktop\coordmapper.dump");
+            this.frameSequence.LocalCoordinateMapper = (LocalCoordinateMapper)Utility.LoadFromBinary(@"C:\Users\non\Desktop\coordmapper.dump");
         }
 
         public MergeRecordWindow()
@@ -250,6 +250,11 @@ namespace KinectMotionCapture
             // Draw the bones
             foreach (var bone in this.bones)
             {
+                if (bone == Tuple.Create(JointType.ShoulderRight, JointType.ElbowRight))
+                {
+                    drawingPen = new Pen(Brushes.Blue, 6);
+                }
+
                 if (points.Keys.Contains(bone.Item1) && points.Keys.Contains(bone.Item2))
                 {
                     drawingContext.DrawLine(drawingPen, points[bone.Item1], points[bone.Item2]);
@@ -348,16 +353,42 @@ namespace KinectMotionCapture
             List<ulong> selectedUsers = frameSequence.selectedUserIdList;
             if (selectedUsers.Count == frameSequence.recordNum)
             {
-                List<CvMat> convs = KinectMerge.AjustFrameFromeBone(frame, frameSequence.ToWorldConversions, selectedUsers);
+                List<CvMat> convs = KinectMerge.GetConvMatrixFromBoneFrame(frame, frameSequence.ToWorldConversions, selectedUsers);
                 frameSequence.ToWorldConversions = convs;
                 frameSequence.ApplyConversion();
-            }
+            }            
+
             // DEBUG
             List<Frame> frames = frameSequence.Slice(this.startIndex, this.endIndex);
             for (int i = 0; i < frameSequence.recordNum; i++)
             {
+                CameraSpacePoint p = frame.records[i].bodies[0].Joints[JointType.SpineBase].Position;
+                Debug.WriteLine(string.Format("{0},{1},{2}", p.X, p.Y, p.Z));
+
                 List<Dictionary<JointType, Joint>> body = frames.Select(f => f.records[i].bodies[0].Joints).ToList();
-                Utility.SaveBodySequence(body, string.Format(@"C:\Users\Administrator\Desktop\joints{0}.dump", i + 1));
+                Utility.SaveBodySequence(body, string.Format(@"C:\Users\non\Desktop\joints{0}.dump", i + 1));
+            }
+        }
+
+        private void MenuCalibBoneFrameRange_Click(object sender, RoutedEventArgs e)
+        {
+            List<ulong> selectedUsers = frameSequence.selectedUserIdList;
+            if (selectedUsers.Count == frameSequence.recordNum)
+            {
+                List<CvMat> convs = KinectMerge.GetConvMatrixFromBoneFrameSequence(frameSequence, this.startIndex, this.endIndex);
+                frameSequence.ToWorldConversions = convs;
+                frameSequence.ApplyConversion();
+            }
+
+            // DEBUG
+            List<Frame> frames = frameSequence.Slice(this.startIndex, this.endIndex);
+            for (int i = 0; i < frameSequence.recordNum; i++)
+            {
+                CameraSpacePoint p = frames[0].records[i].bodies[0].Joints[JointType.SpineBase].Position;
+                Debug.WriteLine(string.Format("{0},{1},{2}", p.X, p.Y, p.Z));
+
+                List<Dictionary<JointType, Joint>> body = frames.Select(f => f.records[i].bodies[0].Joints).ToList();
+                Utility.SaveBodySequence(body, string.Format(@"C:\Users\non\Desktop\joints{0}.dump", i + 1));
             }
         }
     }

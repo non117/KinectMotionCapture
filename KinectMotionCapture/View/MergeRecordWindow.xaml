@@ -149,6 +149,7 @@
             <MenuItem Name="MenuFile" Header="File"></MenuItem>
             <MenuItem Name="MenuCalib" Header="Calibration">
                 <MenuItem Name="MenuCalibBoneFrame" Header="現在のフレームの骨格で座標統合" Click="MenuCalibBoneFrame_Click" />
+                <MenuItem Name="MenuCalibBoneFrameRange" Header="フレーム範囲のの骨格で座標統合" Click="MenuCalibBoneFrameRange_Click" />
             </MenuItem>
         </Menu>
     </Grid>

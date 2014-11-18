@@ -359,6 +359,8 @@ namespace KinectMotionCapture
                     {
                         Joint originalJoint = body.Joints[jointType];
                         CvPoint3D64f fromPoint = originalJoint.Position.ToCvPoint3D();
+                        // debug
+
                         CameraSpacePoint newPoint = CvEx.ConvertPoint3D(fromPoint, conversion).ToCameraSpacePoint();
                         originalJoint.Position = newPoint;
                         newJoints[jointType] = originalJoint;
@@ -375,7 +377,7 @@ namespace KinectMotionCapture
         /// あるフレームにおける座標変換行列を深度情報から計算する
         /// </summary>
         /// <param name="frame"></param>
-        public static List<CvMat> AjustFrameFromDepth(Frame frame, List<CvMat> convList, LocalCoordinateMapper localCoordinateMapper)
+        public static List<CvMat> GetConvMatrixFromDepthFrame(Frame frame, List<CvMat> convList, LocalCoordinateMapper localCoordinateMapper)
         {
             Func<float, double> distance2weight = x => 1.0 / (x * 0 + 400);
             using (ColoredIterativePointMatching sipm = new ColoredIterativePointMatching(frame.DepthMatList, frame.ColorMatList, localCoordinateMapper, convList, distance2weight, 200))
@@ -389,18 +391,19 @@ namespace KinectMotionCapture
         /// フレーム範囲における座標変換行列を深度情報から計算する
         /// </summary>
         /// <param name="frames"></param>
-        public static void AjustFramesFromDepth(FrameSequence frameSeq, int startIndex, int endIndex)
+        public static List<CvMat> GetConvMatrixFromDepthFrameSequence(FrameSequence frameSeq, int startIndex, int endIndex)
         {
+            List<CvMat> conversions = frameSeq.ToWorldConversions;
             IEnumerable<Frame> frames = frameSeq.Frames.Skip(startIndex).Take(endIndex);
             foreach (Frame frame in frames)
             {
                 Func<float, double> distance2weight = x => 1.0 / (x * 0 + 400);
-                using (ColoredIterativePointMatching sipm = new ColoredIterativePointMatching(frame.DepthMatList, frame.ColorMatList, frameSeq.LocalCoordinateMapper, frameSeq.ToWorldConversions, distance2weight, 200))
+                using (ColoredIterativePointMatching sipm = new ColoredIterativePointMatching(frame.DepthMatList, frame.ColorMatList, frameSeq.LocalCoordinateMapper, conversions, distance2weight, 200))
                 {
-                    List<CvMat> conversions = sipm.CalculateTransformSequntially(0.1, 1);
-                    frameSeq.ToWorldConversions = conversions;
+                    conversions = sipm.CalculateTransformSequntially(0.1, 1);                    
                 }
             }
+            return conversions;
 
         }
 
@@ -408,7 +411,7 @@ namespace KinectMotionCapture
         /// あるフレームにおける座標変換行列を骨格情報から計算する
         /// </summary>
         /// <param name="frame"></param>
-        public static List<CvMat> AjustFrameFromeBone(Frame frame, List<CvMat> convList, List<ulong> selectedUserIdList)
+        public static List<CvMat> GetConvMatrixFromBoneFrame(Frame frame, List<CvMat> convList, List<ulong> selectedUserIdList)
         {
             List<SerializableBody> bodies = frame.SelectedBodyList(selectedUserIdList);
             if ( bodies.Count() != frame.recordNum )
@@ -443,7 +446,7 @@ namespace KinectMotionCapture
         /// フレーム範囲における座標変換行列を骨格情報から計算する
         /// </summary>
         /// <param name="frames"></param>
-        public static void AjustFramesFromBone(FrameSequence frameSeq, int startIndex, int endIndex)
+        public static List<CvMat> GetConvMatrixFromBoneFrameSequence(FrameSequence frameSeq, int startIndex, int endIndex)
         {
             Dictionary<Tuple<int, int>, int> cooccurenceCount = new Dictionary<Tuple<int, int>, int>();
             //System.Windows.MessageBox.Show("ユーザが選択されていないレコードがあります");
@@ -481,6 +484,7 @@ namespace KinectMotionCapture
             if (!CalcEx.GetDependencyTree(frameSeq.recordNum, cooccurenceCount, list => list.Sum(), out  baseRecordIndex, out dependencies))
             {
                 System.Windows.MessageBox.Show("骨格が他のレコードと同時に映っているフレームがないレコードがあるため計算できませんでした");
+                return frameSeq.ToWorldConversions;
             }
             else
             {
@@ -526,7 +530,7 @@ namespace KinectMotionCapture
                     CvMat baseConversion = convList[dependencyPair.Value];
                     convList[dependencyPair.Key] = baseConversion * relConv;
                 }
-                frameSeq.ToWorldConversions = convList;
+                return convList;
             }
         }
     }
