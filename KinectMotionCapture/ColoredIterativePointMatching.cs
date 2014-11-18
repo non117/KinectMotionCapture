@@ -197,7 +197,7 @@ namespace KinectMotionCapture
             _weightFromDistanceSq = weightFromDistanceSq;
         }
 
-        public ColoredIterativePointMatching(IList<CvMat> modelDepthMatList, IList<CvMat> modelColorMatList, LocalCoordinateMapper localCoordinateMapper, IList<CvMat> initialModelTransforms, Func<float, double> weightFromDistanceSq, double colorScale)
+        public ColoredIterativePointMatching(IList<CvMat> modelDepthMatList, IList<CvMat> modelColorMatList, List<LocalCoordinateMapper> localCoordinateMappers, IList<CvMat> initialModelTransforms, Func<float, double> weightFromDistanceSq, double colorScale)
         {
             if (weightFromDistanceSq == null)
             {
@@ -209,7 +209,7 @@ namespace KinectMotionCapture
             }
             for (int i = 0; i < modelDepthMatList.Count; i++)
             {
-                FlannColoredModelPoints model = new FlannColoredModelPoints(modelDepthMatList[i], modelColorMatList[i], localCoordinateMapper, new KDTreeIndexParams(), new SearchParams(), colorScale);
+                FlannColoredModelPoints model = new FlannColoredModelPoints(modelDepthMatList[i], modelColorMatList[i], localCoordinateMappers[i], new KDTreeIndexParams(), new SearchParams(), colorScale);
                 _flannModels.Add(model);
             }
             if (_flannModels.Count != initialModelTransforms.Count)

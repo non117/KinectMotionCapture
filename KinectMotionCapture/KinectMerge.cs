@@ -31,7 +31,7 @@ namespace KinectMotionCapture
         // TODO: IEnumerableにしても良さそう。イテレータブロックとか使うらしい。
         public List<List<ulong>> userIdList;
         public List<Frame> Frames { get; set; }
-        public LocalCoordinateMapper LocalCoordinateMapper { get; set; }
+        public List<LocalCoordinateMapper> LocalCoordinateMappers { get; set; }
         
         /// <summary>
         /// 座標系を統合するための変換行列、各レコードに対して
@@ -381,10 +381,10 @@ namespace KinectMotionCapture
         /// あるフレームにおける座標変換行列を深度情報から計算する
         /// </summary>
         /// <param name="frame"></param>
-        public static List<CvMat> GetConvMatrixFromDepthFrame(Frame frame, List<CvMat> convList, LocalCoordinateMapper localCoordinateMapper)
+        public static List<CvMat> GetConvMatrixFromDepthFrame(Frame frame, List<CvMat> convList, List<LocalCoordinateMapper> localCoordinateMappers)
         {
             Func<float, double> distance2weight = x => 1.0 / (x * 0 + 400);
-            using (ColoredIterativePointMatching sipm = new ColoredIterativePointMatching(frame.DepthMatList, frame.ColorMatList, localCoordinateMapper, convList, distance2weight, 200))
+            using (ColoredIterativePointMatching sipm = new ColoredIterativePointMatching(frame.DepthMatList, frame.ColorMatList, localCoordinateMappers, convList, distance2weight, 200))
             {
                 List<CvMat> conversions = sipm.CalculateTransformSequntially(0.2, 3);
                 return conversions;
@@ -402,7 +402,7 @@ namespace KinectMotionCapture
             foreach (Frame frame in frames)
             {
                 Func<float, double> distance2weight = x => 1.0 / (x * 0 + 400);
-                using (ColoredIterativePointMatching sipm = new ColoredIterativePointMatching(frame.DepthMatList, frame.ColorMatList, frameSeq.LocalCoordinateMapper, conversions, distance2weight, 200))
+                using (ColoredIterativePointMatching sipm = new ColoredIterativePointMatching(frame.DepthMatList, frame.ColorMatList, frameSeq.LocalCoordinateMappers, conversions, distance2weight, 200))
                 {
                     conversions = sipm.CalculateTransformSequntially(0.1, 1);                    
                 }
