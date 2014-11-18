@@ -323,12 +323,16 @@ namespace KinectMotionCapture
         public List<SerializableBody> SelectedBodyList(List<ulong> selectedUserIdList)
         {
             List<SerializableBody> bodies = new List<SerializableBody>();
-            for (int i = 0; i < this.recordNum; i++)
-            {
-                // あとでなおす
-                SerializableBody body = this.records[i].bodies.Where((b) => b.TrackingId == selectedUserIdList[i]).First();
-                bodies.Add(body);
-            }
+                for (int i = 0; i < this.recordNum; i++)
+                {
+                    SerializableBody body = this.records[i].bodies.Where((b) => b.TrackingId == selectedUserIdList[i]).FirstOrDefault();
+                    
+                    /// idが違うときの場合. 本来はセグメンテーションすべき.
+                    if ( body == null || body.Equals(default(SerializableBody)))
+                        return new List<SerializableBody>();
+                    
+                    bodies.Add(body);
+                }
             return bodies;
         }
 
@@ -455,6 +459,9 @@ namespace KinectMotionCapture
             foreach (Frame frame in frames)
             {
                 List<SerializableBody> bodies = frame.SelectedBodyList(frameSeq.selectedUserIdList);
+                if (bodies.Count() != frame.recordNum)
+                    continue;
+
                 for (int i = 0; i < frame.recordNum; i++)
                 {
                     for (int j = i + 1; j < frame.recordNum; j++)
@@ -492,13 +499,16 @@ namespace KinectMotionCapture
                 foreach (Frame frame in frameSeq.Frames)
                 {
                     List<SerializableBody> bodies = frame.SelectedBodyList(frameSeq.selectedUserIdList);
+                    if (bodies.Count() != frame.recordNum)
+                        continue;
+
                     //List<KinectUndistortion> undistortions = frameSeq.UndistortionDataList;
                     List<CvSize> depthUsersizeList = frame.DepthUserSize;
 
                     foreach (KeyValuePair<int, int> dependencyPair in CalcEx.EnumerateDependencyPairs(baseRecordIndex, dependencies))
                     {
-                        CvSize imageSize1 = depthUsersizeList[dependencyPair.Key];
-                        CvSize imageSize2 = depthUsersizeList[dependencyPair.Value];
+                        //CvSize imageSize1 = depthUsersizeList[dependencyPair.Key];
+                        //CvSize imageSize2 = depthUsersizeList[dependencyPair.Value];
                         //KinectUndistortion undist1 = undistortions[dependencyPair.Key];
                         //KinectUndistortion undist2 = undistortions[dependencyPair.Value];
 
