@@ -234,8 +234,7 @@ namespace KinectMotionCapture
 
                     foreach (Dictionary<JointType, Point> points in frame.GetBodyColorSpacePoints(i))
                     {
-                        Pen drawPen = new Pen(Brushes.Red, 6);
-                        this.DrawBody(points, dc, drawPen);
+                        this.DrawBody(points, dc);
                     }
                     drawings[i].ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, colorSize.Width, colorSize.Height));
                 }
@@ -245,18 +244,22 @@ namespace KinectMotionCapture
             this.TimeLabel.Content = frame.Time.ToString((frame.Time - frameSequence.startTime).ToString(@"mm\:ss\:fff"));
         }
 
-        private void DrawBody(Dictionary<JointType, Point> points, DrawingContext drawingContext, Pen drawingPen)
+        private void DrawBody(Dictionary<JointType, Point> points, DrawingContext drawingContext)
         {
+            Pen drawingPen;
             // Draw the bones
             foreach (var bone in this.bones)
             {
-                if (bone == Tuple.Create(JointType.ShoulderRight, JointType.ElbowRight))
-                {
-                    drawingPen = new Pen(Brushes.Blue, 6);
-                }
-
                 if (points.Keys.Contains(bone.Item1) && points.Keys.Contains(bone.Item2))
                 {
+                    if (bone.Item2.ToString().Contains("Right") || bone.Item1.ToString().Contains("Right"))
+                    {
+                        drawingPen = new Pen(Brushes.Blue, 6);
+                    }
+                    else
+                    {
+                        drawingPen = new Pen(Brushes.Red, 6);
+                    }
                     drawingContext.DrawLine(drawingPen, points[bone.Item1], points[bone.Item2]);
                 }
             }
