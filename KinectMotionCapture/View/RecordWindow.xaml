@@ -15,12 +15,23 @@
                 <RowDefinition Height="50"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
-            
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="200"/>
+                    <ColumnDefinition Width="200"/>
+                    <ColumnDefinition Width="200"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Button Content="DumpCalib" Name="DumpCalibButton" Height="23" Width="75" HorizontalAlignment="Left" Click="DumpCalibButton_Click" Grid.Column="0" Margin="10"/>
+                <Button Content="Record" Name="RecordButton" Height="23" Width="55" HorizontalAlignment="Right" Click="RecordButton_Click" Grid.Column="3" Margin="10" />
+            </Grid>
+
             <Label Content="Record Path: " Height="28" HorizontalAlignment="Left" Name="RecordPathLabel" />
             <TextBox Height="24" Width="600" Name="RecordPathTextBox" Text="{Binding RecordPath, Mode=OneWay}" IsReadOnly="True"/>
             <Button Content="Open" Name="OpenFolderButton" Height="23" Width="50" HorizontalAlignment="Right" Click="OpenFolderButton_Click" Margin="10"/>
             
-            <Button Content="Record" Name="RecordButton" Height="23" Width="55" HorizontalAlignment="Right" Click="RecordButton_Click" Grid.Row="1" Margin="10" />
+            
                         
             <Image Name="ColorImage" Source="{Binding BackgroundImage}" Stretch="UniformToFill" Grid.Row="2" />
             <Image Name="BodyImage" Source="{Binding ImageSource}" Stretch="UniformToFill" Grid.Row="2" />

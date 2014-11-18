@@ -520,5 +520,17 @@ namespace KinectMotionCapture
                                                             : Properties.Resources.SensorNotAvailableStatusText;
         }
 
+        /// <summary>
+        /// LocalCoordinateMapperをdumpするやつ
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void DumpCalibButton_Click(object sender, RoutedEventArgs e)
+        {
+            LocalCoordinateMapper lcm = new LocalCoordinateMapper(this.coordinateMapper, this.depthWidth, this.depthHeight);
+            string path = Path.Combine(Path.GetDirectoryName(this.recordPath), "coordmap.dump");
+            lcm.dump(path);
+        }
+
     }
 }
