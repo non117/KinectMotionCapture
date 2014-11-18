@@ -61,8 +61,14 @@ namespace KinectMotionCapture
                                                     @"E:\kinect3", 
                                                     @"E:\kinect4", 
             };
+            List<string> mapdir = new List<string>() {
+                                                    @"E:\kinect1_coordmap.dump",  
+                                                    @"E:\kinect2_coordmap.dump", 
+                                                    @"E:\kinect3_coordmap.dump", 
+                                                    @"E:\kinect4_coordmap.dump", 
+            };
             this.frameSequence = new FrameSequence(datadir);
-            this.frameSequence.LocalCoordinateMapper = (LocalCoordinateMapper)Utility.LoadFromBinary(@"C:\Users\non\Desktop\coordmapper.dump");
+            this.frameSequence.LocalCoordinateMappers = mapdir.Select(s => (LocalCoordinateMapper)Utility.LoadFromBinary(s)).ToList();
         }
 
         public MergeRecordWindow()

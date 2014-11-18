@@ -146,6 +146,8 @@ namespace KinectMotionCapture
                         if (depth == 0)
                             continue;
                         ColorSpacePoint csp = this.MapDepthPointToColorSpace(x, y, depth, depthMat.Cols, depthMat.Rows);
+                        if (csp.Y < 0)
+                            csp.Y = 0;
                         CvPoint3D64f point = this.MapDepthPointToCameraSpace(x, y, depth).ToCvPoint3D();
                         int offsetXColor = (int)Math.Round(csp.X) * colorMat.ElemChannels;
                         int offsetColor = (int)Math.Round(csp.Y) * colorMat.Cols * colorMat.ElemChannels;

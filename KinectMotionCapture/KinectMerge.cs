@@ -229,6 +229,7 @@ namespace KinectMotionCapture
                 string metaDataFilePath = Path.Combine(dataDir, "BodyInfo.mpac");
                 // ここでソートしてる
                 List<MotionData> mdList = this.GetMotionDataFromFile(metaDataFilePath).OrderBy(md => md.TimeStamp).ToList();
+                // 画像のパスを修正する
                 foreach (MotionData md in mdList)
                 {
                     md.ReConstructPaths(dataDir);
@@ -277,12 +278,12 @@ namespace KinectMotionCapture
 
         public List<CvMat> ColorMatList
         {
-            get { return this.records.Select((m) => m.imageMat).ToList(); }
+            get { return this.records.Select((m) => CvMat.LoadImageM(m.ImagePath, LoadMode.Unchanged)).ToList(); }
         }
         
         public List<CvMat> DepthMatList
         {
-            get { return this.records.Select((m) => m.depthMat).ToList(); }
+            get { return this.records.Select((m) => CvMat.LoadImageM(m.DepthPath, LoadMode.Unchanged)).ToList(); }
         }
 
         public List<CvSize> ColorSize
