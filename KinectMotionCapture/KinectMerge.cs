@@ -349,6 +349,7 @@ namespace KinectMotionCapture
 
         /// <summary>
         /// 座標変換をBodyに適用する
+        /// TODO : return value required. 非破壊に変更
         /// </summary>
         /// <param name="conversion"></param>
         public void ApplyConversions(List<CvMat> conversions)
