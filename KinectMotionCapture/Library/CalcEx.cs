@@ -1656,7 +1656,6 @@ namespace KinectMotionCapture
             return variances;
         }
 
-        /*
         /// <summary>
         /// 左右を入れ替えた骨格要素を返します
         /// </summary>
@@ -1666,52 +1665,51 @@ namespace KinectMotionCapture
         {
             switch (joint)
             {
-                case JointType.LeftAnkle:
-                    return JointType.RightAnkle;
-                case JointType.LeftCollar:
-                    return JointType.RightCollar;
-                case JointType.LeftElbow:
-                    return JointType.RightElbow;
-                case JointType.LeftFingertip:
-                    return JointType.RightFingertip;
-                case JointType.LeftFoot:
-                    return JointType.RightFoot;
-                case JointType.LeftHand:
-                    return JointType.RightHand;
-                case JointType.LeftHip:
-                    return JointType.RightHip;
-                case JointType.LeftKnee:
-                    return JointType.RightKnee;
-                case JointType.LeftShoulder:
-                    return JointType.RightShoulder;
-                case JointType.LeftWrist:
-                    return JointType.RightWrist;
+                case JointType.AnkleLeft:
+                    return JointType.AnkleRight;
+                case JointType.ElbowLeft:
+                    return JointType.ElbowRight;
+                case JointType.FootLeft:
+                    return JointType.FootRight;
+                case JointType.HandLeft:
+                    return JointType.HandRight;
+                case JointType.HandTipLeft:
+                    return JointType.HandTipRight;
+                case JointType.HipLeft:
+                    return JointType.HipRight;
+                case JointType.KneeLeft:
+                    return JointType.KneeRight;
+                case JointType.ShoulderLeft:
+                    return JointType.ShoulderRight;
+                case JointType.ThumbLeft:
+                    return JointType.ThumbRight;
+                case JointType.WristLeft:
+                    return JointType.WristRight;
 
-                case JointType.RightAnkle:
-                    return JointType.LeftAnkle;
-                case JointType.RightCollar:
-                    return JointType.LeftCollar;
-                case JointType.RightElbow:
-                    return JointType.LeftElbow;
-                case JointType.RightFingertip:
-                    return JointType.LeftFingertip;
-                case JointType.RightFoot:
-                    return JointType.LeftFoot;
-                case JointType.RightHand:
-                    return JointType.LeftHand;
-                case JointType.RightHip:
-                    return JointType.LeftHip;
-                case JointType.RightKnee:
-                    return JointType.LeftKnee;
-                case JointType.RightShoulder:
-                    return JointType.LeftShoulder;
-                case JointType.RightWrist:
-                    return JointType.LeftWrist;
+                case JointType.AnkleRight:
+                    return JointType.AnkleLeft;
+                case JointType.ElbowRight:
+                    return JointType.ElbowLeft;
+                case JointType.FootRight:
+                    return JointType.FootLeft;
+                case JointType.HandRight:
+                    return JointType.HandLeft;
+                case JointType.HandTipRight:
+                    return JointType.HandTipLeft;
+                case JointType.HipRight:
+                    return JointType.HipLeft;
+                case JointType.KneeRight:
+                    return JointType.KneeLeft;
+                case JointType.ShoulderRight:
+                    return JointType.ShoulderLeft;
+                case JointType.ThumbRight:
+                    return JointType.ThumbRight;
+                case JointType.WristRight:
+                    return JointType.WristLeft;
 
             }
             return joint;
         }
-        */
 
         public static void TrimEdgeDepthMat(ref CvMat dest, CvMat src, ref CvMat[] tempMat)
         {
