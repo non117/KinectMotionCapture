@@ -159,24 +159,27 @@ namespace KinectMotionCapture
 
             {
                 // 同時刻のフレーム集合. Kinectの数だけ入るはず.
-                List<MotionData> tempRecords = new List<MotionData>();
+                List<MotionData> currentRecords = new List<MotionData>();
+                List<MotionData> nextRecords = new List<MotionData>();
                 for (int i = 0; i < this.recordNum;i++ )
                 {
                     List<MotionData> record = records[i];
                     List<DateTime> dateTimes = timeInfos[i].Item1;
                     int[] indexes = timeInfos[i].Item2;
                     int frameIndex = ListEx.GetMaxLessEqualIndexFromBinarySearch(dateTimes.BinarySearch(time));
+                    int nextIndex = ListEx.GetMinGreaterEqualIndexFromBinarySearch(dateTimes.BinarySearch(time));
                     if (frameIndex < 0)
-                    {
                         frameIndex = 0;
-                    }
                     if (frameIndex >= record.Count())
-                    {
                         frameIndex = record.Count() - 1;
-                    }
-                    tempRecords.Add(record[indexes[frameIndex]]);
+                    if (nextIndex < 0)
+                        nextIndex = 0;
+                    if (nextIndex >= record.Count())
+                        nextIndex = record.Count() - 1;
+                    currentRecords.Add(record[indexes[frameIndex]]);
+                    nextRecords.Add(record[indexes[nextIndex]]);
                 }
-                Frame frame = new Frame(tempRecords);
+                Frame frame = new Frame(currentRecords, nextRecords);
                 frame.Time = time;
                 frames.Add(frame);
             }
@@ -269,6 +272,7 @@ namespace KinectMotionCapture
         public int recordNum;
         //private List<MotionData> records;
         public List<MotionData> records;  // for debug
+        private List<MotionData> nextRecords;
         public DateTime Time { get; set; }
 
         public List<string> ColorImagePathList
@@ -299,6 +303,11 @@ namespace KinectMotionCapture
         public MotionData GetMotionData(int recordNo)
         {
             return this.records[recordNo];
+        }
+
+        public MotionData GetNextMotionData(int recordNo)
+        {
+            return this.nextRecords[recordNo];
         }
 
         /// <summary>
@@ -356,10 +365,11 @@ namespace KinectMotionCapture
         /// こんすとらくたん
         /// </summary>
         /// <param name="records"></param>
-        public Frame(List<MotionData> records)
+        public Frame(List<MotionData> records, List<MotionData> nextrecords)
         {
             this.recordNum = records.Count();
             this.records = records;
+            this.nextRecords = nextrecords;
         }
 
         /// <summary>

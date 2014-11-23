@@ -228,8 +228,9 @@ namespace KinectMotionCapture
 
             for (int i = 0; i < frameSequence.recordNum; i++)
             {
-                labels[i].Content = String.Join(",", frame.BodyIdList(i));
+                labels[i].Content = String.Join(",", frame.GetBodyIdList(i));
                 images[i].Source = new BitmapImage(new Uri(frame.ColorImagePathList[i]));
+                // Fix : ここpublicなメンバに直接アクセスしてる
                 timeLabels[i].Content = frame.records[i].TimeStamp.ToString(@"ss\:fff");
 
                 // Boneの描画

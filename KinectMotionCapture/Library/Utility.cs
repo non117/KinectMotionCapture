@@ -207,7 +207,7 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
-        /// Bodyを入力にとってTrackedな関節点をフィルターして返す
+        /// Body[]を入力にとってTrackedな関節点をフィルターして返す
         /// </summary>
         /// <param name="bodies"></param>
         /// <param name="userId"></param>
@@ -215,6 +215,27 @@ namespace KinectMotionCapture
         public static Dictionary<JointType, Joint> GetValidJoints(SerializableBody[] bodies, ulong userId)
         {
             return GetValidJoints(bodies.ToList().Where(b => b.TrackingId == userId).First().Joints);
+        }
+
+        /// <summary>
+        /// JointのDicから座標だけのやつに
+        /// </summary>
+        /// <param name="joints"></param>
+        /// <returns></returns>
+        public static Dictionary<JointType, CameraSpacePoint> GetJointPointsFromJoints(Dictionary<JointType, Joint> joints)
+        {
+            return joints.ToDictionary(p => p.Key, p => p.Value.Position);
+        }
+
+        /// <summary>
+        /// Body[]を入力にとってTrackedな関節点座標をフィルターして返す
+        /// </summary>
+        /// <param name="bodies"></param>
+        /// <param name="userId"></param>
+        /// <returns></returns>
+        public static Dictionary<JointType, CameraSpacePoint> GetValidJointPoints(SerializableBody[] bodies, ulong userId)
+        {
+            return GetJointPointsFromJoints(GetValidJoints(bodies, userId));
         }
 
         /// <summary>
