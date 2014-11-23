@@ -32,7 +32,7 @@ namespace KinectMotionCapture
         public List<List<ulong>> userIdList;
         public List<Frame> Frames { get; set; }
         public List<LocalCoordinateMapper> LocalCoordinateMappers { get; set; }
-        public CameraMatrix CameraMatrix { get; set; }
+        public CameraIntrinsics CameraInfo { get; set; }
         
         /// <summary>
         /// 座標系を統合するための変換行列、各レコードに対して

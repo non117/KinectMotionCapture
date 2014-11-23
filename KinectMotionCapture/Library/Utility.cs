@@ -250,6 +250,20 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
+        /// 指定された点から主点までの長さ を 焦点距離/2 で割った値の二乗を返します
+        /// </summary>
+        /// <param name="cameraInfo"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        public static double GetRatioSqOfPrincipalToFocal(CameraIntrinsics cameraInfo, double x, double y)
+        {
+            double dx = (x + 0.5 - cameraInfo.PrincipalPointX) / (cameraInfo.FocalLengthX / 2);
+            double dy = (y + 0.5 - cameraInfo.PrincipalPointY) / (cameraInfo.FocalLengthY / 2);
+            return dx * dx + dy * dy;
+        }
+
+        /// <summary>
         /// DPマッチングのための座標, Point2D使って書き直すべき
         /// </summary>
         public class Point

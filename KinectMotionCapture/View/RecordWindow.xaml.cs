@@ -530,6 +530,10 @@ namespace KinectMotionCapture
             LocalCoordinateMapper lcm = new LocalCoordinateMapper(this.coordinateMapper, this.depthWidth, this.depthHeight);
             string path = Path.Combine(Path.GetDirectoryName(this.recordPath), "coordmap.dump");
             lcm.dump(path);
+
+            CameraIntrinsics cameraIntrinsics = this.coordinateMapper.GetDepthCameraIntrinsics();
+            string path2 = Path.Combine(Path.GetDirectoryName(this.recordPath), "CameraInfo.dump");
+            Utility.SaveToBinary(cameraIntrinsics, path2);
         }
 
     }
