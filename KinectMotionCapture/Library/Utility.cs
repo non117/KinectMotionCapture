@@ -207,6 +207,17 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
+        /// Bodyを入力にとってTrackedな関節点をフィルターして返す
+        /// </summary>
+        /// <param name="bodies"></param>
+        /// <param name="userId"></param>
+        /// <returns></returns>
+        public static Dictionary<JointType, Joint> GetValidJoints(SerializableBody[] bodies, ulong userId)
+        {
+            return GetValidJoints(bodies.ToList().Where(b => b.TrackingId == userId).First().Joints);
+        }
+
+        /// <summary>
         /// 時系列Bodyをシリアライズして保存する
         /// </summary>
         /// <param name="bodies"></param>

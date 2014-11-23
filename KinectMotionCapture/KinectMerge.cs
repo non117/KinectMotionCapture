@@ -296,14 +296,29 @@ namespace KinectMotionCapture
             get { return this.records.Select((m) => new CvSize(m.DepthUserWidth, m.DepthUserHeight)).ToList(); }
         }
 
+        public MotionData GetMotionData(int recordNo)
+        {
+            return this.records[recordNo];
+        }
+
         /// <summary>
         /// レコード番号からBody Idをとってくる
         /// </summary>
         /// <param name="recordNo"></param>
         /// <returns></returns>
-        public List<string> BodyIdList(int recordNo)
+        public List<string> GetBodyIdList(int recordNo)
         {
             return new List<SerializableBody>(this.records[recordNo].bodies).Select((b) => b.TrackingId.ToString()).ToList();
+        }
+
+        /// <summary>
+        /// レコード番号からBodyをとってくる
+        /// </summary>
+        /// <param name="recordNo"></param>
+        /// <returns></returns>
+        public List<SerializableBody> GetBodyList(int recordNo)
+        {
+            return this.records[recordNo].bodies.ToList();
         }
 
         /// <summary>
@@ -321,7 +336,7 @@ namespace KinectMotionCapture
         /// </summary>
         /// <param name="selectedUserIdList"></param>
         /// <returns></returns>
-        public List<SerializableBody> SelectedBodyList(List<ulong> selectedUserIdList)
+        public List<SerializableBody> GetSelectedBodyList(List<ulong> selectedUserIdList)
         {
             List<SerializableBody> bodies = new List<SerializableBody>();
                 for (int i = 0; i < this.recordNum; i++)
@@ -419,7 +434,7 @@ namespace KinectMotionCapture
         /// <param name="frame"></param>
         public static List<CvMat> GetConvMatrixFromBoneFrame(Frame frame, List<CvMat> convList, List<ulong> selectedUserIdList)
         {
-            List<SerializableBody> bodies = frame.SelectedBodyList(selectedUserIdList);
+            List<SerializableBody> bodies = frame.GetSelectedBodyList(selectedUserIdList);
             if ( bodies.Count() != frame.recordNum )
             {
                 System.Windows.MessageBox.Show("ユーザが選択されていないレコードがあります");
@@ -460,7 +475,7 @@ namespace KinectMotionCapture
             IEnumerable<Frame> frames = frameSeq.Frames.Skip(startIndex).Take(endIndex);
             foreach (Frame frame in frames)
             {
-                List<SerializableBody> bodies = frame.SelectedBodyList(frameSeq.selectedUserIdList);
+                List<SerializableBody> bodies = frame.GetSelectedBodyList(frameSeq.selectedUserIdList);
                 if (bodies.Count() != frame.recordNum)
                     continue;
 
@@ -500,7 +515,7 @@ namespace KinectMotionCapture
                 Dictionary<int, ICoordConversion3D> conversionsPerDependencyKey = new Dictionary<int, ICoordConversion3D>();
                 foreach (Frame frame in frameSeq.Frames)
                 {
-                    List<SerializableBody> bodies = frame.SelectedBodyList(frameSeq.selectedUserIdList);
+                    List<SerializableBody> bodies = frame.GetSelectedBodyList(frameSeq.selectedUserIdList);
                     if (bodies.Count() != frame.recordNum)
                         continue;
 
