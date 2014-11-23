@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using System.IO;
 using OpenCvSharp;
-//using OpenNI;
+
+using Microsoft.Kinect;
 
 using System.IO.Compression;
 
@@ -1661,51 +1662,51 @@ namespace KinectMotionCapture
         /// </summary>
         /// <param name="joint"></param>
         /// <returns></returns>
-        public static SkeletonJoint GetMirroredJoint(SkeletonJoint joint)
+        public static JointType GetMirroredJoint(JointType joint)
         {
             switch (joint)
             {
-                case SkeletonJoint.LeftAnkle:
-                    return SkeletonJoint.RightAnkle;
-                case SkeletonJoint.LeftCollar:
-                    return SkeletonJoint.RightCollar;
-                case SkeletonJoint.LeftElbow:
-                    return SkeletonJoint.RightElbow;
-                case SkeletonJoint.LeftFingertip:
-                    return SkeletonJoint.RightFingertip;
-                case SkeletonJoint.LeftFoot:
-                    return SkeletonJoint.RightFoot;
-                case SkeletonJoint.LeftHand:
-                    return SkeletonJoint.RightHand;
-                case SkeletonJoint.LeftHip:
-                    return SkeletonJoint.RightHip;
-                case SkeletonJoint.LeftKnee:
-                    return SkeletonJoint.RightKnee;
-                case SkeletonJoint.LeftShoulder:
-                    return SkeletonJoint.RightShoulder;
-                case SkeletonJoint.LeftWrist:
-                    return SkeletonJoint.RightWrist;
+                case JointType.LeftAnkle:
+                    return JointType.RightAnkle;
+                case JointType.LeftCollar:
+                    return JointType.RightCollar;
+                case JointType.LeftElbow:
+                    return JointType.RightElbow;
+                case JointType.LeftFingertip:
+                    return JointType.RightFingertip;
+                case JointType.LeftFoot:
+                    return JointType.RightFoot;
+                case JointType.LeftHand:
+                    return JointType.RightHand;
+                case JointType.LeftHip:
+                    return JointType.RightHip;
+                case JointType.LeftKnee:
+                    return JointType.RightKnee;
+                case JointType.LeftShoulder:
+                    return JointType.RightShoulder;
+                case JointType.LeftWrist:
+                    return JointType.RightWrist;
 
-                case SkeletonJoint.RightAnkle:
-                    return SkeletonJoint.LeftAnkle;
-                case SkeletonJoint.RightCollar:
-                    return SkeletonJoint.LeftCollar;
-                case SkeletonJoint.RightElbow:
-                    return SkeletonJoint.LeftElbow;
-                case SkeletonJoint.RightFingertip:
-                    return SkeletonJoint.LeftFingertip;
-                case SkeletonJoint.RightFoot:
-                    return SkeletonJoint.LeftFoot;
-                case SkeletonJoint.RightHand:
-                    return SkeletonJoint.LeftHand;
-                case SkeletonJoint.RightHip:
-                    return SkeletonJoint.LeftHip;
-                case SkeletonJoint.RightKnee:
-                    return SkeletonJoint.LeftKnee;
-                case SkeletonJoint.RightShoulder:
-                    return SkeletonJoint.LeftShoulder;
-                case SkeletonJoint.RightWrist:
-                    return SkeletonJoint.LeftWrist;
+                case JointType.RightAnkle:
+                    return JointType.LeftAnkle;
+                case JointType.RightCollar:
+                    return JointType.LeftCollar;
+                case JointType.RightElbow:
+                    return JointType.LeftElbow;
+                case JointType.RightFingertip:
+                    return JointType.LeftFingertip;
+                case JointType.RightFoot:
+                    return JointType.LeftFoot;
+                case JointType.RightHand:
+                    return JointType.LeftHand;
+                case JointType.RightHip:
+                    return JointType.LeftHip;
+                case JointType.RightKnee:
+                    return JointType.LeftKnee;
+                case JointType.RightShoulder:
+                    return JointType.LeftShoulder;
+                case JointType.RightWrist:
+                    return JointType.LeftWrist;
 
             }
             return joint;
@@ -1888,19 +1889,20 @@ namespace KinectMotionCapture
             }
             return convLocal2world.Clone();
         }
+         */
 
-        public static Dictionary<SkeletonJoint, CvPoint3D64f> LinearMedianSkeletons(Dictionary<SkeletonJoint, CvPoint3D64f>[] skeletonList, double[] weightList)
+        public static Dictionary<JointType, CvPoint3D64f> LinearMedianSkeletons(Dictionary<JointType, CvPoint3D64f>[] skeletonList, double[] weightList)
         {
             if (skeletonList.Length != weightList.Length)
             {
                 throw new ArgumentException("Array length mismatch");
             }
-            HashSet<SkeletonJoint> joints = new HashSet<SkeletonJoint>();
+            HashSet<JointType> joints = new HashSet<JointType>();
             foreach (var skeleton in skeletonList)
             {
                 if (skeleton != null)
                 {
-                    foreach (SkeletonJoint joint in skeleton.Keys)
+                    foreach (JointType joint in skeleton.Keys)
                     {
                         joints.Add(joint);
                     }
@@ -1908,8 +1910,8 @@ namespace KinectMotionCapture
             }
             if (joints.Count == 0)
                 return null;
-            Dictionary<SkeletonJoint, CvPoint3D64f> ret = new Dictionary<SkeletonJoint, CvPoint3D64f>();
-            foreach (SkeletonJoint joint in joints)
+            Dictionary<JointType, CvPoint3D64f> ret = new Dictionary<JointType, CvPoint3D64f>();
+            foreach (JointType joint in joints)
             {
                 List<Tuple<CvPoint3D64f, double>> positionWeight = new List<Tuple<CvPoint3D64f, double>>();
                 for (int i = 0; i < skeletonList.Length; i++)
@@ -1936,18 +1938,18 @@ namespace KinectMotionCapture
             return ret;
         }
 
-        public static Dictionary<SkeletonJoint, CvPoint3D64f> LinearAverageSkeletons(Dictionary<SkeletonJoint, CvPoint3D64f>[] skeletonList, double[] weightList)
+        public static Dictionary<JointType, CvPoint3D64f> LinearAverageSkeletons(Dictionary<JointType, CvPoint3D64f>[] skeletonList, double[] weightList)
         {
             if (skeletonList.Length != weightList.Length)
             {
                 throw new ArgumentException("Array length mismatch");
             }
-            HashSet<SkeletonJoint> joints = new HashSet<SkeletonJoint>();
+            HashSet<JointType> joints = new HashSet<JointType>();
             foreach (var skeleton in skeletonList)
             {
                 if (skeleton != null)
                 {
-                    foreach (SkeletonJoint joint in skeleton.Keys)
+                    foreach (JointType joint in skeleton.Keys)
                     {
                         joints.Add(joint);
                     }
@@ -1955,8 +1957,8 @@ namespace KinectMotionCapture
             }
             if (joints.Count == 0)
                 return null;
-            Dictionary<SkeletonJoint, CvPoint3D64f> ret = new Dictionary<SkeletonJoint, CvPoint3D64f>();
-            foreach (SkeletonJoint joint in joints)
+            Dictionary<JointType, CvPoint3D64f> ret = new Dictionary<JointType, CvPoint3D64f>();
+            foreach (JointType joint in joints)
             {
                 List<Tuple<CvPoint3D64f, double>> positionWeight = new List<Tuple<CvPoint3D64f, double>>();
                 for (int i = 0; i < skeletonList.Length; i++)
@@ -1982,7 +1984,6 @@ namespace KinectMotionCapture
             }
             return ret;
         }
-         */
     }
     
 
