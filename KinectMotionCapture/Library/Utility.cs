@@ -196,6 +196,23 @@ namespace KinectMotionCapture
             return newJoints;
         }
 
+        public static List<Dictionary<int, float[]>> ConverToCompatibleJoint(List<Dictionary<JointType, CvPoint3D64f>> originalJoints)
+        {
+            List<Dictionary<int, float[]>> newJoints = new List<Dictionary<int, float[]>>();
+            foreach (Dictionary<JointType, CvPoint3D64f> joints in originalJoints)
+            {
+                Dictionary<int, float[]> body = new Dictionary<int, float[]>();
+                foreach (JointType jointType in joints.Keys)
+                {
+                    CvPoint3D64f position = joints[jointType];
+                    float[] points = new float[] { (float)position.X, (float)position.Y, (float)position.Z };
+                    body.Add((int)jointType, points);
+                }
+                newJoints.Add(body);
+            }
+            return newJoints;
+        }
+
         /// <summary>
         /// Bodyの関節点をTrackedなものだけにフィルターして返す
         /// </summary>
@@ -214,7 +231,12 @@ namespace KinectMotionCapture
         /// <returns></returns>
         public static Dictionary<JointType, Joint> GetValidJoints(SerializableBody[] bodies, ulong userId)
         {
-            return GetValidJoints(bodies.ToList().Where(b => b.TrackingId == userId).First().Joints);
+            IEnumerable<SerializableBody> selectedBodies = bodies.ToList().Where(b => b.TrackingId == userId);
+            if (selectedBodies.Count() == 0)
+            {
+                return null;
+            }
+            return GetValidJoints(selectedBodies.First().Joints);
         }
 
         /// <summary>
@@ -235,7 +257,12 @@ namespace KinectMotionCapture
         /// <returns></returns>
         public static Dictionary<JointType, CameraSpacePoint> GetValidJointPoints(SerializableBody[] bodies, ulong userId)
         {
-            return GetJointPointsFromJoints(GetValidJoints(bodies, userId));
+            Dictionary<JointType, Joint> validJoints = GetValidJoints(bodies, userId);
+            if (validJoints != null)
+            {
+                return GetJointPointsFromJoints(GetValidJoints(bodies, userId));
+            }
+            return null;
         }
 
         /// <summary>

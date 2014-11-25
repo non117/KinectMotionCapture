@@ -393,6 +393,9 @@ namespace KinectMotionCapture
             {
                 List<CvMat> convs = KinectMerge.GetConvMatrixFromBoneFrameSequence(frameSequence, startIndex, endIndex);
                 frameSequence.ToWorldConversions = convs;
+
+                //List<Dictionary<JointType, CvPoint3D64f>> mergedBodies = SkeletonInterpolator.ExportFromProject(frameSequence);
+                var hoge = SkeletonInterpolator.ExportFromProject(frameSequence);
                 frameSequence.ApplyConversion();
             }
 

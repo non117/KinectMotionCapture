@@ -157,7 +157,8 @@ namespace KinectMotionCapture
             return CalcEx.LinearMedianSkeletons(jointsArr, modifiedReliabilityList);
         }
 
-        public void ExportFromProject(FrameSequence frameseq) {
+        public static Dictionary<ulong, List<Dictionary<JointType, CvPoint3D64f>>> ExportFromProject(FrameSequence frameseq)
+        {
             HashSet<Tuple<ulong, JointType>> uniqueUserJoint = new HashSet<Tuple<ulong, JointType>>();
             foreach(Frame frame in frameseq.Frames){
                 for (int i = 0; i < frameseq.recordNum; i++)
@@ -183,22 +184,22 @@ namespace KinectMotionCapture
                 select pair
                 ).ToList();
 
+            Dictionary<ulong, List<Dictionary<JointType, CvPoint3D64f>>> allBodies = new Dictionary<ulong, List<Dictionary<JointType, CvPoint3D64f>>>();
             SkeletonInterpolator skeletonInterpolator = new SkeletonInterpolator(0.5, true);
-            for (int i = 0; i < frameseq.Frames.Count() - 1; i++)
+            foreach (ulong user in userJointPairs.Select(p => p.Item1).Distinct())            
             {
-                Dictionary<Tuple<ulong, JointType>, CvPoint3D64f> jointSet = new Dictionary<Tuple<ulong,JointType>,CvPoint3D64f>();
-                Frame curr = frameseq.Frames[i];
-                foreach (ulong user in userJointPairs.Select(p => p.Item1).Distinct())
+                List<Dictionary<JointType, CvPoint3D64f>> jointsSeq = new List<Dictionary<JointType, CvPoint3D64f>>();
+                for (int i = 0; i < frameseq.Frames.Count() - 1; i++)
                 {
-                    var joints = skeletonInterpolator.IntegrateSkeleton(curr, user, frameseq.ToWorldConversions, frameseq.CameraInfo);
+                    Frame curr = frameseq.Frames[i];
+                    Dictionary<JointType, CvPoint3D64f> joints = skeletonInterpolator.IntegrateSkeleton(curr, user, frameseq.ToWorldConversions, frameseq.CameraInfo);
                         if (joints != null) {
-                        foreach (var pair in joints) {
-                            Tuple<ulong, JointType> key = new Tuple<ulong, JointType>(user, pair.Key);
-                            jointSet[key] = pair.Value;
-                        }
+                            jointsSeq.Add(joints);                            
                     }
                 }
+                allBodies[user] = jointsSeq;
             }
+            return allBodies;
         }
     }
 }
