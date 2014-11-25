@@ -156,10 +156,8 @@ namespace KinectMotionCapture
 
             return CalcEx.LinearMedianSkeletons(jointsArr, modifiedReliabilityList);
         }
-    }
 
-    public class SkeletonCsvExporter {
-        public static void ExportFromProject(FrameSequence frameseq) {
+        public void ExportFromProject(FrameSequence frameseq) {
             HashSet<Tuple<ulong, JointType>> uniqueUserJoint = new HashSet<Tuple<ulong, JointType>>();
             foreach(Frame frame in frameseq.Frames){
                 for (int i = 0; i < frameseq.recordNum; i++)

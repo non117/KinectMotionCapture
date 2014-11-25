@@ -56,19 +56,21 @@ namespace KinectMotionCapture
         private void LoadFrames()
         {
             List<string> datadir = new List<string>() {
-                                                    @"F:\kinect1",  
-                                                    @"F:\kinect2", 
-                                                    @"F:\kinect3", 
-                                                    @"F:\kinect4", 
+                                                    @"E:\kinect1",  
+                                                    @"E:\kinect2", 
+                                                    @"E:\kinect3", 
+                                                    @"E:\kinect4", 
             };
             List<string> mapdir = new List<string>() {
-                                                    @"F:\kinect1_coordmap.dump",  
-                                                    @"F:\kinect2_coordmap.dump", 
-                                                    @"F:\kinect3_coordmap.dump", 
-                                                    @"F:\kinect4_coordmap.dump", 
+                                                    @"E:\kinect1_coordmap.dump",  
+                                                    @"E:\kinect2_coordmap.dump", 
+                                                    @"E:\kinect3_coordmap.dump", 
+                                                    @"E:\kinect4_coordmap.dump", 
             };
+            string cameradir = @"E:\CameraInfo.dump";
             this.frameSequence = new FrameSequence(datadir);
             this.frameSequence.LocalCoordinateMappers = mapdir.Select(s => (LocalCoordinateMapper)Utility.LoadFromBinary(s)).ToList();
+            this.frameSequence.CameraInfo = (CameraIntrinsics)Utility.LoadFromBinary(cameradir);
         }
 
         public MergeRecordWindow()
