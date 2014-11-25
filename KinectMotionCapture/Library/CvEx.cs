@@ -46,6 +46,7 @@ namespace KinectMotionCapture
         {
             return new CameraSpacePoint(){X = point.X, Y = point.Y, Z = point.Z};
         }
+
         /// <summary>
         /// CvPoint3D64fをOpenNI.Point3Dに変換します
         /// </summary>

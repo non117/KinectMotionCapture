@@ -336,9 +336,19 @@ namespace KinectMotionCapture
         /// </summary>
         /// <param name="recordNo"></param>
         /// <returns></returns>
-        public List<Dictionary<JointType, Point>> GetBodyColorSpacePoints(int recordNo)
-        {
+        public List<Dictionary<JointType, Point>> GetBodyColorSpaceJoints(int recordNo)
+        {            
             return new List<SerializableBody>(this.records[recordNo].bodies).Select((b) => b.colorSpacePoints).ToList();
+        }
+
+        /// <summary>
+        /// レコード番号からJointsをとってくる
+        /// </summary>
+        /// <param name="recordNo"></param>
+        /// <returns></returns>
+        public List<Dictionary<JointType, Joint>> GetBodyJoints(int recordNo)
+        {
+            return this.records[recordNo].bodies.ToList().Select((b) => b.Joints).ToList();
         }
 
         /// <summary>

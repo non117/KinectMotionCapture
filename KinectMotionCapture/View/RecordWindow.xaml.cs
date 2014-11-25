@@ -439,7 +439,14 @@ namespace KinectMotionCapture
             // Draw the bones
             foreach (var bone in this.bones)
             {
-                this.DrawBone(joints, jointPoints, bone.Item1, bone.Item2, drawingContext, drawingPen);
+                if (bone.Item2.ToString().Contains("Right") || bone.Item1.ToString().Contains("Right"))
+                {
+                    this.DrawBone(joints, jointPoints, bone.Item1, bone.Item2, drawingContext, new Pen(Brushes.WhiteSmoke, 6));
+                }
+                else
+                {
+                    this.DrawBone(joints, jointPoints, bone.Item1, bone.Item2, drawingContext, drawingPen);
+                }
             }
 
             // Draw the joints

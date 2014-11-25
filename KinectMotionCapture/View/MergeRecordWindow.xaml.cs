@@ -240,10 +240,12 @@ namespace KinectMotionCapture
                 {
                     CvSize colorSize = frame.ColorSize[i];
                     dc.DrawRectangle(Brushes.Transparent, null, new Rect(0.0, 0.0, colorSize.Width, colorSize.Height));
+                    List<Dictionary<JointType, Point>> pointsList = frame.GetBodyColorSpaceJoints(i);
+                    List<Dictionary<JointType, Joint>> jointsList = frame.GetBodyJoints(i);
 
-                    foreach (Dictionary<JointType, Point> points in frame.GetBodyColorSpacePoints(i))
+                    for (int user = 0; user < pointsList.Count(); user++)
                     {
-                        this.DrawBody(points, dc);
+                        this.DrawBody(pointsList[user], jointsList[user], dc);
                     }
                     drawings[i].ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, colorSize.Width, colorSize.Height));
                 }
@@ -253,7 +255,7 @@ namespace KinectMotionCapture
             this.TimeLabel.Content = frame.Time.ToString(frame.Time.ToString(@"mm\:ss\:fff"));
         }
 
-        private void DrawBody(Dictionary<JointType, Point> points, DrawingContext drawingContext)
+        private void DrawBody(Dictionary<JointType, Point> points, Dictionary<JointType, Joint> joints, DrawingContext drawingContext)
         {
             Pen drawingPen;
             // Draw the bones
@@ -261,13 +263,15 @@ namespace KinectMotionCapture
             {
                 if (points.Keys.Contains(bone.Item1) && points.Keys.Contains(bone.Item2))
                 {
+                    int thickness = 6;
+                    if (joints[bone.Item1].TrackingState == TrackingState.Inferred || joints[bone.Item2].TrackingState == TrackingState.Inferred)
+                    {
+                        thickness = 2;
+                    }
+                    drawingPen = new Pen(Brushes.Red, thickness);
                     if (bone.Item2.ToString().Contains("Right") || bone.Item1.ToString().Contains("Right"))
                     {
-                        drawingPen = new Pen(Brushes.Blue, 6);
-                    }
-                    else
-                    {
-                        drawingPen = new Pen(Brushes.Red, 6);
+                        drawingPen = new Pen(Brushes.Blue, thickness);
                     }
                     drawingContext.DrawLine(drawingPen, points[bone.Item1], points[bone.Item2]);
                 }
