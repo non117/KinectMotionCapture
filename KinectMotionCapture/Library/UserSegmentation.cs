@@ -9,46 +9,56 @@ using OpenCvSharp;
 
 namespace KinectMotionCapture
 {
-    public class UserIntegrationPackage
+    public struct TupleStruct<T, U>
     {
-        public bool IsSkeletonIntegrated { get; set; }
-        public TupleStruct<UserSegmentation, JointMirroredState>[] UserSegmentaions;
+        public T Item1;
+        public U Item2;
+        public TupleStruct(T item1, U item2)
+        {
+            this.Item1 = item1;
+            this.Item2 = item2;
+        }
+        public TupleStruct(KeyValuePair<T, U> pair)
+            : this(pair.Key, pair.Value)
+        {
+        }
     }
+
     public class UserSegmentation
     {
         int _numUsers = 0;
-        SortedList<int, Dictionary<int, int>> _conversions = new SortedList<int, Dictionary<int, int>>();
+        SortedList<int, Dictionary<ulong, int>> _conversions = new SortedList<int, Dictionary<ulong, int>>();
         [XmlIgnore]
-        public SortedList<int, Dictionary<int, int>> Conversions
+        public SortedList<int, Dictionary<ulong, int>> Conversions
         {
             get { return _conversions; }
             set { _conversions = value; }
         }
 
-        public TupleStruct<int, TupleStruct<int, int>[]>[] SerializableConversions
-        {
-            get
-            {
-                return _conversions.Select(p => new TupleStruct<int, TupleStruct<int, int>[]>(p.Key, p.Value.Select(q => new TupleStruct<int, int>(q.Key, q.Value)).ToArray())).ToArray();
-            }
-            set
-            {
-                _conversions = new SortedList<int, Dictionary<int, int>>();
-                foreach (var pair in value)
-                {
-                    Dictionary<int, int> conv = new Dictionary<int, int>();
-                    foreach (var innerPair in pair.Item2)
-                    {
-                        conv.Add(innerPair.Item1, innerPair.Item2);
-                        if (_numUsers <= innerPair.Item2)
-                        {
-                            _numUsers = innerPair.Item2 + 1;
-                        }
-                    }
-                    _conversions.Add(pair.Item1, conv);
-                }
-            }
-        }
+        //public TupleStruct<int, TupleStruct<int, int>[]>[] SerializableConversions
+        //{
+        //    get
+        //    {
+        //        return _conversions.Select(p => new TupleStruct<int, TupleStruct<int, int>[]>(p.Key, p.Value.Select(q => new TupleStruct<int, int>(q.Key, q.Value)).ToArray())).ToArray();
+        //    }
+        //    set
+        //    {
+        //        _conversions = new SortedList<int, Dictionary<int, int>>();
+        //        foreach (var pair in value)
+        //        {
+        //            Dictionary<int, int> conv = new Dictionary<int, int>();
+        //            foreach (var innerPair in pair.Item2)
+        //            {
+        //                conv.Add(innerPair.Item1, innerPair.Item2);
+        //                if (_numUsers <= innerPair.Item2)
+        //                {
+        //                    _numUsers = innerPair.Item2 + 1;
+        //                }
+        //            }
+        //            _conversions.Add(pair.Item1, conv);
+        //        }
+        //    }
+        //}
 
         public void MergeSegment(int fromUser, int toUser)
         {
@@ -58,7 +68,7 @@ namespace KinectMotionCapture
             {
                 if (dict.ContainsValue(fromUser))
                 {
-                    int key = dict.First(p => p.Value == fromUser).Key;
+                    ulong key = dict.First(p => p.Value == fromUser).Key;
                     dict[key] = toUser;
                 }
             }
@@ -68,29 +78,29 @@ namespace KinectMotionCapture
         {
         }
 
-        public static UserSegmentation Segment(TrackImageRecordData recordData, TimeSpan segmentTimeSpan)
+        public static UserSegmentation Segment(IEnumerable<MotionData> recordData, TimeSpan segmentTimeSpan)
         {
             int numUser = 0;
             UserSegmentation segm = new UserSegmentation();
-            Dictionary<int, Tuple<int, DateTime>> currentConversions = new Dictionary<int, Tuple<int, DateTime>>();
+            Dictionary<ulong, Tuple<int, DateTime>> currentConversions = new Dictionary<ulong, Tuple<int, DateTime>>();
             int frameIndex = 0;
-            foreach (TrackFrame trackFrame in recordData.EnumerateTrackFrame())
+            foreach (MotionData md in recordData)
             {
                 bool changed = false;
-                foreach (int user in trackFrame.GetValidUsers())
+                foreach (ulong user in md.bodies.ToList().Select(b => b.TrackingId))
                 {
                     Tuple<int, DateTime> converted;
                     if (currentConversions.TryGetValue(user, out converted))
                     {
                         // 前回と比べて時間内なら継続
-                        if (trackFrame.Timestamp - converted.Item2 <= segmentTimeSpan)
+                        if (md.TimeStamp - converted.Item2 <= segmentTimeSpan)
                         {
-                            currentConversions[user] = new Tuple<int, DateTime>(converted.Item1, trackFrame.Timestamp);
+                            currentConversions[user] = new Tuple<int, DateTime>(converted.Item1, md.TimeStamp);
                             continue;
                         }
                     }
                     // 新しい番号を与える
-                    currentConversions[user] = new Tuple<int, DateTime>(numUser, trackFrame.Timestamp);
+                    currentConversions[user] = new Tuple<int, DateTime>(numUser, md.TimeStamp);
                     numUser++;
                     changed = true;
                 }
@@ -104,7 +114,7 @@ namespace KinectMotionCapture
             return segm;
         }
 
-        public void SetNewID(int beginFrameIndex, int endFrameIndex, int originalUser)
+        public void SetNewID(int beginFrameIndex, int endFrameIndex, ulong originalUser)
         {
             SetID(beginFrameIndex, endFrameIndex, originalUser, _numUsers);
         }
@@ -126,7 +136,7 @@ namespace KinectMotionCapture
             }
         }
 
-        public void SetID(int beginFrameIndex, int endFrameIndex, int originalUser, int segID)
+        public void SetID(int beginFrameIndex, int endFrameIndex, ulong originalUser, int segID)
         {
             int idAtEnd = GetSegmentedUser(endFrameIndex, originalUser);
             var list = getSegmentedRange(beginFrameIndex, endFrameIndex);
@@ -138,19 +148,19 @@ namespace KinectMotionCapture
             _numUsers = Math.Max(_numUsers, segID + 1);
         }
 
-        void setIDAt(int frameIndex, int user, int segID)
+        void setIDAt(int frameIndex, ulong user, int segID)
         {
-            Dictionary<int, int> dict = new Dictionary<int, int>(getSegmentedUsers(frameIndex));
+            Dictionary<ulong, int> dict = new Dictionary<ulong, int>(getSegmentedUsers(frameIndex));
             dict[user] = segID;
             _conversions[frameIndex] = dict;
         }
-        public int GetSegmentedUser(TrackImageRecordData recordData, DateTime timestamp, int originalUser)
-        {
-            int frameIndex = ListEx.GetMaxLessEqualIndexFromBinarySearch(recordData.GetIndexBinarySearch(timestamp));
-            return this.GetSegmentedUser(frameIndex, originalUser);
-        }
+        //public int GetSegmentedUser(TrackImageRecordData recordData, DateTime timestamp, int originalUser)
+        //{
+        //    int frameIndex = ListEx.GetMaxLessEqualIndexFromBinarySearch(recordData.GetIndexBinarySearch(timestamp));
+        //    return this.GetSegmentedUser(frameIndex, originalUser);
+        //}
 
-        public int GetSegmentedUser(int frameIndex, int originalUser)
+        public int GetSegmentedUser(int frameIndex, ulong originalUser)
         {
             var dict = getSegmentedUsers(frameIndex);
             int ret;
@@ -159,25 +169,25 @@ namespace KinectMotionCapture
             return ret;
         }
 
-        public Dictionary<int, int> GetSegmentedUsers(int frameIndex)
+        public Dictionary<ulong, int> GetSegmentedUsers(int frameIndex)
         {
             return getSegmentedUsers(frameIndex).ToDictionary(p => p.Key, p => p.Value);
         }
 
-        Dictionary<int, int> getSegmentedUsers(int frameIndex)
+        Dictionary<ulong, int> getSegmentedUsers(int frameIndex)
         {
             int index = ListEx.GetMaxLessEqualIndexFromBinarySearch(_conversions.Keys.BinarySearch(frameIndex));
             if (index < 0 || index >= _conversions.Count)
-                return new Dictionary<int, int>();
+                return new Dictionary<ulong, int>();
             var dict = _conversions.Values[index];
             return dict;
         }
 
-        SortedList<int, Dictionary<int, int>> getSegmentedRange(int beginFrameIndex, int endFrameIndex)
+        SortedList<int, Dictionary<ulong, int>> getSegmentedRange(int beginFrameIndex, int endFrameIndex)
         {
             int beginKey = ListEx.GetMaxLessEqualIndexFromBinarySearch(_conversions.Keys.BinarySearch(beginFrameIndex));
             int endKey = ListEx.GetMinGreaterEqualIndexFromBinarySearch(_conversions.Keys.BinarySearch(endFrameIndex));
-            SortedList<int, Dictionary<int, int>> ret = new SortedList<int, Dictionary<int, int>>();
+            SortedList<int, Dictionary<ulong, int>> ret = new SortedList<int, Dictionary<ulong, int>>();
             for (int key = beginKey; key < endKey; key++)
             {
                 if (key >= 0)

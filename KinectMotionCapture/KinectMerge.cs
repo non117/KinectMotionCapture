@@ -33,6 +33,7 @@ namespace KinectMotionCapture
         public List<Frame> Frames { get; set; }
         public List<LocalCoordinateMapper> LocalCoordinateMappers { get; set; }
         public CameraIntrinsics CameraInfo { get; set; }
+        public List<UserSegmentation> Segmentations { get; set; }
         
         /// <summary>
         /// 座標系を統合するための変換行列、各レコードに対して
@@ -212,6 +213,16 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
+        /// あるレコードのMotionDataを取ってくる. 重複有りの時系列
+        /// </summary>
+        /// <param name="recordNo"></param>
+        /// <returns></returns>
+        public IEnumerable<MotionData> GetMotionDataSequence(int recordNo)
+        {
+            return this.Frames.Select(f => f.GetMotionData(recordNo));
+        }
+
+        /// <summary>
         /// コンストラクタ
         /// </summary>
         /// <param name="dataDirs"></param>
@@ -301,11 +312,21 @@ namespace KinectMotionCapture
             get { return this.records.Select((m) => new CvSize(m.DepthUserWidth, m.DepthUserHeight)).ToList(); }
         }
 
+        /// <summary>
+        /// レコード番号からMotionDataをとってくる
+        /// </summary>
+        /// <param name="recordNo"></param>
+        /// <returns></returns>
         public MotionData GetMotionData(int recordNo)
         {
             return this.records[recordNo];
         }
 
+        /// <summary>
+        /// レコード番号から次のフレームのMotionDataをとってくる
+        /// </summary>
+        /// <param name="recordNo"></param>
+        /// <returns></returns>
         public MotionData GetNextMotionData(int recordNo)
         {
             return this.nextRecords[recordNo];
