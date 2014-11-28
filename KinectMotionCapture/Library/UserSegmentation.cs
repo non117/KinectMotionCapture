@@ -221,8 +221,9 @@ namespace KinectMotionCapture
 
         struct RecordAndUser
         {
-            public int RecordIndex, UserIndex;
-            public RecordAndUser(int recordIndex, int userIndex)
+            public int RecordIndex;
+            public ulong UserIndex;
+            public RecordAndUser(int recordIndex, ulong userIndex)
             {
                 this.RecordIndex = recordIndex;
                 this.UserIndex = userIndex;
@@ -233,71 +234,62 @@ namespace KinectMotionCapture
             }
         }
 
-        public static UserSegmentation[] Identification(double frequency, IList<TrackImageRecordProperty> records, double maxDistance, ProgressData progress)
+        public static UserSegmentation[] Identification(FrameSequence frameseq, double maxDistance)
         {
-            if (records.Any(r => r.UserSegmentationData == null))
+            if (frameseq.Segmentations.Any(seg => seg == null))
                 throw new InvalidOperationException("ユーザトラッキングデータがセグメンテーションされていません");
-            progress.InitProgress("Initializing... ", 0);
 
             HashSet<Tuple<RecordAndUser, RecordAndUser>> contemporaryList = new HashSet<Tuple<RecordAndUser, RecordAndUser>>();
 
 
-            for (int i = 0; i < records.Count; i++)
+            for (int recordNo = 0; recordNo < frameseq.recordNum; recordNo++)
             {
-                TrackImageRecordProperty record = records[i];
+                IEnumerable<MotionData> record = frameseq.GetMotionDataSequence(recordNo);
                 int frameIndex = 0;
-                foreach (TrackFrame trackFrame in record.RecordData.EnumerateTrackFrame())
+                foreach (MotionData motionData in record)
                 {
-                    IList<int> users = trackFrame.GetValidUsers();
-                    foreach (var tuple in users.SelectMany(u => users.Select(v => new Tuple<RecordAndUser, RecordAndUser>(new RecordAndUser(i, u), new RecordAndUser(i, v)))))
+                    IList<ulong> users = motionData.bodies.ToList().Select(b => b.TrackingId).ToList();
+                    foreach (var tuple in users.SelectMany(u => users.Select(v => new Tuple<RecordAndUser, RecordAndUser>(new RecordAndUser(recordNo, u), new RecordAndUser(recordNo, v)))))
                     {
                         contemporaryList.Add(tuple);
                     }
                     frameIndex++;
                 }
             }
-            DateTime beginTime = new DateTime(records.Min(r => r.RecordData.BeginTime.Ticks));
-            DateTime endTime = new DateTime(records.Max(r => r.RecordData.EndTime.Ticks));
+            DateTime beginTime = frameseq.startTime;
+            DateTime endTime = frameseq.endTime;
+            double frequency = frameseq.frameRate;
             TimeSpan increment = new TimeSpan((long)(10000000 / frequency));
             long totalCount = (endTime.Ticks - beginTime.Ticks) / increment.Ticks;
             long totalIndex = 0;
-            progress.InitProgress("Calculate Distances... ", totalCount + 100);
             Dictionary<Tuple<RecordAndUser, RecordAndUser>, List<double>> distanceListMatrix = new Dictionary<Tuple<RecordAndUser, RecordAndUser>, List<double>>();
-            for (DateTime time = beginTime; time < endTime; time += increment)
+            foreach(Frame frame in frameseq.Frames)
             {
-                progress.SetProgress(totalIndex);
                 // 現在の時刻での各レコードの各ユーザの各骨格の絶対座標を求める
-                Dictionary<int, Dictionary<JointType, CvPoint3D64f>>[] absPositions = new Dictionary<int, Dictionary<JointType, CvPoint3D64f>>[records.Count];
-                for (int i = 0; i < records.Count; i++)
+                Dictionary<ulong, Dictionary<JointType, CvPoint3D64f>>[] absPositions = new Dictionary<ulong, Dictionary<JointType, CvPoint3D64f>>[frameseq.recordNum];
+                for (int recordNo = 0; recordNo < frameseq.recordNum; recordNo++)
                 {
-                    TrackImageRecordProperty record = records[i];
-                    int frameIndex = ListEx.GetMaxLessEqualIndexFromBinarySearch(record.RecordData.GetIndexBinarySearch(time));
-                    // 最後のフレームを使わないようにして、最後のフレームをいつまでも引きずらないようにする
-                    int nextIndex = ListEx.GetMinGreaterEqualIndexFromBinarySearch(record.RecordData.GetIndexBinarySearch(time));
-                    if (frameIndex == -1 || nextIndex >= record.RecordData.FrameCount)
-                        continue;
-                    Dictionary<int, Dictionary<JointType, CvPoint3D64f>> recordUserPositions = new Dictionary<int, Dictionary<JointType, CvPoint3D64f>>();
-                    TrackFrame trackFrame = record.RecordData.GetTrackFrame(frameIndex);
-                    IList<int> users = trackFrame.GetValidUsers();
-                    foreach (int user in users)
+                    Dictionary<ulong, Dictionary<JointType, CvPoint3D64f>> recordUserPositions = new Dictionary<ulong, Dictionary<JointType, CvPoint3D64f>>();
+                    foreach(SerializableBody body in frame.GetBodyList(recordNo))
                     {
                         Dictionary<JointType, CvPoint3D64f> userPositions = new Dictionary<JointType, CvPoint3D64f>();
-                        foreach (var jointPair in trackFrame.UserTrackings[user].OriginalJoints)
+                        //foreach (var jointPair in trackFrame.UserTrackings[user].OriginalJoints)
+                        foreach(var jointPair in body.Joints)
                         {
-                            CvPoint3D64f posInCamera = record.UndistortionData.GetRealFromScreenPos(jointPair.Value.Position.ToCvPoint3D(), trackFrame.DepthUserSize);
-                            CvPoint3D64f posInWorld = CvEx.ConvertPoint3D(posInCamera, record.ToWorldConversion);
+                            CvPoint3D64f posInCamera = jointPair.Value.Position.ToCvPoint3D();
+                            CvPoint3D64f posInWorld = CvEx.ConvertPoint3D(posInCamera, frameseq.ToWorldConversions[recordNo]);
                             userPositions[jointPair.Key] = posInWorld;
                         }
-                        recordUserPositions[user] = userPositions;
+                        recordUserPositions[body.TrackingId] = userPositions;
                     }
-                    absPositions[i] = recordUserPositions;
+                    absPositions[recordNo] = recordUserPositions;
                 }
                 // 現在の時刻で各レコード間のユーザ間の距離を求める
-                for (int i = 0; i < records.Count; i++)
+                for (int i = 0; i < frameseq.recordNum; i++)
                 {
                     if (absPositions[i] == null)
                         continue;
-                    for (int j = i + 1; j < records.Count; j++)
+                    for (int j = i + 1; j < frameseq.recordNum; j++)
                     {
                         if (absPositions[j] == null)
                             continue;
@@ -323,7 +315,6 @@ namespace KinectMotionCapture
                 }
                 totalIndex++;
             }
-            progress.SetProgress("Calculate Identification", totalCount + 50);
             // 中央値で集計して小さい順に並べる
             Dictionary<Tuple<RecordAndUser, RecordAndUser>, double> distanceMatrix = distanceListMatrix.ToDictionary(p => p.Key, p => CalcEx.GetMedian(p.Value));
             List<Tuple<RecordAndUser, RecordAndUser, double>> neighborList = (
@@ -357,22 +348,21 @@ namespace KinectMotionCapture
             // 番号を圧縮
             identificationSet.CompactIdentificationNumber();
             // 新しいセグメンテーション番号を与える
-            UserSegmentation[] ret = Enumerable.Range(0, records.Count).Select(i => new UserSegmentation()).ToArray();
-            for (int i = 0; i < records.Count; i++)
+            UserSegmentation[] ret = Enumerable.Range(0, frameseq.recordNum).Select(i => new UserSegmentation()).ToArray();
+            for (int recordNo = 0; recordNo < frameseq.recordNum; recordNo++)
             {
-                TrackImageRecordProperty record = records[i];
-                foreach (var pair in record.UserSegmentationData.Conversions)
+                foreach (var pair in frameseq.Segmentations[recordNo].Conversions)
                 {
                     int frameIndex = pair.Key;
-                    Dictionary<int, int> newConversions = new Dictionary<int, int>();
+                    Dictionary<ulong, int> newConversions = new Dictionary<ulong, int>();
                     foreach (var conv in pair.Value)
                     {
-                        int ident = identificationSet.ConvertToIdentificationNumber(new RecordAndUser(i, conv.Value));
+                        int ident = identificationSet.ConvertToIdentificationNumber(new RecordAndUser(recordNo, conv.Value));
                         newConversions[conv.Key] = ident;
                     }
-                    ret[i].Conversions[frameIndex] = newConversions;
+                    ret[recordNo].Conversions[frameIndex] = newConversions;
                 }
-                ret[i].fixNumUsers();
+                ret[recordNo].fixNumUsers();
             }
             return ret;
         }

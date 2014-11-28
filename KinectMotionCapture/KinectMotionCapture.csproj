@@ -148,6 +148,8 @@
     </ApplicationDefinition>
     <Compile Include="Library\CalcEx.cs" />
     <Compile Include="Library\SkeletonInterpolator.cs" />
+    <Compile Include="Library\UserSegmentation.cs" />
+    <Compile Include="Model\IdentificationSet.cs" />
     <Compile Include="View\CameraUndistortWindow.xaml.cs">
       <DependentUpon>CameraUndistortWindow.xaml</DependentUpon>
     </Compile>
