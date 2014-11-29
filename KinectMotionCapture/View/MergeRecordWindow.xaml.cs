@@ -233,7 +233,7 @@ namespace KinectMotionCapture
                 labels[i].Content = String.Join(",", frame.GetBodyIdList(i));
                 images[i].Source = new BitmapImage(new Uri(frame.ColorImagePathList[i]));
                 // Fix : ここpublicなメンバに直接アクセスしてる
-                timeLabels[i].Content = frame.records[i].TimeStamp.ToString(@"ss\:fff");
+                timeLabels[i].Content = frame.GetMotionData(i).TimeStamp.ToString(@"ss\:fff");
 
                 // Boneの描画
                 using (DrawingContext dc = drawings[i].Open())
@@ -242,6 +242,7 @@ namespace KinectMotionCapture
                     dc.DrawRectangle(Brushes.Transparent, null, new Rect(0.0, 0.0, colorSize.Width, colorSize.Height));
                     List<Dictionary<JointType, Point>> pointsList = frame.GetBodyColorSpaceJoints(i);
                     List<Dictionary<JointType, Joint>> jointsList = frame.GetBodyJoints(i);
+                    List<Tuple<ulong, Point>> idPointList = frame.GetIdAndPosition(i); // TODO : 描画する
 
                     for (int user = 0; user < pointsList.Count(); user++)
                     {
@@ -381,9 +382,6 @@ namespace KinectMotionCapture
             {
                 List<CvMat> convs = KinectMerge.GetConvMatrixFromBoneFrameSequence(frameSequence, startIndex, endIndex);
                 frameSequence.ToWorldConversions = convs;
-
-                //List<Dictionary<JointType, CvPoint3D64f>> mergedBodies = SkeletonInterpolator.ExportFromProject(frameSequence);
-                //var hoge = SkeletonInterpolator.ExportFromProject(frameSequence);
             }
             UserSegmentation[] segm = new UserSegmentation[frameSequence.recordNum];
             for (int i = 0; i < frameSequence.recordNum; i++)
@@ -392,17 +390,18 @@ namespace KinectMotionCapture
             }
             frameSequence.Segmentations = segm.ToList();
             segm = UserSegmentation.Identification(frameSequence, 1);
+            //var mergedBodies = SkeletonInterpolator.ExportFromProject(frameSequence);
 
             // DEBUG
             List<Frame> frames = frameSequence.Slice(this.startIndex, this.endIndex);
             for (int i = 0; i < frameSequence.recordNum; i++)
             {
-                Dictionary<JointType, Joint> joints = Utility.ApplyConversions(frames[0].records[i].bodies[0].Joints, frameSequence.ToWorldConversions[i]);
+                Dictionary<JointType, Joint> joints = Utility.ApplyConversions(frames[0].GetMotionData(i).bodies[0].Joints, frameSequence.ToWorldConversions[i]);
                 CameraSpacePoint p = joints[JointType.SpineBase].Position;
                 Debug.WriteLine(string.Format("{0},{1},{2}", p.X, p.Y, p.Z));
 
                 List<Dictionary<JointType, Joint>> body = frames.Select(
-                    f => Utility.ApplyConversions(f.records[i].bodies[0].Joints, frameSequence.ToWorldConversions[i])).ToList();
+                    f => Utility.ApplyConversions(f.GetMotionData(i).bodies[0].Joints, frameSequence.ToWorldConversions[i])).ToList();
                 //Utility.SaveBodySequence(body, string.Format(@"C:\Users\non\Desktop\joints{0}.dump", i + 1));
             }
         }

@@ -302,6 +302,18 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
+        /// 平均のPointを返す
+        /// </summary>
+        /// <param name="ps"></param>
+        /// <returns></returns>
+        public static Point GetAveragePoint(IEnumerable<Point> ps)
+        {
+            double x = ps.Select(p => p.X).Average();
+            double y = ps.Select(p => p.Y).Average();
+            return new Point(x, y);
+        }
+
+        /// <summary>
         /// 指定された点から主点までの長さ を 焦点距離/2 で割った値の二乗を返します
         /// </summary>
         /// <param name="cameraInfo"></param>
@@ -315,6 +327,7 @@ namespace KinectMotionCapture
             return dx * dx + dy * dy;
         }
 
+        /*
         /// <summary>
         /// DPマッチングのための座標, Point2D使って書き直すべき
         /// </summary>
@@ -411,5 +424,6 @@ namespace KinectMotionCapture
             }
             return new Tuple<float, int[]>(pathMatrix[m - 1, n - 1].cost / minPath.Count, res);
         }
+         */ 
     }
 }

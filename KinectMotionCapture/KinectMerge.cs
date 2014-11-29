@@ -34,6 +34,22 @@ namespace KinectMotionCapture
         public List<LocalCoordinateMapper> LocalCoordinateMappers { get; set; }
         public CameraIntrinsics CameraInfo { get; set; }
         public List<UserSegmentation> Segmentations { get; set; }
+
+        /// <summary>
+        /// オリジナルのTrackingIdとセグメンテーションによって振り直したidの対応
+        /// </summary>
+        public Dictionary<ulong, int> UserMapping
+        {
+            get
+            {
+                Dictionary<ulong, int> mapping = new Dictionary<ulong, int>();
+                foreach (UserSegmentation us in this.Segmentations)
+                {
+                    mapping.Concat(us.Conversions.Last().Value);
+                }
+                return mapping;
+            }
+        }
         
         /// <summary>
         /// 座標系を統合するための変換行列、各レコードに対して
@@ -271,8 +287,7 @@ namespace KinectMotionCapture
     public class Frame
     {
         public int recordNum;
-        //private List<MotionData> records;
-        public List<MotionData> records;  // for debug
+        private List<MotionData> records;
         private List<MotionData> nextRecords;
         public DateTime Time { get; set; }
 
@@ -359,6 +374,22 @@ namespace KinectMotionCapture
         public List<Dictionary<JointType, Joint>> GetBodyJoints(int recordNo)
         {
             return this.records[recordNo].bodies.ToList().Select((b) => b.Joints).ToList();
+        }
+
+        /// <summary>
+        /// Bodyのidと代表点の座標を返す
+        /// </summary>
+        /// <param name="recordNo"></param>
+        /// <returns></returns>
+        public List<Tuple<ulong, Point>> GetIdAndPosition(int recordNo)
+        {
+            MotionData md = this.records[recordNo];
+            List<Tuple<ulong, Point>> ret = new List<Tuple<ulong, Point>>();
+            foreach (SerializableBody body in md.bodies)
+            {
+                ret.Add(Tuple.Create(body.TrackingId, Utility.GetAveragePoint(body.colorSpacePoints.Values)));
+            }
+            return ret;
         }
 
         /// <summary>
