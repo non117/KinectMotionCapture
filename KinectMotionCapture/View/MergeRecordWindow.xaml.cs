@@ -56,21 +56,21 @@ namespace KinectMotionCapture
         private void LoadFrames()
         {
             List<string> datadir = new List<string>() {
-                                                    @"E:\kinect1",  
-                                                    @"E:\kinect2", 
-                                                    @"E:\kinect3", 
-                                                    @"E:\kinect4", 
+                                                    @"F:\kinect1",  
+                                                    @"F:\kinect2", 
+                                                    @"F:\kinect3", 
+                                                    @"F:\kinect4", 
             };
             List<string> mapdir = new List<string>() {
-                                                    @"E:\kinect1_coordmap.dump",  
-                                                    @"E:\kinect2_coordmap.dump", 
-                                                    @"E:\kinect3_coordmap.dump", 
-                                                    @"E:\kinect4_coordmap.dump", 
+                                                    @"F:\kinect1_coordmap.dump",  
+                                                    @"F:\kinect2_coordmap.dump", 
+                                                    @"F:\kinect3_coordmap.dump", 
+                                                    @"F:\kinect4_coordmap.dump", 
             };
-            string cameradir = @"E:\CameraInfo.dump";
+            //string cameradir = @"E:\CameraInfo.dump";
             this.frameSequence = new FrameSequence(datadir);
             this.frameSequence.LocalCoordinateMappers = mapdir.Select(s => (LocalCoordinateMapper)Utility.LoadFromBinary(s)).ToList();
-            this.frameSequence.CameraInfo = (CameraIntrinsics)Utility.LoadFromBinary(cameradir);
+            //this.frameSequence.CameraInfo = (CameraIntrinsics)Utility.LoadFromBinary(cameradir);
         }
 
         public MergeRecordWindow()
@@ -371,17 +371,6 @@ namespace KinectMotionCapture
             {
                 List<CvMat> convs = KinectMerge.GetConvMatrixFromBoneFrame(frame, frameSequence.ToWorldConversions, selectedUsers);
                 frameSequence.ToWorldConversions = convs;
-            }            
-
-            // DEBUG
-            List<Frame> frames = frameSequence.Slice(this.startIndex, this.endIndex);
-            for (int i = 0; i < frameSequence.recordNum; i++)
-            {
-                CameraSpacePoint p = frame.records[i].bodies[0].Joints[JointType.SpineBase].Position;
-                Debug.WriteLine(string.Format("{0},{1},{2}", p.X, p.Y, p.Z));
-
-                List<Dictionary<JointType, Joint>> body = frames.Select(f => f.records[i].bodies[0].Joints).ToList();
-                Utility.SaveBodySequence(body, string.Format(@"C:\Users\non\Desktop\joints{0}.dump", i + 1));
             }
         }
 
@@ -394,18 +383,27 @@ namespace KinectMotionCapture
                 frameSequence.ToWorldConversions = convs;
 
                 //List<Dictionary<JointType, CvPoint3D64f>> mergedBodies = SkeletonInterpolator.ExportFromProject(frameSequence);
-                var hoge = SkeletonInterpolator.ExportFromProject(frameSequence);
+                //var hoge = SkeletonInterpolator.ExportFromProject(frameSequence);
             }
+            UserSegmentation[] segm = new UserSegmentation[frameSequence.recordNum];
+            for (int i = 0; i < frameSequence.recordNum; i++)
+            {
+                segm[i] = UserSegmentation.Segment(frameSequence.GetMotionDataSequence(i), new TimeSpan(0, 0, 1));
+            }
+            frameSequence.Segmentations = segm.ToList();
+            segm = UserSegmentation.Identification(frameSequence, 1);
 
             // DEBUG
             List<Frame> frames = frameSequence.Slice(this.startIndex, this.endIndex);
             for (int i = 0; i < frameSequence.recordNum; i++)
             {
-                CameraSpacePoint p = frames[0].records[i].bodies[0].Joints[JointType.SpineBase].Position;
+                Dictionary<JointType, Joint> joints = Utility.ApplyConversions(frames[0].records[i].bodies[0].Joints, frameSequence.ToWorldConversions[i]);
+                CameraSpacePoint p = joints[JointType.SpineBase].Position;
                 Debug.WriteLine(string.Format("{0},{1},{2}", p.X, p.Y, p.Z));
 
-                List<Dictionary<JointType, Joint>> body = frames.Select(f => f.records[i].bodies[0].Joints).ToList();
-                Utility.SaveBodySequence(body, string.Format(@"C:\Users\non\Desktop\joints{0}.dump", i + 1));
+                List<Dictionary<JointType, Joint>> body = frames.Select(
+                    f => Utility.ApplyConversions(f.records[i].bodies[0].Joints, frameSequence.ToWorldConversions[i])).ToList();
+                //Utility.SaveBodySequence(body, string.Format(@"C:\Users\non\Desktop\joints{0}.dump", i + 1));
             }
         }
 
@@ -418,17 +416,6 @@ namespace KinectMotionCapture
                 List<CvMat> convs = KinectMerge.GetConvMatrixFromDepthFrame(frame, frameSequence.ToWorldConversions, frameSequence.LocalCoordinateMappers); 
                 frameSequence.ToWorldConversions = convs;
             }
-
-            // DEBUG
-            List<Frame> frames = frameSequence.Slice(this.startIndex, this.endIndex);
-            for (int i = 0; i < frameSequence.recordNum; i++)
-            {
-                CameraSpacePoint p = frame.records[i].bodies[0].Joints[JointType.SpineBase].Position;
-                Debug.WriteLine(string.Format("{0},{1},{2}", p.X, p.Y, p.Z));
-
-                List<Dictionary<JointType, Joint>> body = frames.Select(f => f.records[i].bodies[0].Joints).ToList();
-                Utility.SaveBodySequence(body, string.Format(@"C:\Users\non\Desktop\joints{0}.dump", i + 1));
-            }
         }
 
         private void MenuCalibDepthFrameRange_Click(object sender, RoutedEventArgs e)
@@ -438,17 +425,6 @@ namespace KinectMotionCapture
             {
                 List<CvMat> convs = KinectMerge.GetConvMatrixFromDepthFrameSequence(frameSequence, startIndex, endIndex);
                 frameSequence.ToWorldConversions = convs;
-            }
-
-            // DEBUG
-            List<Frame> frames = frameSequence.Slice(this.startIndex, this.endIndex);
-            for (int i = 0; i < frameSequence.recordNum; i++)
-            {
-                CameraSpacePoint p = frames[0].records[i].bodies[0].Joints[JointType.SpineBase].Position;
-                Debug.WriteLine(string.Format("{0},{1},{2}", p.X, p.Y, p.Z));
-
-                List<Dictionary<JointType, Joint>> body = frames.Select(f => f.records[i].bodies[0].Joints).ToList();
-                Utility.SaveBodySequence(body, string.Format(@"C:\Users\non\Desktop\joints{0}.dump", i + 1));
             }
         }
     }
