@@ -371,7 +371,6 @@ namespace KinectMotionCapture
             {
                 List<CvMat> convs = KinectMerge.GetConvMatrixFromBoneFrame(frame, frameSequence.ToWorldConversions, selectedUsers);
                 frameSequence.ToWorldConversions = convs;
-                frameSequence.ApplyConversion();
             }            
 
             // DEBUG
@@ -396,7 +395,6 @@ namespace KinectMotionCapture
 
                 //List<Dictionary<JointType, CvPoint3D64f>> mergedBodies = SkeletonInterpolator.ExportFromProject(frameSequence);
                 var hoge = SkeletonInterpolator.ExportFromProject(frameSequence);
-                frameSequence.ApplyConversion();
             }
 
             // DEBUG
@@ -419,7 +417,6 @@ namespace KinectMotionCapture
             {
                 List<CvMat> convs = KinectMerge.GetConvMatrixFromDepthFrame(frame, frameSequence.ToWorldConversions, frameSequence.LocalCoordinateMappers); 
                 frameSequence.ToWorldConversions = convs;
-                frameSequence.ApplyConversion();
             }
 
             // DEBUG
@@ -441,7 +438,6 @@ namespace KinectMotionCapture
             {
                 List<CvMat> convs = KinectMerge.GetConvMatrixFromDepthFrameSequence(frameSequence, startIndex, endIndex);
                 frameSequence.ToWorldConversions = convs;
-                frameSequence.ApplyConversion();
             }
 
             // DEBUG

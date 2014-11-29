@@ -73,17 +73,6 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
-        /// 座標変換を適用する
-        /// </summary>
-        public void ApplyConversion()
-        {
-            foreach(Frame frame in Frames)
-            {
-                frame.ApplyConversions(this.ToWorldConversions);
-            }
-        }
-
-        /// <summary>
         /// レコードのメタデータをデシリアライズしてくる
         /// </summary>
         /// <param name="filepath"></param>
@@ -402,35 +391,6 @@ namespace KinectMotionCapture
             this.recordNum = records.Count();
             this.records = records;
             this.nextRecords = nextrecords;
-        }
-
-        /// <summary>
-        /// 座標変換をBodyに適用する
-        /// TODO : return value required. 非破壊に変更
-        /// </summary>
-        /// <param name="conversion"></param>
-        public void ApplyConversions(List<CvMat> conversions)
-        {
-            for (int i = 0; i < this.recordNum; i++)
-            {
-                MotionData md = this.records[i];
-                CvMat conversion = conversions[i];
-                foreach (SerializableBody body in md.bodies)
-                {
-                    Dictionary<JointType, Joint> newJoints = new Dictionary<JointType, Joint>();
-                    foreach (JointType jointType in body.Joints.Keys)
-                    {
-                        Joint originalJoint = body.Joints[jointType];
-                        CvPoint3D64f fromPoint = originalJoint.Position.ToCvPoint3D();
-                        // debug
-
-                        CameraSpacePoint newPoint = CvEx.ConvertPoint3D(fromPoint, conversion).ToCameraSpacePoint();
-                        originalJoint.Position = newPoint;
-                        newJoints[jointType] = originalJoint;
-                    }
-                    body.Joints = newJoints;
-                }
-            }
         }
     }
 

@@ -196,6 +196,11 @@ namespace KinectMotionCapture
             return newJoints;
         }
 
+        /// <summary>
+        /// Unityに吐くためのデータ変換
+        /// </summary>
+        /// <param name="originalJoints"></param>
+        /// <returns></returns>
         public static List<Dictionary<int, float[]>> ConverToCompatibleJoint(List<Dictionary<JointType, CvPoint3D64f>> originalJoints)
         {
             List<Dictionary<int, float[]>> newJoints = new List<Dictionary<int, float[]>>();
@@ -274,6 +279,26 @@ namespace KinectMotionCapture
         {
             List<Dictionary<int, float[]>> serializableBodies = Utility.ConverToCompatibleJoint(bodies);
             Utility.SaveToBinary(serializableBodies, path);
+        }
+
+        /// <summary>
+        /// Jointsに座標変換を適用する
+        /// </summary>
+        /// <param name="joints"></param>
+        /// <param name="conversion"></param>
+        /// <returns></returns>
+        public static Dictionary<JointType, Joint> ApplyConversions(Dictionary<JointType, Joint> joints, CvMat conversion)
+        {
+            Dictionary<JointType, Joint> newJoints = new Dictionary<JointType, Joint>();
+            foreach (JointType jointType in joints.Keys)
+            {
+                Joint originalJoint = joints[jointType];
+                CvPoint3D64f fromPoint = originalJoint.Position.ToCvPoint3D();
+                CameraSpacePoint newPoint = CvEx.ConvertPoint3D(fromPoint, conversion).ToCameraSpacePoint();
+                originalJoint.Position = newPoint;
+                newJoints[jointType] = originalJoint;
+            }
+            return newJoints;
         }
 
         /// <summary>

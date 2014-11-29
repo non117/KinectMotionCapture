@@ -357,7 +357,7 @@ namespace KinectMotionCapture
                     Dictionary<ulong, int> newConversions = new Dictionary<ulong, int>();
                     foreach (var conv in pair.Value)
                     {
-                        int ident = identificationSet.ConvertToIdentificationNumber(new RecordAndUser(recordNo, conv.Value));
+                        int ident = identificationSet.ConvertToIdentificationNumber(new RecordAndUser(recordNo, conv.Key));
                         newConversions[conv.Key] = ident;
                     }
                     ret[recordNo].Conversions[frameIndex] = newConversions;
