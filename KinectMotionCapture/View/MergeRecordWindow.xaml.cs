@@ -160,11 +160,17 @@ namespace KinectMotionCapture
 
             // UserIdを選択するUI, あとで同様の処理で更新される
             ComboBox[] boxes = { UserIdBox1, UserIdBox2, UserIdBox3, UserIdBox4 };
-            for (int i = 0; i < frameSequence.recordNum; i++)
+            for (int recordNo = 0; recordNo < frameSequence.recordNum; recordNo++)
             {
-                foreach (ulong id in frameSequence.userIdList[i])
+                foreach (ulong id in frameSequence.userIdList[recordNo])
                 {
-                    boxes[i].Items.Add(id);
+                    string idStr = id.ToString();
+                    Dictionary<ulong, int> map = frameSequence.Segmentations[recordNo].Conversions.Last().Value;
+                    if (map.ContainsKey(id))
+                    {
+                        idStr = map[id].ToString();
+                    }
+                    boxes[recordNo].Items.Add(idStr);
                 }
             }
         }
@@ -272,6 +278,12 @@ namespace KinectMotionCapture
             this.TimeLabel.Content = frame.Time.ToString(frame.Time.ToString(@"mm\:ss\:fff"));
         }
 
+        /// <summary>
+        /// Bodyの関節点、boneを描画する
+        /// </summary>
+        /// <param name="points"></param>
+        /// <param name="joints"></param>
+        /// <param name="drawingContext"></param>
         private void DrawBody(Dictionary<JointType, Point> points, Dictionary<JointType, Joint> joints, DrawingContext drawingContext)
         {
             Pen drawingPen;
@@ -354,8 +366,15 @@ namespace KinectMotionCapture
             ComboBox box = (ComboBox)sender;
             int i = box.Name.Length - 1;
             int index = box.Name[i] - '0' - 1;
-            ulong bodyId = (ulong)box.SelectedItem;
-            this.frameSequence.SetUserID(index, bodyId);
+            if (box.SelectedItem.ToString().Length > 5)
+            {
+                ulong bodyId = (ulong)box.SelectedItem;
+                this.frameSequence.SetUserID(index, bodyId);
+            }
+            else
+            {
+                
+            }
         }
 
         private void PlaySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -418,22 +437,15 @@ namespace KinectMotionCapture
         private void MenuCalibDepthFrame_Click(object sender, RoutedEventArgs e)
         {
             Frame frame = frameSequence.Frames[playingIndex];
-            List<ulong> selectedUsers = frameSequence.selectedUserIdList;
-            if (selectedUsers.Count == frameSequence.recordNum)
-            {
-                List<CvMat> convs = KinectMerge.GetConvMatrixFromDepthFrame(frame, frameSequence.ToWorldConversions, frameSequence.LocalCoordinateMappers); 
-                frameSequence.ToWorldConversions = convs;
-            }
+            List<CvMat> convs = KinectMerge.GetConvMatrixFromDepthFrame(frame, frameSequence.ToWorldConversions, frameSequence.LocalCoordinateMappers);
+            frameSequence.ToWorldConversions = convs;
         }
 
         private void MenuCalibDepthFrameRange_Click(object sender, RoutedEventArgs e)
         {
-            List<ulong> selectedUsers = frameSequence.selectedUserIdList;
-            if (selectedUsers.Count == frameSequence.recordNum)
-            {
-                List<CvMat> convs = KinectMerge.GetConvMatrixFromDepthFrameSequence(frameSequence, startIndex, endIndex);
-                frameSequence.ToWorldConversions = convs;
-            }
+            List<CvMat> convs = KinectMerge.GetConvMatrixFromDepthFrameSequence(frameSequence, startIndex, endIndex);
+            frameSequence.ToWorldConversions = convs;
+
         }
 
         private void Segmentation_Click(object sender, RoutedEventArgs e)

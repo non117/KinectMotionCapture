@@ -408,9 +408,9 @@ namespace KinectMotionCapture
         public List<SerializableBody> GetSelectedBodyList(List<ulong> selectedUserIdList)
         {
             List<SerializableBody> bodies = new List<SerializableBody>();
-                for (int i = 0; i < this.recordNum; i++)
+                for (int recordNo = 0; recordNo < this.recordNum; recordNo++)
                 {
-                    SerializableBody body = this.records[i].bodies.Where((b) => b.TrackingId == selectedUserIdList[i]).FirstOrDefault();
+                    SerializableBody body = this.records[recordNo].bodies.Where((b) => b.TrackingId == selectedUserIdList[recordNo]).FirstOrDefault();
                     
                     /// idが違うときの場合. 本来はセグメンテーションすべき.
                     if ( body == null || body.Equals(default(SerializableBody)))
@@ -418,6 +418,26 @@ namespace KinectMotionCapture
                     
                     bodies.Add(body);
                 }
+            return bodies;
+        }
+
+        /// <summary>
+        /// セグメンテーション後にidと一致するBodyを取ってきたいやつ
+        /// </summary>
+        /// <param name="selectedUserIdList"></param>
+        /// <returns></returns>
+        public List<SerializableBody> GetSelectedBodyList(List<List<ulong>> selectedUserIdList)
+        {
+            List<SerializableBody> bodies = new List<SerializableBody>();
+            for (int recordNo = 0; recordNo < this.recordNum; recordNo++)
+            {
+                SerializableBody body = this.records[recordNo].bodies.Where(b => selectedUserIdList[recordNo].Contains(b.TrackingId)).FirstOrDefault();
+                /// idが違うときの場合. ありえないとは思うけど、未検証
+                if (body == null || body.Equals(default(SerializableBody)))
+                    return new List<SerializableBody>();
+
+                bodies.Add(body);
+            }
             return bodies;
         }
 
