@@ -399,13 +399,6 @@ namespace KinectMotionCapture
                 List<CvMat> convs = KinectMerge.GetConvMatrixFromBoneFrameSequence(frameSequence, startIndex, endIndex);
                 frameSequence.ToWorldConversions = convs;
             }
-            UserSegmentation[] segm = new UserSegmentation[frameSequence.recordNum];
-            for (int i = 0; i < frameSequence.recordNum; i++)
-            {
-                segm[i] = UserSegmentation.Segment(frameSequence.GetMotionDataSequence(i), new TimeSpan(0, 0, 1));
-            }
-            frameSequence.Segmentations = segm.ToList();
-            segm = UserSegmentation.Identification(frameSequence, 1);
             //var mergedBodies = SkeletonInterpolator.ExportFromProject(frameSequence);
 
             // DEBUG
@@ -441,6 +434,18 @@ namespace KinectMotionCapture
                 List<CvMat> convs = KinectMerge.GetConvMatrixFromDepthFrameSequence(frameSequence, startIndex, endIndex);
                 frameSequence.ToWorldConversions = convs;
             }
+        }
+
+        private void Segmentation_Click(object sender, RoutedEventArgs e)
+        {
+            UserSegmentation[] segm = new UserSegmentation[frameSequence.recordNum];
+            for (int i = 0; i < frameSequence.recordNum; i++)
+            {
+                segm[i] = UserSegmentation.Segment(frameSequence.GetMotionDataSequence(i), new TimeSpan(0, 0, 1));
+            }
+            frameSequence.Segmentations = segm.ToList();
+            segm = UserSegmentation.Identification(frameSequence, 1);
+            frameSequence.Segmentations = segm.ToList();
         }
     }
 }

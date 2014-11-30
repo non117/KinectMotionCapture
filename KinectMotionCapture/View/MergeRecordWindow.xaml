@@ -144,6 +144,8 @@
         <Menu Name="Menu" VerticalAlignment="Top">
             <MenuItem Name="MenuFile" Header="File"></MenuItem>
             <MenuItem Name="MenuCalib" Header="Calibration">
+                <MenuItem Name="Segmentation" Header="検出ユーザのセグメンテーションとフレーム間統合" Click="Segmentation_Click"/>
+                <Separator/>
                 <MenuItem Name="MenuCalibBoneFrame" Header="現在のフレームの骨格で座標統合" Click="MenuCalibBoneFrame_Click" />
                 <MenuItem Name="MenuCalibBoneFrameRange" Header="フレーム範囲の骨格で座標統合" Click="MenuCalibBoneFrameRange_Click" />
                 <Separator/>
