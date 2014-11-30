@@ -518,9 +518,37 @@ namespace KinectMotionCapture
         /// あるフレームにおける座標変換行列を骨格情報から計算する
         /// </summary>
         /// <param name="frame"></param>
+        /// <param name="convList"></param>
+        /// <param name="selectedUserIdList"></param>
+        /// <returns></returns>
         public static List<CvMat> GetConvMatrixFromBoneFrame(Frame frame, List<CvMat> convList, ulong[] selectedUserIdList)
         {
             List<SerializableBody> bodies = frame.GetSelectedBodyList(selectedUserIdList);
+            return GetConvMatrixFromBoneFrame(frame, convList, bodies);
+        }
+
+        /// <summary>
+        /// あるフレームにおける座標変換行列を骨格情報から計算する
+        /// </summary>
+        /// <param name="frame"></param>
+        /// <param name="convList"></param>
+        /// <param name="selectedUserIdList"></param>
+        /// <returns></returns>
+        public static List<CvMat> GetConvMatrixFromBoneFrame(Frame frame, List<CvMat> convList, List<List<ulong>> selectedUserIdList)
+        {
+            List<SerializableBody> bodies = frame.GetSelectedBodyList(selectedUserIdList);
+            return GetConvMatrixFromBoneFrame(frame, convList, bodies);
+        }
+
+        /// <summary>
+        /// あるフレームにおける座標変換行列を骨格情報から計算する
+        /// </summary>
+        /// <param name="frame"></param>
+        /// <param name="convList"></param>
+        /// <param name="bodies"></param>
+        /// <returns></returns>
+        public static List<CvMat> GetConvMatrixFromBoneFrame(Frame frame, List<CvMat> convList, List<SerializableBody> bodies)
+        {
             if ( bodies.Count() != frame.recordNum )
             {
                 System.Windows.MessageBox.Show("ユーザが選択されていないレコードがあります");
@@ -556,12 +584,18 @@ namespace KinectMotionCapture
         public static List<CvMat> GetConvMatrixFromBoneFrameSequence(FrameSequence frameSeq, int startIndex, int endIndex)
         {
             Dictionary<Tuple<int, int>, int> cooccurenceCount = new Dictionary<Tuple<int, int>, int>();
-            //System.Windows.MessageBox.Show("ユーザが選択されていないレコードがあります");
-            //return;
             IEnumerable<Frame> frames = frameSeq.Frames.Skip(startIndex).Take(endIndex);
+            List<SerializableBody> bodies;
             foreach (Frame frame in frames)
             {
-                List<SerializableBody> bodies = frame.GetSelectedBodyList(frameSeq.selectedUserIdList);
+                if (frameSeq.Segmentations == null)
+                {
+                    bodies = frame.GetSelectedBodyList(frameSeq.selectedUserIdList);
+                }
+                else
+                {
+                    bodies = frame.GetSelectedBodyList(frameSeq.SelectedIntegratedIdList);
+                }
                 if (bodies.Count() != frame.recordNum)
                     continue;
 
@@ -601,7 +635,14 @@ namespace KinectMotionCapture
                 Dictionary<int, ICoordConversion3D> conversionsPerDependencyKey = new Dictionary<int, ICoordConversion3D>();
                 foreach (Frame frame in frameSeq.Frames)
                 {
-                    List<SerializableBody> bodies = frame.GetSelectedBodyList(frameSeq.selectedUserIdList);
+                    if (frameSeq.Segmentations == null)
+                    {
+                        bodies = frame.GetSelectedBodyList(frameSeq.selectedUserIdList);
+                    }
+                    else
+                    {
+                        bodies = frame.GetSelectedBodyList(frameSeq.SelectedIntegratedIdList);
+                    }
                     if (bodies.Count() != frame.recordNum)
                         continue;
 
