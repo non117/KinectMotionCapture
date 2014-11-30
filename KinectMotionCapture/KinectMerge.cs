@@ -43,9 +43,12 @@ namespace KinectMotionCapture
             get
             {
                 Dictionary<ulong, int> mapping = new Dictionary<ulong, int>();
-                foreach (UserSegmentation us in this.Segmentations)
+                if (this.Segmentations != null)
                 {
-                    mapping.Concat(us.Conversions.Last().Value);
+                    foreach (UserSegmentation us in this.Segmentations)
+                    {
+                        mapping.Concat(us.Conversions.Last().Value);
+                    }
                 }
                 return mapping;
             }

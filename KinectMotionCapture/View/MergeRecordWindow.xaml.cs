@@ -158,10 +158,10 @@ namespace KinectMotionCapture
             this.PlaySlider.SelectionStart = this.startIndex;
             this.PlaySlider.SelectionEnd = this.endIndex;
 
+            // UserIdを選択するUI, あとで同様の処理で更新される
             ComboBox[] boxes = { UserIdBox1, UserIdBox2, UserIdBox3, UserIdBox4 };
             for (int i = 0; i < frameSequence.recordNum; i++)
             {
-                // TODO : frameListの狭い範囲に対するidの列挙が必要かも
                 foreach (ulong id in frameSequence.userIdList[i])
                 {
                     boxes[i].Items.Add(id);
@@ -226,33 +226,45 @@ namespace KinectMotionCapture
             Label[] timeLabels = { Box1Timer, Box2Timer, Box3Timer, Box4Timer };
             Image[] images = { Image1, Image2, Image3, Image4 };
             DrawingGroup[] drawings = { drawingGroup1, drawingGroup2, drawingGroup3, drawingGroup4 };
+            // 使い回しの変数
+            List<Dictionary<JointType, Point>> pointsList;
+            List<Dictionary<JointType, Joint>> jointsList;
+            List<Tuple<ulong, Point>> idPointList;
+            FormattedText fmt;
 
-            for (int i = 0; i < frameSequence.recordNum; i++)
+            for (int recordNo = 0; recordNo < frameSequence.recordNum; recordNo++)
             {
-                images[i].Source = new BitmapImage(new Uri(frame.ColorImagePathList[i]));
-                timeLabels[i].Content = frame.GetMotionData(i).TimeStamp.ToString(@"ss\:fff");
+                images[recordNo].Source = new BitmapImage(new Uri(frame.ColorImagePathList[recordNo]));
+                timeLabels[recordNo].Content = frame.GetMotionData(recordNo).TimeStamp.ToString(@"ss\:fff");
 
                 // Boneの描画
-                using (DrawingContext dc = drawings[i].Open())
+                using (DrawingContext dc = drawings[recordNo].Open())
                 {
-                    CvSize colorSize = frame.ColorSize[i];
+                    CvSize colorSize = frame.ColorSize[recordNo];
                     dc.DrawRectangle(Brushes.Transparent, null, new Rect(0.0, 0.0, colorSize.Width, colorSize.Height));
-                    List<Dictionary<JointType, Point>> pointsList = frame.GetBodyColorSpaceJoints(i);
-                    List<Dictionary<JointType, Joint>> jointsList = frame.GetBodyJoints(i);
-                    List<Tuple<ulong, Point>> idPointList = frame.GetIdAndPosition(i); // TODO : 描画する
+                    pointsList = frame.GetBodyColorSpaceJoints(recordNo);
+                    jointsList = frame.GetBodyJoints(recordNo);
+                    idPointList = frame.GetIdAndPosition(recordNo);
 
                     for (int user = 0; user < pointsList.Count(); user++)
                     {
+                        // Bodyの描画
                         this.DrawBody(pointsList[user], jointsList[user], dc);
                         // user id の描画
-                        FormattedText fmt = new FormattedText(idPointList[user].Item1.ToString(),
+                        ulong userId = idPointList[user].Item1;
+                        string text = userId.ToString();
+                        if (frameSequence.UserMapping.ContainsKey(userId))
+                        {
+                            text = frameSequence.UserMapping[userId].ToString();
+                        }
+                        fmt = new FormattedText(text,
                             System.Globalization.CultureInfo.CurrentCulture,
                             System.Windows.FlowDirection.LeftToRight,
                             new Typeface("Arial"), 50.0, Brushes.WhiteSmoke
                             );
                         dc.DrawText(fmt, idPointList[user].Item2);
                     }
-                    drawings[i].ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, colorSize.Width, colorSize.Height));
+                    drawings[recordNo].ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, colorSize.Width, colorSize.Height));
                 }
             }
             // スライダーとか時間表示
