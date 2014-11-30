@@ -44,14 +44,11 @@ namespace KinectMotionCapture
             get
             {
                 List<List<ulong>> ret = new List<List<ulong>>();
-                foreach (int integratedId in this.selecteedIntegretedIdList)
+                for (int recordNo = 0; recordNo < this.recordNum; recordNo++)
                 {
-                    List<ulong> recordSelectedIds = new List<ulong>();
-                    foreach (UserSegmentation segm in this.Segmentations)
-                    {
-                        Dictionary<ulong, int> map = segm.Conversions.Last().Value;
-                        recordSelectedIds.AddRange(map.Where(pair => pair.Value == integratedId).Select(pair => pair.Key).ToList());
-                    }
+                    int integratedId = this.selecteedIntegretedIdList[recordNo];
+                    Dictionary<ulong, int> map = this.Segmentations[recordNo].Conversions.Last().Value;
+                    List<ulong> recordSelectedIds = map.Where(pair => pair.Value == integratedId).Select(pair => pair.Key).ToList();
                     ret.Add(recordSelectedIds);
                 }
                 return ret;
@@ -464,6 +461,15 @@ namespace KinectMotionCapture
                 bodies.Add(body);
             }
             return bodies;
+        }
+
+        /// <summary>
+        /// Bodyが0個以上各レコードに詰まっているかどうか
+        /// </summary>
+        /// <returns></returns>
+        public bool IsAllBodyAvailable()
+        {
+            return this.records.All(md => md.bodies.Length != 0);
         }
 
         /// <summary>
