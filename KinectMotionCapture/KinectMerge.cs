@@ -20,20 +20,43 @@ namespace KinectMotionCapture
     public class FrameSequence
     {
         private List<CvMat> convList;
-        private List<string> dataDirs;
+        private string[] dataDirs;
         private TimeSpan timePeriod;
 
         public int recordNum;
         public double frameRate = 30;
         public DateTime startTime;
         public DateTime endTime;
-        public List<ulong> selectedUserIdList;
-        // TODO: IEnumerableにしても良さそう。イテレータブロックとか使うらしい。
+        public ulong[] selectedUserIdList;
+        public int[] selecteedIntegretedIdList;
         public List<List<ulong>> userIdList;
+        // TODO: IEnumerableにしても良さそう。イテレータブロックとか使うらしい。        
         public List<Frame> Frames { get; set; }
         public List<LocalCoordinateMapper> LocalCoordinateMappers { get; set; }
         public CameraIntrinsics CameraInfo { get; set; }
         public List<UserSegmentation> Segmentations { get; set; }
+
+        /// <summary>
+        /// 選択された統合IDと対応するオリジナルIDを返す
+        /// </summary>
+        public List<List<ulong>> SelectedIntegratedIdList
+        {
+            get
+            {
+                List<List<ulong>> ret = new List<List<ulong>>();
+                foreach (int integratedId in this.selecteedIntegretedIdList)
+                {
+                    List<ulong> recordSelectedIds = new List<ulong>();
+                    foreach (UserSegmentation segm in this.Segmentations)
+                    {
+                        Dictionary<ulong, int> map = segm.Conversions.Last().Value;
+                        recordSelectedIds.AddRange(map.Where(pair => pair.Value == integratedId).Select(pair => pair.Key).ToList());
+                    }
+                    ret.Add(recordSelectedIds);
+                }
+                return ret;
+            }
+        }
 
         /// <summary>
         /// オリジナルのTrackingIdとセグメンテーションによって振り直したidの対応
@@ -239,15 +262,12 @@ namespace KinectMotionCapture
         /// コンストラクタ
         /// </summary>
         /// <param name="dataDirs"></param>
-        public FrameSequence(List<string> dataDirs)
+        public FrameSequence(string[] dataDirs)
         {
             // TODO 例外処理
             this.recordNum = dataDirs.Count();
-            this.selectedUserIdList = new List<ulong>();
-            for (int i = 0; i < this.recordNum; i++)
-            {
-                this.selectedUserIdList.Add(ulong.MaxValue);
-            }
+            this.selectedUserIdList = new ulong[this.recordNum];
+            this.selecteedIntegretedIdList = new int[this.recordNum];
             
             this.dataDirs = dataDirs;
             // 外側がKinectの数だけあるレコード、内側がフレーム数分
@@ -405,7 +425,7 @@ namespace KinectMotionCapture
         /// </summary>
         /// <param name="selectedUserIdList"></param>
         /// <returns></returns>
-        public List<SerializableBody> GetSelectedBodyList(List<ulong> selectedUserIdList)
+        public List<SerializableBody> GetSelectedBodyList(ulong[] selectedUserIdList)
         {
             List<SerializableBody> bodies = new List<SerializableBody>();
                 for (int recordNo = 0; recordNo < this.recordNum; recordNo++)
@@ -493,7 +513,7 @@ namespace KinectMotionCapture
         /// あるフレームにおける座標変換行列を骨格情報から計算する
         /// </summary>
         /// <param name="frame"></param>
-        public static List<CvMat> GetConvMatrixFromBoneFrame(Frame frame, List<CvMat> convList, List<ulong> selectedUserIdList)
+        public static List<CvMat> GetConvMatrixFromBoneFrame(Frame frame, List<CvMat> convList, ulong[] selectedUserIdList)
         {
             List<SerializableBody> bodies = frame.GetSelectedBodyList(selectedUserIdList);
             if ( bodies.Count() != frame.recordNum )

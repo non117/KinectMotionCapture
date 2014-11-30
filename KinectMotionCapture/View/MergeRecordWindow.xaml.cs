@@ -55,7 +55,7 @@ namespace KinectMotionCapture
 
         private void LoadFrames()
         {
-            List<string> datadir = new List<string>() {
+            string[] datadir = new string[] {
                                                     @"F:\kinect1",  
                                                     @"F:\kinect2", 
                                                     @"F:\kinect3", 
@@ -406,8 +406,8 @@ namespace KinectMotionCapture
         private void MenuCalibBoneFrame_Click(object sender, RoutedEventArgs e)
         {
             Frame frame = frameSequence.Frames[playingIndex];
-            List<ulong> selectedUsers = frameSequence.selectedUserIdList;
-            if (selectedUsers.Count == frameSequence.recordNum)
+            ulong[] selectedUsers = frameSequence.selectedUserIdList;
+            if (selectedUsers.Length == frameSequence.recordNum)
             {
                 List<CvMat> convs = KinectMerge.GetConvMatrixFromBoneFrame(frame, frameSequence.ToWorldConversions, selectedUsers);
                 frameSequence.ToWorldConversions = convs;
@@ -416,8 +416,8 @@ namespace KinectMotionCapture
 
         private void MenuCalibBoneFrameRange_Click(object sender, RoutedEventArgs e)
         {
-            List<ulong> selectedUsers = frameSequence.selectedUserIdList;
-            if (selectedUsers.Count == frameSequence.recordNum)
+            ulong[] selectedUsers = frameSequence.selectedUserIdList;
+            if (selectedUsers.Length == frameSequence.recordNum)
             {
                 List<CvMat> convs = KinectMerge.GetConvMatrixFromBoneFrameSequence(frameSequence, startIndex, endIndex);
                 frameSequence.ToWorldConversions = convs;
