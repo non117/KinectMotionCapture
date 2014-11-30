@@ -119,6 +119,11 @@ namespace KinectMotionCapture
             this.selectedUserIdList[recordIndex] = bodyId;
         }
 
+        public void setIntegratedID(int recordIndex, int id)
+        {
+            this.selecteedIntegretedIdList[recordIndex] = id;
+        }
+
         /// <summary>
         /// レコードのメタデータをデシリアライズしてくる
         /// </summary>

@@ -370,14 +370,18 @@ namespace KinectMotionCapture
             ComboBox box = (ComboBox)sender;
             int i = box.Name.Length - 1;
             int index = box.Name[i] - '0' - 1;
-            if (box.SelectedItem.ToString().Length > 5)
+            if (box.SelectedItem != null)
             {
-                ulong bodyId = (ulong)box.SelectedItem;
-                this.frameSequence.SetUserID(index, bodyId);
-            }
-            else
-            {
-                
+                if (box.SelectedItem.ToString().Length > 5)
+                {
+                    ulong bodyId = ulong.Parse(box.SelectedItem.ToString());
+                    this.frameSequence.SetUserID(index, bodyId);
+                }
+                else
+                {
+                    int bodyId = int.Parse(box.SelectedItem.ToString());
+                    this.frameSequence.setIntegratedID(index, bodyId);
+                }
             }
         }
 
@@ -462,6 +466,18 @@ namespace KinectMotionCapture
             frameSequence.Segmentations = segm.ToList();
             segm = UserSegmentation.Identification(frameSequence, 1);
             frameSequence.Segmentations = segm.ToList();
+            // UserIdを選択するUI
+            ComboBox[] boxes = { UserIdBox1, UserIdBox2, UserIdBox3, UserIdBox4 };
+            for (int recordNo = 0; recordNo < frameSequence.recordNum; recordNo++)
+            {
+                boxes[recordNo].SelectedItem = null;
+                boxes[recordNo].Items.Clear();
+                Dictionary<ulong, int> map = frameSequence.Segmentations[recordNo].Conversions.Last().Value;
+                foreach (int id in map.Select(pair => pair.Value).OrderBy(num => num).Distinct())
+                {
+                    boxes[recordNo].Items.Add(id.ToString());
+                }
+            }
         }
     }
 }
