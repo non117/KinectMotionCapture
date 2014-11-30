@@ -504,5 +504,15 @@ namespace KinectMotionCapture
                 Utility.SaveBodySequence(mergedBodies[userId], path);
             }
         }
+
+        private void ExportConversionMatrix_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void ImportConversionMatrix_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }
