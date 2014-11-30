@@ -165,10 +165,13 @@ namespace KinectMotionCapture
                 foreach (ulong id in frameSequence.userIdList[recordNo])
                 {
                     string idStr = id.ToString();
-                    Dictionary<ulong, int> map = frameSequence.Segmentations[recordNo].Conversions.Last().Value;
-                    if (map.ContainsKey(id))
+                    if (frameSequence.Segmentations != null)
                     {
-                        idStr = map[id].ToString();
+                        Dictionary<ulong, int> map = frameSequence.Segmentations[recordNo].Conversions.Last().Value;
+                        if (map.ContainsKey(id))
+                        {
+                            idStr = map[id].ToString();
+                        }
                     }
                     boxes[recordNo].Items.Add(idStr);
                 }
@@ -263,10 +266,11 @@ namespace KinectMotionCapture
                         {
                             text = frameSequence.UserMapping[userId].ToString();
                         }
+                        // TODO: 縁取りテキスト, http://gushwell.ldblog.jp/archives/52312432.html
                         fmt = new FormattedText(text,
                             System.Globalization.CultureInfo.CurrentCulture,
                             System.Windows.FlowDirection.LeftToRight,
-                            new Typeface("Arial"), 50.0, Brushes.WhiteSmoke
+                            new Typeface("Arial"), 50.0, Brushes.Cyan
                             );
                         dc.DrawText(fmt, idPointList[user].Item2);
                     }
