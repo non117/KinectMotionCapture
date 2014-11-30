@@ -223,16 +223,13 @@ namespace KinectMotionCapture
         /// <param name="frame"></param>
         private void UpdateDisplay(Frame frame)
         {
-            Label[] labels = { UserIdLabel1, UserIdLabel2, UserIdLabel3, UserIdLabel4 };
             Label[] timeLabels = { Box1Timer, Box2Timer, Box3Timer, Box4Timer };
             Image[] images = { Image1, Image2, Image3, Image4 };
             DrawingGroup[] drawings = { drawingGroup1, drawingGroup2, drawingGroup3, drawingGroup4 };
 
             for (int i = 0; i < frameSequence.recordNum; i++)
             {
-                labels[i].Content = String.Join(",", frame.GetBodyIdList(i));
                 images[i].Source = new BitmapImage(new Uri(frame.ColorImagePathList[i]));
-                // Fix : ここpublicなメンバに直接アクセスしてる
                 timeLabels[i].Content = frame.GetMotionData(i).TimeStamp.ToString(@"ss\:fff");
 
                 // Boneの描画
@@ -247,6 +244,13 @@ namespace KinectMotionCapture
                     for (int user = 0; user < pointsList.Count(); user++)
                     {
                         this.DrawBody(pointsList[user], jointsList[user], dc);
+                        // user id の描画
+                        FormattedText fmt = new FormattedText(idPointList[user].Item1.ToString(),
+                            System.Globalization.CultureInfo.CurrentCulture,
+                            System.Windows.FlowDirection.LeftToRight,
+                            new Typeface("Arial"), 50.0, Brushes.WhiteSmoke
+                            );
+                        dc.DrawText(fmt, idPointList[user].Item2);
                     }
                     drawings[i].ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, colorSize.Width, colorSize.Height));
                 }
