@@ -494,5 +494,15 @@ namespace KinectMotionCapture
                 }
             }
         }
+
+        private void ExportAllBodiesAsBinary_Click(object sender, RoutedEventArgs e)
+        {
+            Dictionary<int, List<Dictionary<JointType, CvPoint3D64f>>> mergedBodies = SkeletonInterpolator.ExportFromProject(frameSequence);
+            foreach (int userId in mergedBodies.Keys)
+            {
+                string path = Path.Combine(Environment.CurrentDirectory, userId.ToString() + @"_Body.dump");
+                Utility.SaveBodySequence(mergedBodies[userId], path);
+            }
+        }
     }
 }

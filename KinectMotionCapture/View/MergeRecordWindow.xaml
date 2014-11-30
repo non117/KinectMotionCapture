@@ -142,7 +142,10 @@
             </Grid>
         </Border>
         <Menu Name="Menu" VerticalAlignment="Top">
-            <MenuItem Name="MenuFile" Header="File"></MenuItem>
+            <MenuItem Name="MenuFile" Header="File">
+                <Separator/>
+                <MenuItem Name="ExportAllBodiesAsBinary" Header="全てのユーザをバイナリで出力" Click="ExportAllBodiesAsBinary_Click"/>
+            </MenuItem>            
             <MenuItem Name="MenuCalib" Header="Calibration">
                 <MenuItem Name="Segmentation" Header="検出ユーザのセグメンテーションとフレーム間統合" Click="Segmentation_Click"/>
                 <Separator/>

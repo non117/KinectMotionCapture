@@ -31,10 +31,10 @@ namespace KinectMotionCapture
         /// <param name="time"></param>
         /// <param name="user"></param>
         /// <returns></returns>
-        public double GetVarianceWeight(MotionData prevFrame, MotionData nextFrame, DateTime time, ulong user)
+        public double GetVarianceWeight(MotionData prevFrame, MotionData nextFrame, SerializableBody prevBody, SerializableBody nextBody, DateTime time)
         {
-            Dictionary<JointType, CameraSpacePoint> prevJoints = Utility.GetValidJointPoints(prevFrame.bodies, user);
-            Dictionary<JointType, CameraSpacePoint> nextJoints = Utility.GetValidJointPoints(nextFrame.bodies, user);
+            Dictionary<JointType, CameraSpacePoint> prevJoints = Utility.GetValidJointPointsFromJoints(prevBody.Joints);
+            Dictionary<JointType, CameraSpacePoint> nextJoints = Utility.GetValidJointPointsFromJoints(nextBody.Joints);
             if (prevJoints == null || prevJoints.Count == 0)
                 return 0;
             if (nextJoints == null || nextJoints.Count == 0)
@@ -51,13 +51,14 @@ namespace KinectMotionCapture
         /// <param name="time"></param>
         /// <param name="user"></param>
         /// <returns></returns>
-        public double GetSkeletonReliability(MotionData prevFrame, MotionData nextFrame, DateTime time, ulong user, CameraIntrinsics cameraInfo)
+        public double GetSkeletonReliability(MotionData prevFrame, MotionData nextFrame, SerializableBody prevBody, SerializableBody nextBody, DateTime time, 
+            CameraIntrinsics cameraInfo)
         {
             double periodAfter = (time - prevFrame.TimeStamp).TotalSeconds;
             double periodBefore = (nextFrame.TimeStamp - time).TotalSeconds;
             double weightPeriod = Math.Exp(-periodAfter / 0.2) + Math.Exp(-periodBefore / 0.2);
-            Dictionary<JointType, CameraSpacePoint> prevJoints = Utility.GetValidJointPoints(prevFrame.bodies, user);
-            Dictionary<JointType, CameraSpacePoint> nextJoints = Utility.GetValidJointPoints(nextFrame.bodies, user);
+            Dictionary<JointType, CameraSpacePoint> prevJoints = Utility.GetValidJointPointsFromJoints(prevBody.Joints);
+            Dictionary<JointType, CameraSpacePoint> nextJoints = Utility.GetValidJointPointsFromJoints(nextBody.Joints);
             if (prevJoints == null || prevJoints.Count == 0)
                 return 0;
             if (nextJoints == null || nextJoints.Count == 0)
@@ -90,7 +91,8 @@ namespace KinectMotionCapture
             _omitWhenDataLack = omitWhenDataLack;
         }
 
-        public Dictionary<JointType, CvPoint3D64f> InterpolateSkeleton(MotionData prevFrame, MotionData nextFrame, DateTime time, ulong user, CvMat ToWorldConversion)
+        public Dictionary<JointType, CvPoint3D64f> InterpolateSkeleton(MotionData prevFrame, MotionData nextFrame, SerializableBody prevBody, SerializableBody nextBody,
+            DateTime time, CvMat ToWorldConversion)
         {
             double prevWeight;
             if (prevFrame.TimeStamp >= nextFrame.TimeStamp)
@@ -102,8 +104,8 @@ namespace KinectMotionCapture
                 prevWeight = (time - prevFrame.TimeStamp).TotalSeconds / (nextFrame.TimeStamp - prevFrame.TimeStamp).TotalSeconds;
             }
             double nextWeight = 1.0 - prevWeight;
-            Dictionary<JointType, CameraSpacePoint> prevJoints = Utility.GetValidJointPoints(prevFrame.bodies, user);
-            Dictionary<JointType, CameraSpacePoint> nextJoints = Utility.GetValidJointPoints(nextFrame.bodies, user);
+            Dictionary<JointType, CameraSpacePoint> prevJoints = Utility.GetValidJointPointsFromJoints(prevBody.Joints);
+            Dictionary<JointType, CameraSpacePoint> nextJoints = Utility.GetValidJointPointsFromJoints(nextBody.Joints);
             if (prevJoints == null || nextJoints == null)
                 return null;
             Dictionary<JointType, CvPoint3D64f> prevData = prevJoints.ToDictionary(p => p.Key, p => (CvPoint3D64f)p.Value.ToCvPoint3D());
@@ -134,7 +136,8 @@ namespace KinectMotionCapture
             return ret;
         }
 
-        public Dictionary<JointType, CvPoint3D64f> IntegrateSkeleton(Frame frame, ulong user, List<CvMat> ToWorldConversions, CameraIntrinsics cameraInfo)
+        public Dictionary<JointType, CvPoint3D64f> IntegrateSkeleton(Frame frame, int userInt, List<CvMat> ToWorldConversions,
+            CameraIntrinsics cameraInfo, List<UserSegmentation> segm)
         {
             Dictionary<JointType, CvPoint3D64f>[] jointsArr = new Dictionary<JointType, CvPoint3D64f>[frame.recordNum];
             double[] reliabilityList = new double[frame.recordNum];
@@ -144,9 +147,12 @@ namespace KinectMotionCapture
                 MotionData prevData = frame.GetMotionData(recordNo);
                 MotionData nextData = frame.GetNextMotionData(recordNo);
                 DateTime time = frame.Time;
-                jointsArr[recordNo] = this.InterpolateSkeleton(prevData, nextData, time, user, ToWorldConversions[recordNo]);
-                reliabilityList[recordNo] = this.GetSkeletonReliability(prevData, nextData, time, user, cameraInfo);
-                weightList[recordNo] = this.GetVarianceWeight(prevData, nextData, time, user);
+                ulong[] users = segm[recordNo].Conversions.Last().Value.Where(pair => pair.Value == userInt).Select(pair => pair.Key).ToArray();
+                SerializableBody prevBody = prevData.bodies.Where(b => users.Contains(b.TrackingId)).First();
+                SerializableBody nextBody = nextData.bodies.Where(b => users.Contains(b.TrackingId)).First();
+                jointsArr[recordNo] = this.InterpolateSkeleton(prevData, nextData, prevBody, nextBody, time, ToWorldConversions[recordNo]);
+                reliabilityList[recordNo] = this.GetSkeletonReliability(prevData, nextData, prevBody, nextBody, time, cameraInfo);
+                weightList[recordNo] = this.GetVarianceWeight(prevData, nextData, prevBody, nextBody, time);
             }
             double maxWeight = weightList.Max();
             double[] modifiedReliabilityList = weightList.Select(w => Math.Max(0, (w / maxWeight) - _weightBase)).Zip(reliabilityList, (a, b) => a * b).ToArray();
@@ -157,9 +163,9 @@ namespace KinectMotionCapture
             return CalcEx.LinearMedianSkeletons(jointsArr, modifiedReliabilityList);
         }
 
-        public static Dictionary<ulong, List<Dictionary<JointType, CvPoint3D64f>>> ExportFromProject(FrameSequence frameseq)
+        public static Dictionary<int, List<Dictionary<JointType, CvPoint3D64f>>> ExportFromProject(FrameSequence frameseq)
         {
-            HashSet<Tuple<ulong, JointType>> uniqueUserJoint = new HashSet<Tuple<ulong, JointType>>();
+            HashSet<Tuple<int, JointType>> uniqueUserJoint = new HashSet<Tuple<int, JointType>>();
             foreach(Frame frame in frameseq.Frames){
                 for (int i = 0; i < frameseq.recordNum; i++)
                 {
@@ -168,7 +174,7 @@ namespace KinectMotionCapture
                         foreach (JointType jointType in Utility.GetValidJoints(body.Joints).Keys)
                         {
                             // TrackingIdと勝手に作ったuser idの対応辞書が必要. 以下の処理はとりあえず
-                            Tuple<ulong, JointType> userJoint = new Tuple<ulong, JointType>(body.TrackingId, jointType);
+                            Tuple<int, JointType> userJoint = new Tuple<int, JointType>(frameseq.UserMapping[body.TrackingId], jointType);
                             if (!uniqueUserJoint.Contains(userJoint))
                             {
                                 uniqueUserJoint.Add(userJoint);
@@ -178,21 +184,22 @@ namespace KinectMotionCapture
                 }
             }
 
-            List<Tuple<ulong, JointType>> userJointPairs = (
+            List<Tuple<int, JointType>> userJointPairs = (
                 from pair in uniqueUserJoint
                 orderby pair.Item1, pair.Item2
                 select pair
                 ).ToList();
 
-            Dictionary<ulong, List<Dictionary<JointType, CvPoint3D64f>>> allBodies = new Dictionary<ulong, List<Dictionary<JointType, CvPoint3D64f>>>();
+            Dictionary<int, List<Dictionary<JointType, CvPoint3D64f>>> allBodies = new Dictionary<int, List<Dictionary<JointType, CvPoint3D64f>>>();
             SkeletonInterpolator skeletonInterpolator = new SkeletonInterpolator(0.5, true);
-            foreach (ulong user in userJointPairs.Select(p => p.Item1).Distinct())            
+            foreach (int user in userJointPairs.Select(p => p.Item1).Distinct())            
             {
                 List<Dictionary<JointType, CvPoint3D64f>> jointsSeq = new List<Dictionary<JointType, CvPoint3D64f>>();
                 for (int i = 0; i < frameseq.Frames.Count() - 1; i++)
                 {
                     Frame curr = frameseq.Frames[i];
-                    Dictionary<JointType, CvPoint3D64f> joints = skeletonInterpolator.IntegrateSkeleton(curr, user, frameseq.ToWorldConversions, frameseq.CameraInfo);
+                    Dictionary<JointType, CvPoint3D64f> joints = skeletonInterpolator.IntegrateSkeleton(curr, user, frameseq.ToWorldConversions,
+                        frameseq.CameraInfo, frameseq.Segmentations);
                         if (joints != null) {
                             jointsSeq.Add(joints);                            
                     }

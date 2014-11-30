@@ -255,6 +255,16 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
+        /// JointのDicから座標だけのやつに
+        /// </summary>
+        /// <param name="joints"></param>
+        /// <returns></returns>
+        public static Dictionary<JointType, CameraSpacePoint> GetValidJointPointsFromJoints(Dictionary<JointType, Joint> joints)
+        {
+            return GetValidJoints(joints).ToDictionary(p => p.Key, p => p.Value.Position);
+        }
+
+        /// <summary>
         /// Body[]を入力にとってTrackedな関節点座標をフィルターして返す
         /// </summary>
         /// <param name="bodies"></param>
@@ -276,6 +286,17 @@ namespace KinectMotionCapture
         /// <param name="bodies"></param>
         /// <param name="path"></param>
         public static void SaveBodySequence(List<Dictionary<JointType, Joint>> bodies, string path)
+        {
+            List<Dictionary<int, float[]>> serializableBodies = Utility.ConverToCompatibleJoint(bodies);
+            Utility.SaveToBinary(serializableBodies, path);
+        }
+
+        /// <summary>
+        /// 時系列Bodyをシリアライズして保存する
+        /// </summary>
+        /// <param name="bodies"></param>
+        /// <param name="path"></param>
+        public static void SaveBodySequence(List<Dictionary<JointType, CvPoint3D64f>> bodies, string path)
         {
             List<Dictionary<int, float[]>> serializableBodies = Utility.ConverToCompatibleJoint(bodies);
             Utility.SaveToBinary(serializableBodies, path);
