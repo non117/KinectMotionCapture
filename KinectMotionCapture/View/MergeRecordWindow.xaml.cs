@@ -57,21 +57,21 @@ namespace KinectMotionCapture
         private void LoadFrames()
         {
             string[] datadir = new string[] {
-                                                    @"F:\kinect1",  
-                                                    @"F:\kinect2", 
-                                                    @"F:\kinect3", 
-                                                    @"F:\kinect4", 
+                                                    @"E:\kinect1",  
+                                                    @"E:\kinect2", 
+                                                    @"E:\kinect3", 
+                                                    @"E:\kinect4", 
             };
             List<string> mapdir = new List<string>() {
-                                                    @"F:\kinect1_coordmap.dump",  
-                                                    @"F:\kinect2_coordmap.dump", 
-                                                    @"F:\kinect3_coordmap.dump", 
-                                                    @"F:\kinect4_coordmap.dump", 
+                                                    @"E:\kinect1_coordmap.dump",  
+                                                    @"E:\kinect2_coordmap.dump", 
+                                                    @"E:\kinect3_coordmap.dump", 
+                                                    @"E:\kinect4_coordmap.dump", 
             };
-            //string cameradir = @"E:\CameraInfo.dump";
+            string cameradir = @"E:\CameraInfo.dump";
             this.frameSequence = new FrameSequence(datadir);
             this.frameSequence.LocalCoordinateMappers = mapdir.Select(s => (LocalCoordinateMapper)Utility.LoadFromBinary(s)).ToList();
-            //this.frameSequence.CameraInfo = (CameraIntrinsics)Utility.LoadFromBinary(cameradir);
+            this.frameSequence.CameraInfo = (CameraIntrinsics)Utility.LoadFromBinary(cameradir);
         }
 
         public MergeRecordWindow()
@@ -440,7 +440,6 @@ namespace KinectMotionCapture
                 List<CvMat> convs = KinectMerge.GetConvMatrixFromBoneFrameSequence(frameSequence, startIndex, endIndex);
                 frameSequence.ToWorldConversions = convs;
             }
-            //var mergedBodies = SkeletonInterpolator.ExportFromProject(frameSequence);
 
             // DEBUG
             IEnumerable<Frame> frames = frameSequence.Slice(this.startIndex, this.endIndex).Where(f => f.IsAllBodyAvailable());
@@ -449,10 +448,6 @@ namespace KinectMotionCapture
                 Dictionary<JointType, Joint> joints = Utility.ApplyConversions(frames.First().GetMotionData(i).bodies[0].Joints, frameSequence.ToWorldConversions[i]);
                 CameraSpacePoint p = joints[JointType.SpineBase].Position;
                 Debug.WriteLine(string.Format("{0},{1},{2}", p.X, p.Y, p.Z));
-
-                List<Dictionary<JointType, Joint>> body = frames.Select(
-                    f => Utility.ApplyConversions(f.GetMotionData(i).bodies[0].Joints, frameSequence.ToWorldConversions[i])).ToList();
-                //Utility.SaveBodySequence(body, string.Format(@"C:\Users\non\Desktop\joints{0}.dump", i + 1));
             }
         }
 
@@ -505,14 +500,29 @@ namespace KinectMotionCapture
             }
         }
 
+        private void ExportSelectedBodiesAsBinary_Click(object sender, RoutedEventArgs e)
+        {
+            Dictionary<int, List<Dictionary<JointType, CvPoint3D64f>>> mergedBodies = SkeletonInterpolator.ExportFromProject(frameSequence);
+            // IDは統合されているものとする
+            string path = Path.Combine(Environment.CurrentDirectory, @"SelectedUserBody.dump");
+            int id = this.frameSequence.selecteedIntegretedIdList[0];
+            if (this.frameSequence.selecteedIntegretedIdList.All(i => i == id))
+            {
+                Utility.SaveBodySequence(mergedBodies[id], path);
+            }
+        }
+
         private void ExportConversionMatrix_Click(object sender, RoutedEventArgs e)
         {
-
+            string path = Path.Combine(Environment.CurrentDirectory, @"ConversionMatrix.dump");
+            Utility.SaveToBinary(frameSequence.ToWorldConversions, path);
         }
 
         private void ImportConversionMatrix_Click(object sender, RoutedEventArgs e)
         {
-
+            string path = Path.Combine(Environment.CurrentDirectory, @"ConversionMatrix.dump");
+            List<CvMat> conversions = (List<CvMat>)Utility.LoadFromBinary(path);
+            frameSequence.ToWorldConversions = conversions;
         }
     }
 }
