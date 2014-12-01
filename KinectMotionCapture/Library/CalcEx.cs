@@ -1703,7 +1703,7 @@ namespace KinectMotionCapture
                 case JointType.ShoulderRight:
                     return JointType.ShoulderLeft;
                 case JointType.ThumbRight:
-                    return JointType.ThumbRight;
+                    return JointType.ThumbLeft;
                 case JointType.WristRight:
                     return JointType.WristLeft;
 

@@ -159,6 +159,8 @@
             </MenuItem>
             <MenuItem Name="Edit" Header="Edit">
                 <MenuItem Name="MirrorSelectedRecord" Header="選択中のレコードの選択されたユーザの骨格情報を左右反転する" Click="MirrorSelectedRecord_Click"/>
+                <Separator/>
+                <MenuItem Name="ResetMirroredBodies" Header="全てのレコードの反転状態を初期化する" Click="ResetMirroredBodies_Click"/>
             </MenuItem>
             <MenuItem Name="MenuCalib" Header="Calibration">
                 <MenuItem Name="Segmentation" Header="検出ユーザのセグメンテーションとフレーム間統合" Click="Segmentation_Click"/>

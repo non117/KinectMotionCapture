@@ -353,6 +353,30 @@ namespace KinectMotionCapture
             }
         }
 
+        /// <summary>
+        /// Bodyの関節を反転する
+        /// </summary>
+        public void InverseJoints()
+        {
+            Dictionary<JointType, Joint> newJoints = new Dictionary<JointType, Joint>();
+            Dictionary<JointType, Point> newColorPoints = new Dictionary<JointType, Point>();
+            Dictionary<JointType, Point> newDepthPoints = new Dictionary<JointType, Point>();
+            foreach (JointType key in Enum.GetValues(typeof(JointType)))
+            {
+                JointType newKey = CalcEx.GetMirroredJoint(key);
+                if (this.Joints.ContainsKey(key))
+                    newJoints[newKey] = this.Joints[key];
+                if (this.colorSpacePoints.ContainsKey(key))
+                    newColorPoints[newKey] = this.colorSpacePoints[key];
+                if (this.depthSpacePoints.ContainsKey(key))
+                    newDepthPoints[newKey] = this.depthSpacePoints[key];
+
+            }
+            this.Joints = newJoints;
+            this.colorSpacePoints = newColorPoints;
+            this.depthSpacePoints = newDepthPoints;
+        }
+
         public Dictionary<Activity, DetectionResult> Activities { get; set; }
         public Dictionary<Appearance, DetectionResult> Appearance { get; set; }
         public FrameEdges ClippedEdges { get; set; }
@@ -372,5 +396,7 @@ namespace KinectMotionCapture
         public ulong TrackingId { get; set; }
         public Dictionary<JointType, Point> colorSpacePoints { get; set; }
         public Dictionary<JointType, Point> depthSpacePoints { get; set; }
+        [NonSerialized]
+        public bool mirrored = false;
     }
 }

@@ -558,5 +558,11 @@ namespace KinectMotionCapture
                 }
             }
         }
+
+        private void ResetMirroredBodies_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (Frame frame in this.frameSequence.Frames)
+                frame.ResetInversedBody();
+        }
     }
 }

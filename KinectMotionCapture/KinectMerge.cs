@@ -506,13 +506,25 @@ namespace KinectMotionCapture
             {
                 if (UserIds.Contains(body.TrackingId))
                 {
-                    Dictionary<JointType, Joint> newJoints = new Dictionary<JointType,Joint>();
-                    foreach (JointType key in body.Joints.Keys)
+                    body.InverseJoints();
+                    body.mirrored = !body.mirrored;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 全てのBodyの反転状態を初期化する
+        /// </summary>
+        public void ResetInversedBody()
+        {
+            foreach (MotionData md in this.records)
+            {
+                foreach (SerializableBody body in md.bodies)
+                {
+                    if (body.mirrored)
                     {
-                        JointType newKey = CalcEx.GetMirroredJoint(key);
-                        newJoints[newKey] = body.Joints[key];
+                        body.InverseJoints();
                     }
-                    body.Joints = newJoints;
                 }
             }
         }
