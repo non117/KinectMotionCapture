@@ -64,11 +64,13 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="150"/>
                                     <ColumnDefinition Width="220"/>
+                                    <ColumnDefinition Width="80"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <Label Name="Box1Text" Content="User Selection" Grid.Column="0" Margin="5" Height="25" Width="100"/>
                                 <ComboBox Name="UserIdBox1" Grid.Column="1" Margin="10" Height="25" Width="200" HorizontalAlignment="Left" SelectionChanged="UserIdBox_SelectionChanged"/>
-                                <Label Name="Box1Timer" Content="00:000" Grid.Column="2" Margin="5" Height="25" Width="60"/>
+                                <CheckBox Name="RecordSelect1" Content="Select" Margin="10" Grid.Column="2" VerticalAlignment="Center" Click="RecordSelect_Clicked"/>
+                                <Label Name="Box1Timer" Content="00:000" Grid.Column="3" Margin="5" Height="25" Width="60"/>
 
                             </Grid>
                             <Image Name="Image1" Grid.Row="1" Margin="5"/>
@@ -85,11 +87,13 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="150"/>
                                     <ColumnDefinition Width="220"/>
+                                    <ColumnDefinition Width="80"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <Label Name="Box2Text" Content="User Selection" Grid.Column="0" Margin="5" Height="25" Width="100"/>
                                 <ComboBox Name="UserIdBox2" Grid.Column="1" Margin="10" Height="25" Width="200" HorizontalAlignment="Left" SelectionChanged="UserIdBox_SelectionChanged"/>
-                                <Label Name="Box2Timer" Content="00:000" Grid.Column="2" Margin="5" Height="25" Width="60"/>
+                                <CheckBox Name="RecordSelect2" Content="Select" Margin="10" Grid.Column="2" VerticalAlignment="Center" Click="RecordSelect_Clicked"/>
+                                <Label Name="Box2Timer" Content="00:000" Grid.Column="3" Margin="5" Height="25" Width="60"/>
 
                             </Grid>
                             <Image Name="Image2" Grid.Row="1" Margin="5"/>
@@ -106,11 +110,13 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="150"/>
                                     <ColumnDefinition Width="220"/>
+                                    <ColumnDefinition Width="80"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <Label Name="Box3Text" Content="User Selection" Grid.Column="0" Margin="5" Height="25" Width="100"/>
                                 <ComboBox Name="UserIdBox3" Grid.Column="1" Margin="10" Height="25" Width="200" HorizontalAlignment="Left" SelectionChanged="UserIdBox_SelectionChanged"/>
-                                <Label Name="Box3Timer" Content="00:000" Grid.Column="2" Margin="5" Height="25" Width="60"/>
+                                <CheckBox Name="RecordSelect3" Content="Select" Margin="10" Grid.Column="2" VerticalAlignment="Center" Click="RecordSelect_Clicked"/>
+                                <Label Name="Box3Timer" Content="00:000" Grid.Column="3" Margin="5" Height="25" Width="60"/>
                             </Grid>
                             <Image Name="Image3" Grid.Row="1" Margin="5"/>
                             <Image Name="BodyImage3" Grid.Row="1" Margin="5" Source="{Binding BodyImageSource3}"/>
@@ -126,11 +132,13 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="150"/>
                                     <ColumnDefinition Width="220"/>
+                                    <ColumnDefinition Width="80"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <Label Name="Box4Text" Content="User Selection" Grid.Column="0" Margin="5" Height="25" Width="100"/>
                                 <ComboBox Name="UserIdBox4" Grid.Column="1" Margin="10" Height="25" Width="200" HorizontalAlignment="Left" SelectionChanged="UserIdBox_SelectionChanged"/>
-                                <Label Name="Box4Timer" Content="00:000" Grid.Column="2" Margin="5" Height="25" Width="60"/>
+                                <CheckBox Name="RecordSelect4" Content="Select" Margin="10" Grid.Column="2" VerticalAlignment="Center" Click="RecordSelect_Clicked"/>
+                                <Label Name="Box4Timer" Content="00:000" Grid.Column="3" Margin="5" Height="25" Width="60"/>
                             </Grid>
                             <Image Name="Image4" Grid.Row="1" Margin="5"/>
                             <Image Name="BodyImage4" Grid.Row="1" Margin="5" Source="{Binding BodyImageSource4}"/>
@@ -152,11 +160,11 @@
             <MenuItem Name="MenuCalib" Header="Calibration">
                 <MenuItem Name="Segmentation" Header="検出ユーザのセグメンテーションとフレーム間統合" Click="Segmentation_Click"/>
                 <Separator/>
-                <MenuItem Name="MenuCalibBoneFrame" Header="現在のフレームの骨格で座標統合" Click="MenuCalibBoneFrame_Click" />
-                <MenuItem Name="MenuCalibBoneFrameRange" Header="フレーム範囲の骨格で座標統合" Click="MenuCalibBoneFrameRange_Click" />
+                <MenuItem Name="MenuCalibBoneFrame" Header="現在のフレームの骨格で座標統合行列を計算" Click="MenuCalibBoneFrame_Click" />
+                <MenuItem Name="MenuCalibBoneFrameRange" Header="フレーム範囲の骨格で座標統合行列を計算" Click="MenuCalibBoneFrameRange_Click" />
                 <Separator/>
-                <MenuItem Name="MenuCalibDepthFrame" Header="現在のフレームの深度画像で座標統合" Click="MenuCalibDepthFrame_Click" />
-                <MenuItem Name="MenuCalibDepthFrameRange" Header="フレーム範囲の深度画像で座標統合" Click="MenuCalibDepthFrameRange_Click" />
+                <MenuItem Name="MenuCalibDepthFrame" Header="現在のフレームの深度画像で座標統合行列を計算" Click="MenuCalibDepthFrame_Click" />
+                <MenuItem Name="MenuCalibDepthFrameRange" Header="フレーム範囲の深度画像で座標統合行列を計算" Click="MenuCalibDepthFrameRange_Click" />
             </MenuItem>
         </Menu>
     </Grid>

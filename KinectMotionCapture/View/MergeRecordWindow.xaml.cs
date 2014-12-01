@@ -36,7 +36,8 @@ namespace KinectMotionCapture
         private int endIndex;
         private bool isPlaying;
 
-        private bool[] isSelected;
+        private bool[] isUserSelected;
+        private bool[] isRecordSelected;
 
         private DrawingGroup drawingGroup1;
         private DrawingImage bodyImageSource1;
@@ -150,7 +151,8 @@ namespace KinectMotionCapture
             CompositionTarget.Rendering += this.CompositionTargetRendering;
             this.LoadFrames();
 
-            this.isSelected = new bool[this.frameSequence.recordNum];
+            this.isUserSelected = new bool[this.frameSequence.recordNum];
+            this.isRecordSelected = new bool[this.frameSequence.recordNum];
             
             // player関係
             this.playingIndex = 0;
@@ -379,13 +381,13 @@ namespace KinectMotionCapture
                 {
                     ulong bodyId = ulong.Parse(box.SelectedItem.ToString());
                     this.frameSequence.SetUserID(index, bodyId);
-                    this.isSelected[index] = true;
+                    this.isUserSelected[index] = true;
                 }
                 else
                 {
                     int bodyId = int.Parse(box.SelectedItem.ToString());
                     this.frameSequence.setIntegratedID(index, bodyId);
-                    this.isSelected[index] = true;
+                    this.isUserSelected[index] = true;
                 }
             }
         }
@@ -416,7 +418,7 @@ namespace KinectMotionCapture
         {
             Frame frame = frameSequence.Frames[playingIndex];
             List<CvMat> convs;
-            if (this.isSelected.All(b => b == true))
+            if (this.isUserSelected.All(b => b == true))
             {
                 if (this.frameSequence.Segmentations == null)
                 {
@@ -435,7 +437,7 @@ namespace KinectMotionCapture
         private void MenuCalibBoneFrameRange_Click(object sender, RoutedEventArgs e)
         {
             ulong[] selectedUsers = frameSequence.selectedUserIdList;
-            if (this.isSelected.All(b => b == true))
+            if (this.isUserSelected.All(b => b == true))
             {
                 List<CvMat> convs = KinectMerge.GetConvMatrixFromBoneFrameSequence(frameSequence, startIndex, endIndex);
                 frameSequence.ToWorldConversions = convs;
@@ -481,7 +483,7 @@ namespace KinectMotionCapture
             {
                 boxes[recordNo].SelectedItem = null;
                 boxes[recordNo].Items.Clear();
-                this.isSelected[recordNo] = false;
+                this.isUserSelected[recordNo] = false;
                 Dictionary<ulong, int> map = frameSequence.Segmentations[recordNo].Conversions.Last().Value;
                 foreach (int id in map.Select(pair => pair.Value).OrderBy(num => num).Distinct())
                 {
@@ -524,6 +526,14 @@ namespace KinectMotionCapture
             string path = Path.Combine(Environment.CurrentDirectory, @"ConversionMatrix.dump");
             List<SerializableCvMat> conversions = (List<SerializableCvMat>)Utility.LoadFromBinary(path);
             frameSequence.ToWorldConversions = conversions.Select(mat => mat.CreateCvMat()).ToList();
+        }
+
+        private void RecordSelect_Clicked(object sender, RoutedEventArgs e)
+        {
+            CheckBox box = (CheckBox)sender;
+            int i = box.Name.Length - 1;
+            int index = box.Name[i] - '0' - 1;
+            this.isRecordSelected[index] = (bool)box.IsChecked;
         }
     }
 }
