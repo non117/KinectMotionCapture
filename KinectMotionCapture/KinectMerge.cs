@@ -56,6 +56,28 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
+        /// 統合IDに対応するオリジナルid[]のマッピング
+        /// </summary>
+        public List<Dictionary<int, ulong[]>> InversedUserMapping
+        {
+            get
+            {
+                List<Dictionary<int, ulong[]>> ret = new List<Dictionary<int, ulong[]>>();
+                foreach (UserSegmentation segm in this.Segmentations)
+                {
+                    Dictionary<ulong, int> mapping = segm.Conversions.Last().Value;
+                    Dictionary<int, ulong[]> retIn = new Dictionary<int, ulong[]>();
+                    foreach (int key in mapping.Values.Distinct())
+                    {
+                        retIn[key] = (from pair in mapping where pair.Value == key select pair.Key).ToArray();
+                    }
+                    ret.Add(retIn);
+                }
+                return ret;
+            }
+        }
+
+        /// <summary>
         /// オリジナルのTrackingIdとセグメンテーションによって振り直したidの対応
         /// </summary>
         public Dictionary<ulong, int> UserMapping
@@ -470,6 +492,29 @@ namespace KinectMotionCapture
         public bool IsAllBodyAvailable()
         {
             return this.records.All(md => md.bodies.Length != 0);
+        }
+
+        /// <summary>
+        /// Bodyの左右を反転する
+        /// </summary>
+        /// <param name="recordNo"></param>
+        /// <param name="UserIds"></param>
+        public void InverseBody(int recordNo, List<ulong> UserIds)
+        {
+            MotionData md = this.records[recordNo];
+            foreach (SerializableBody body in md.bodies)
+            {
+                if (UserIds.Contains(body.TrackingId))
+                {
+                    Dictionary<JointType, Joint> newJoints = new Dictionary<JointType,Joint>();
+                    foreach (JointType key in body.Joints.Keys)
+                    {
+                        JointType newKey = CalcEx.GetMirroredJoint(key);
+                        newJoints[newKey] = body.Joints[key];
+                    }
+                    body.Joints = newJoints;
+                }
+            }
         }
 
         /// <summary>

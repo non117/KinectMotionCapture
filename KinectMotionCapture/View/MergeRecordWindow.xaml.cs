@@ -535,5 +535,28 @@ namespace KinectMotionCapture
             int index = box.Name[i] - '0' - 1;
             this.isRecordSelected[index] = (bool)box.IsChecked;
         }
+
+        private void MirrorSelectedRecord_Click(object sender, RoutedEventArgs e)
+        {
+            if (this.isRecordSelected.Any())
+            {
+                for (int recordNo = 0; recordNo < this.frameSequence.recordNum; recordNo++)
+                {
+                    if (this.isRecordSelected[recordNo])
+                    {
+                        List<ulong> userIds = new List<ulong>() { this.frameSequence.selectedUserIdList[recordNo] };
+                        if (this.frameSequence.Segmentations != null)
+                        {
+                            int selectedUser = this.frameSequence.selecteedIntegretedIdList[recordNo];
+                            userIds = this.frameSequence.InversedUserMapping[recordNo][selectedUser].ToList();
+                        }
+                        foreach (Frame frame in this.frameSequence.Frames)
+                        {
+                            frame.InverseBody(recordNo, userIds);
+                        }
+                    }
+                }
+            }
+        }
     }
 }

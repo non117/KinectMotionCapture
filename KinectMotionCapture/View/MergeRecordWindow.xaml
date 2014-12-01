@@ -156,7 +156,10 @@
                 <Separator/>
                 <MenuItem Name="ExportAllBodiesAsBinary" Header="全てのユーザをバイナリで出力" Click="ExportAllBodiesAsBinary_Click"/>
                 <MenuItem Name="ExportSelectedBodiesAsBinary" Header="選択中のユーザをバイナリで出力" Click="ExportSelectedBodiesAsBinary_Click"/>
-            </MenuItem>            
+            </MenuItem>
+            <MenuItem Name="Edit" Header="Edit">
+                <MenuItem Name="MirrorSelectedRecord" Header="選択中のレコードの選択されたユーザの骨格情報を左右反転する" Click="MirrorSelectedRecord_Click"/>
+            </MenuItem>
             <MenuItem Name="MenuCalib" Header="Calibration">
                 <MenuItem Name="Segmentation" Header="検出ユーザのセグメンテーションとフレーム間統合" Click="Segmentation_Click"/>
                 <Separator/>
