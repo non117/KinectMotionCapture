@@ -515,14 +515,15 @@ namespace KinectMotionCapture
         private void ExportConversionMatrix_Click(object sender, RoutedEventArgs e)
         {
             string path = Path.Combine(Environment.CurrentDirectory, @"ConversionMatrix.dump");
-            Utility.SaveToBinary(frameSequence.ToWorldConversions, path);
+            List<SerializableCvMat> conversions = frameSequence.ToWorldConversions.Select(mat => SerializableCvMat.CreateOrNull(mat)).ToList();
+            Utility.SaveToBinary(conversions, path);
         }
 
         private void ImportConversionMatrix_Click(object sender, RoutedEventArgs e)
         {
             string path = Path.Combine(Environment.CurrentDirectory, @"ConversionMatrix.dump");
-            List<CvMat> conversions = (List<CvMat>)Utility.LoadFromBinary(path);
-            frameSequence.ToWorldConversions = conversions;
+            List<SerializableCvMat> conversions = (List<SerializableCvMat>)Utility.LoadFromBinary(path);
+            frameSequence.ToWorldConversions = conversions.Select(mat => mat.CreateCvMat()).ToList();
         }
     }
 }

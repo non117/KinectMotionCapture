@@ -146,10 +146,17 @@ namespace KinectMotionCapture
             {
                 MotionData prevData = frame.GetMotionData(recordNo);
                 MotionData nextData = frame.GetNextMotionData(recordNo);
+
+                if (prevData.bodies.Length * nextData.bodies.Length == 0)
+                    return null;
+
                 DateTime time = frame.Time;
                 ulong[] users = segm[recordNo].Conversions.Last().Value.Where(pair => pair.Value == userInt).Select(pair => pair.Key).ToArray();
-                SerializableBody prevBody = prevData.bodies.Where(b => users.Contains(b.TrackingId)).First();
-                SerializableBody nextBody = nextData.bodies.Where(b => users.Contains(b.TrackingId)).First();
+                SerializableBody prevBody = prevData.bodies.Where(b => users.Contains(b.TrackingId)).FirstOrDefault();
+                SerializableBody nextBody = nextData.bodies.Where(b => users.Contains(b.TrackingId)).FirstOrDefault();
+                if (prevBody == null || nextBody == null || prevBody.Equals(default(SerializableBody)) || nextBody.Equals(default(SerializableBody)))
+                    return null;
+
                 jointsArr[recordNo] = this.InterpolateSkeleton(prevData, nextData, prevBody, nextBody, time, ToWorldConversions[recordNo]);
                 reliabilityList[recordNo] = this.GetSkeletonReliability(prevData, nextData, prevBody, nextBody, time, cameraInfo);
                 weightList[recordNo] = this.GetVarianceWeight(prevData, nextData, prevBody, nextBody, time);

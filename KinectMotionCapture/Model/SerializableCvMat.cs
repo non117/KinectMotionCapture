@@ -12,6 +12,7 @@ namespace KinectMotionCapture
     /// <summary>
     /// CvMatを数値データ列のXMLとしてシリアライズ可能な形で保持するクラス
     /// </summary>
+    [Serializable]
     public class SerializableCvMat
     {
         /// <summary>
