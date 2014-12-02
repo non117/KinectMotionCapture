@@ -154,8 +154,8 @@
                 <MenuItem Name="ExportConversionMatrix" Header="座標変換行列を保存" Click="ExportConversionMatrix_Click"/>
                 <MenuItem Name="ImportConversionMatrix" Header="座標変換行列を読み込む" Click="ImportConversionMatrix_Click"/>
                 <Separator/>
-                <MenuItem Name="ExportAllBodiesAsBinary" Header="全てのユーザをバイナリで出力" Click="ExportAllBodiesAsBinary_Click"/>
-                <MenuItem Name="ExportSelectedBodiesAsBinary" Header="選択中のユーザをバイナリで出力" Click="ExportSelectedBodiesAsBinary_Click"/>
+                <MenuItem Name="ExportAllBodiesAsBinary" Header="現在のフレーム範囲の全ユーザをバイナリで出力" Click="ExportAllBodiesAsBinary_Click"/>
+                <MenuItem Name="ExportSelectedBodiesAsBinary" Header="現在のフレーム範囲で選択中のユーザをバイナリで出力" Click="ExportSelectedBodiesAsBinary_Click"/>
             </MenuItem>
             <MenuItem Name="Edit" Header="Edit">
                 <MenuItem Name="MirrorSelectedRecord" Header="選択中のレコードの選択されたユーザの骨格情報を左右反転する" Click="MirrorSelectedRecord_Click"/>

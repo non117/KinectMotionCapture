@@ -494,7 +494,7 @@ namespace KinectMotionCapture
 
         private void ExportAllBodiesAsBinary_Click(object sender, RoutedEventArgs e)
         {
-            Dictionary<int, List<Dictionary<JointType, CvPoint3D64f>>> mergedBodies = SkeletonInterpolator.ExportFromProject(frameSequence);
+            Dictionary<int, List<Dictionary<JointType, CvPoint3D64f>>> mergedBodies = SkeletonInterpolator.ExportFromProject(frameSequence, startIndex, endIndex);
             foreach (int userId in mergedBodies.Keys)
             {
                 string path = Path.Combine(Environment.CurrentDirectory, userId.ToString() + @"_Body.dump");
@@ -504,7 +504,7 @@ namespace KinectMotionCapture
 
         private void ExportSelectedBodiesAsBinary_Click(object sender, RoutedEventArgs e)
         {
-            Dictionary<int, List<Dictionary<JointType, CvPoint3D64f>>> mergedBodies = SkeletonInterpolator.ExportFromProject(frameSequence);
+            Dictionary<int, List<Dictionary<JointType, CvPoint3D64f>>> mergedBodies = SkeletonInterpolator.ExportFromProject(frameSequence, startIndex, endIndex);
             // IDは統合されているものとする
             string path = Path.Combine(Environment.CurrentDirectory, @"SelectedUserBody.dump");
             int id = this.frameSequence.selecteedIntegretedIdList[0];

@@ -143,7 +143,7 @@ namespace KinectMotionCapture
             double[] reliabilityList = new double[frame.recordNum];
             double[] weightList = new double[frame.recordNum];
             bool[] skipped = new bool[frame.recordNum];
-            for (int recordNo = 0; recordNo < frame.recordNum - 1; recordNo++)
+            for (int recordNo = 0; recordNo < frame.recordNum; recordNo++)
             {
                 MotionData prevData = frame.GetMotionData(recordNo);
                 MotionData nextData = frame.GetNextMotionData(recordNo);
@@ -168,10 +168,10 @@ namespace KinectMotionCapture
                 reliabilityList[recordNo] = this.GetSkeletonReliability(prevData, nextData, prevBody, nextBody, time, cameraInfo);
                 weightList[recordNo] = this.GetVarianceWeight(prevData, nextData, prevBody, nextBody, time);
             }
-            if (skipped.Count(b => b) < 3){
+            if (skipped.Count(b => b) >= 2){
                 return null;
             }
-            else if (skipped.Count(b => b) == 3)
+            else if (skipped.Count(b => b) == 1)
             {
                 jointsArr = jointsArr.Where(j => j != default(Dictionary<JointType, CvPoint3D64f>)).ToArray();
                 reliabilityList = reliabilityList.Where(d => d != default(double)).ToArray();
@@ -187,10 +187,11 @@ namespace KinectMotionCapture
             return CalcEx.LinearMedianSkeletons(jointsArr, modifiedReliabilityList);
         }
 
-        public static Dictionary<int, List<Dictionary<JointType, CvPoint3D64f>>> ExportFromProject(FrameSequence frameseq)
+        public static Dictionary<int, List<Dictionary<JointType, CvPoint3D64f>>> ExportFromProject(FrameSequence frameseq, int startIndex, int endIndex)
         {
             HashSet<Tuple<int, JointType>> uniqueUserJoint = new HashSet<Tuple<int, JointType>>();
-            foreach(Frame frame in frameseq.Frames){
+            List<Frame> frames = frameseq.Frames.Skip(startIndex).Take(endIndex - startIndex).ToList();
+            foreach(Frame frame in frames){
                 for (int i = 0; i < frameseq.recordNum; i++)
                 {
                     foreach (SerializableBody body in frame.GetBodyList(i))
@@ -219,9 +220,9 @@ namespace KinectMotionCapture
             foreach (int user in userJointPairs.Select(p => p.Item1).Distinct())            
             {
                 List<Dictionary<JointType, CvPoint3D64f>> jointsSeq = new List<Dictionary<JointType, CvPoint3D64f>>();
-                for (int i = 0; i < frameseq.Frames.Count() - 1; i++)
+                for (int i = 0; i < frames.Count() - 1; i++)
                 {
-                    Frame curr = frameseq.Frames[i];
+                    Frame curr = frames[i];
                     Dictionary<JointType, CvPoint3D64f> joints = skeletonInterpolator.IntegrateSkeleton(curr, user, frameseq.ToWorldConversions,
                         frameseq.CameraInfo, frameseq.Segmentations);
                         if (joints != null) {
