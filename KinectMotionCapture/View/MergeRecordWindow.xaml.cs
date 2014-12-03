@@ -585,7 +585,6 @@ namespace KinectMotionCapture
             if (frameSequence.Segmentations != null && this.isUserSelected.All(b => b))
             {
                 Dictionary<int, List<Dictionary<JointType, CvPoint3D64f>>> mergedBodies = SkeletonInterpolator.ExportFromProject(frameSequence, startIndex, endIndex);
-                // IDは統合されているものとする
                 string path = Path.Combine(Environment.CurrentDirectory, @"SelectedUserBody.dump");
                 int id = this.frameSequence.selecteedIntegretedIdList[0];
                 if (this.frameSequence.selecteedIntegretedIdList.All(i => i == id))
@@ -597,8 +596,10 @@ namespace KinectMotionCapture
                 IEnumerable<Frame> frames = frameSequence.Slice(this.startIndex, this.endIndex).Where(f => f.IsAllBodyAvailable());
                 for (int i = 0; i < frameSequence.recordNum; i++)
                 {
-                    //List<Dictionary<JointType, Joint>> hoge = null;
-                    //Dictionary<JointType, Joint> joints = Utility.ApplyConversions(frames.First().GetMotionData(i).bodies[0].Joints, frameSequence.ToWorldConversions[i]);
+                    var bodies = frames.Select(f => f.GetMotionData(i).bodies.Where(b => b.integratedId == frameSequence.selecteedIntegretedIdList[i]).First());
+                    List<Dictionary<JointType, Joint>> joints = bodies.Select(b => Utility.ApplyConversions(b.Joints, frameSequence.ToWorldConversions[i])).ToList();
+                    path = Path.Combine(Environment.CurrentDirectory, i.ToString() + @"_RecordBodies.dump");
+                    Utility.SaveBodySequence(joints, path);
                 }
             }
         }
