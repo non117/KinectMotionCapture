@@ -155,9 +155,8 @@ namespace KinectMotionCapture
                 }
 
                 DateTime time = frame.Time;
-                ulong[] users = segm[recordNo].Conversions.Last().Value.Where(pair => pair.Value == userInt).Select(pair => pair.Key).ToArray();
-                SerializableBody prevBody = prevData.bodies.Where(b => users.Contains(b.TrackingId)).FirstOrDefault();
-                SerializableBody nextBody = nextData.bodies.Where(b => users.Contains(b.TrackingId)).FirstOrDefault();
+                SerializableBody prevBody = prevData.bodies.Where(b => b.integratedId == userInt).FirstOrDefault();
+                SerializableBody nextBody = nextData.bodies.Where(b => b.integratedId == userInt).FirstOrDefault();
                 if (prevBody == null || nextBody == null || prevBody.Equals(default(SerializableBody)) || nextBody.Equals(default(SerializableBody)))
                 {
                     skipped[recordNo] = true;
@@ -190,7 +189,7 @@ namespace KinectMotionCapture
         public static Dictionary<int, List<Dictionary<JointType, CvPoint3D64f>>> ExportFromProject(FrameSequence frameseq, int startIndex, int endIndex)
         {
             HashSet<Tuple<int, JointType>> uniqueUserJoint = new HashSet<Tuple<int, JointType>>();
-            List<Frame> frames = frameseq.Frames.Skip(startIndex).Take(endIndex - startIndex).ToList();
+            List<Frame> frames = frameseq.Slice(startIndex, endIndex);
             foreach(Frame frame in frames){
                 for (int i = 0; i < frameseq.recordNum; i++)
                 {
@@ -199,7 +198,7 @@ namespace KinectMotionCapture
                         foreach (JointType jointType in Utility.GetValidJoints(body.Joints).Keys)
                         {
                             // TrackingIdと勝手に作ったuser idの対応辞書が必要. 以下の処理はとりあえず
-                            Tuple<int, JointType> userJoint = new Tuple<int, JointType>(frameseq.UserMapping[body.TrackingId], jointType);
+                            Tuple<int, JointType> userJoint = new Tuple<int, JointType>(body.integratedId, jointType);
                             if (!uniqueUserJoint.Contains(userJoint))
                             {
                                 uniqueUserJoint.Add(userJoint);

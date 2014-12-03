@@ -398,5 +398,7 @@ namespace KinectMotionCapture
         public Dictionary<JointType, Point> depthSpacePoints { get; set; }
         [NonSerialized]
         public bool mirrored = false;
+        [NonSerialized]
+        public int integratedId = -1;
     }
 }

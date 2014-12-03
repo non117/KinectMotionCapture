@@ -22,58 +22,34 @@ namespace KinectMotionCapture
         private List<CvMat> convList;
         private string[] dataDirs;
         private TimeSpan timePeriod;
+        private List<UserSegmentation> segms;
 
         public int recordNum;
         public double frameRate = 30;
         public DateTime startTime;
         public DateTime endTime;
-        public ulong[] selectedUserIdList;
+        public ulong[] selectedOriginalIdList;
         public int[] selecteedIntegretedIdList;
         public List<List<ulong>> userIdList;
         // TODO: IEnumerableにしても良さそう。イテレータブロックとか使うらしい。        
         public List<Frame> Frames { get; set; }
         public List<LocalCoordinateMapper> LocalCoordinateMappers { get; set; }
         public CameraIntrinsics CameraInfo { get; set; }
-        public List<UserSegmentation> Segmentations { get; set; }
-
-        /// <summary>
-        /// 選択された統合IDと対応するオリジナルIDを返す
-        /// </summary>
-        public List<List<ulong>> SelectedIntegratedIdList
+        
+        public List<UserSegmentation> Segmentations
         {
             get
             {
-                List<List<ulong>> ret = new List<List<ulong>>();
-                for (int recordNo = 0; recordNo < this.recordNum; recordNo++)
-                {
-                    int integratedId = this.selecteedIntegretedIdList[recordNo];
-                    Dictionary<ulong, int> map = this.Segmentations[recordNo].Conversions.Last().Value;
-                    List<ulong> recordSelectedIds = map.Where(pair => pair.Value == integratedId).Select(pair => pair.Key).ToList();
-                    ret.Add(recordSelectedIds);
-                }
-                return ret;
+                return this.segms;
             }
-        }
-
-        /// <summary>
-        /// 統合IDに対応するオリジナルid[]のマッピング
-        /// </summary>
-        public List<Dictionary<int, ulong[]>> InversedUserMapping
-        {
-            get
+            set
             {
-                List<Dictionary<int, ulong[]>> ret = new List<Dictionary<int, ulong[]>>();
-                foreach (UserSegmentation segm in this.Segmentations)
+                this.segms = value;
+                Dictionary<ulong, int> mapping = this.UserMapping;
+                foreach (Frame frame in this.Frames)
                 {
-                    Dictionary<ulong, int> mapping = segm.Conversions.Last().Value;
-                    Dictionary<int, ulong[]> retIn = new Dictionary<int, ulong[]>();
-                    foreach (int key in mapping.Values.Distinct())
-                    {
-                        retIn[key] = (from pair in mapping where pair.Value == key select pair.Key).ToArray();
-                    }
-                    ret.Add(retIn);
+                    frame.SetIntegratedId(mapping);
                 }
-                return ret;
             }
         }
 
@@ -86,9 +62,9 @@ namespace KinectMotionCapture
             {
                 Dictionary<ulong, int> mapping = new Dictionary<ulong, int>();
                 Dictionary<ulong, int> conversion;
-                if (this.Segmentations != null)
+                if (this.segms != null)
                 {
-                    foreach (UserSegmentation us in this.Segmentations)
+                    foreach (UserSegmentation us in this.segms)
                     {
                         conversion = us.Conversions.Last().Value;
                         foreach (ulong longId in conversion.Keys)
@@ -135,7 +111,7 @@ namespace KinectMotionCapture
 
         public void SetUserID(int recordIndex, ulong bodyId)
         {
-            this.selectedUserIdList[recordIndex] = bodyId;
+            this.selectedOriginalIdList[recordIndex] = bodyId;
         }
 
         public void setIntegratedID(int recordIndex, int id)
@@ -290,7 +266,7 @@ namespace KinectMotionCapture
         {
             // TODO 例外処理
             this.recordNum = dataDirs.Count();
-            this.selectedUserIdList = new ulong[this.recordNum];
+            this.selectedOriginalIdList = new ulong[this.recordNum];
             this.selecteedIntegretedIdList = new int[this.recordNum];
             
             this.dataDirs = dataDirs;
@@ -445,43 +421,68 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
+        /// Bodyデータに新しい統合IDをセットする
+        /// </summary>
+        /// <param name="mapping"></param>
+        public void SetIntegratedId(Dictionary<ulong, int> mapping)
+        {
+            foreach (MotionData md in this.records)
+            {
+                foreach (SerializableBody body in md.bodies)
+                {
+                    int integratedId = mapping[body.TrackingId];
+                    body.integratedId = integratedId;
+                }
+            }
+        }
+
+        /// <summary>
         /// idの一致するBodyを返す
+        /// </summary>
+        /// <param name="recordNo"></param>
+        /// <param name="integratedId"></param>
+        /// <param name="originalId"></param>
+        /// <returns></returns>
+        public SerializableBody GetSelectedBody(int recordNo, int integratedId = -1, ulong originalId = 0)
+        {
+            SerializableBody body = null;
+            if (integratedId != -1)
+            {
+                body = this.records[recordNo].bodies.Where((b) => b.integratedId == integratedId).FirstOrDefault();
+            }
+            else if (originalId == 0)
+            {
+                body = this.records[recordNo].bodies.Where((b) => b.TrackingId == originalId).FirstOrDefault();
+            }           
+            /// idが違うときの場合. 本来はセグメンテーションすべき.
+            if (body == null || body.Equals(default(SerializableBody)))
+                return null;
+            return body;
+        }
+
+        /// <summary>
+        /// idの一致するBody[]を返す
         /// </summary>
         /// <param name="selectedUserIdList"></param>
         /// <returns></returns>
-        public List<SerializableBody> GetSelectedBodyList(ulong[] selectedUserIdList)
+        public List<SerializableBody> GetSelectedBodyList(int[] integratedIds = null, ulong[] originalIds = null)
         {
             List<SerializableBody> bodies = new List<SerializableBody>();
                 for (int recordNo = 0; recordNo < this.recordNum; recordNo++)
                 {
-                    SerializableBody body = this.records[recordNo].bodies.Where((b) => b.TrackingId == selectedUserIdList[recordNo]).FirstOrDefault();
-                    
-                    /// idが違うときの場合. 本来はセグメンテーションすべき.
-                    if ( body == null || body.Equals(default(SerializableBody)))
-                        return new List<SerializableBody>();
-                    
+                    SerializableBody body = null;
+                    if (integratedIds != null && integratedIds.Count() == this.recordNum)
+                    {
+                        body = this.GetSelectedBody(recordNo, integratedId:integratedIds[recordNo]);
+                    }
+                    else if (originalIds != null && originalIds.Count() == this.recordNum)
+                    {
+                        body = this.GetSelectedBody(recordNo, originalId: originalIds[recordNo]);
+                    }                                        
+                    if ( body == null)
+                        return new List<SerializableBody>();                    
                     bodies.Add(body);
                 }
-            return bodies;
-        }
-
-        /// <summary>
-        /// セグメンテーション後にidと一致するBodyを取ってきたいやつ
-        /// </summary>
-        /// <param name="selectedUserIdList"></param>
-        /// <returns></returns>
-        public List<SerializableBody> GetSelectedBodyList(List<List<ulong>> selectedUserIdList)
-        {
-            List<SerializableBody> bodies = new List<SerializableBody>();
-            for (int recordNo = 0; recordNo < this.recordNum; recordNo++)
-            {
-                SerializableBody body = this.records[recordNo].bodies.Where(b => selectedUserIdList[recordNo].Contains(b.TrackingId)).FirstOrDefault();
-                /// idが違うときの場合. ありえないとは思うけど、未検証
-                if (body == null || body.Equals(default(SerializableBody)))
-                    return new List<SerializableBody>();
-
-                bodies.Add(body);
-            }
             return bodies;
         }
 
@@ -499,12 +500,17 @@ namespace KinectMotionCapture
         /// </summary>
         /// <param name="recordNo"></param>
         /// <param name="UserIds"></param>
-        public void InverseBody(int recordNo, List<ulong> UserIds)
+        public void InverseBody(int recordNo, int integratedId = -1, ulong originalId = 0)
         {
             MotionData md = this.records[recordNo];
             foreach (SerializableBody body in md.bodies)
             {
-                if (UserIds.Contains(body.TrackingId))
+                if (integratedId != -1 && body.integratedId == integratedId)
+                {
+                    body.InverseJoints();
+                    body.mirrored = !body.mirrored;
+                }
+                else if (originalId != 0 && body.TrackingId == originalId)
                 {
                     body.InverseJoints();
                     body.mirrored = !body.mirrored;
@@ -584,9 +590,9 @@ namespace KinectMotionCapture
         /// <param name="convList"></param>
         /// <param name="selectedUserIdList"></param>
         /// <returns></returns>
-        public static List<CvMat> GetConvMatrixFromBoneFrame(Frame frame, List<CvMat> convList, ulong[] selectedUserIdList)
+        public static List<CvMat> GetConvMatrixFromBoneFrame(Frame frame, List<CvMat> convList, ulong[] originalIds)
         {
-            List<SerializableBody> bodies = frame.GetSelectedBodyList(selectedUserIdList);
+            List<SerializableBody> bodies = frame.GetSelectedBodyList(originalIds:originalIds);
             return GetConvMatrixFromBoneFrame(frame, convList, bodies);
         }
 
@@ -597,9 +603,9 @@ namespace KinectMotionCapture
         /// <param name="convList"></param>
         /// <param name="selectedUserIdList"></param>
         /// <returns></returns>
-        public static List<CvMat> GetConvMatrixFromBoneFrame(Frame frame, List<CvMat> convList, List<List<ulong>> selectedUserIdList)
+        public static List<CvMat> GetConvMatrixFromBoneFrame(Frame frame, List<CvMat> convList, int[] integratedIs)
         {
-            List<SerializableBody> bodies = frame.GetSelectedBodyList(selectedUserIdList);
+            List<SerializableBody> bodies = frame.GetSelectedBodyList(integratedIds:integratedIs);
             return GetConvMatrixFromBoneFrame(frame, convList, bodies);
         }
 
@@ -653,11 +659,11 @@ namespace KinectMotionCapture
             {
                 if (frameSeq.Segmentations == null)
                 {
-                    bodies = frame.GetSelectedBodyList(frameSeq.selectedUserIdList);
+                    bodies = frame.GetSelectedBodyList(originalIds:frameSeq.selectedOriginalIdList);
                 }
                 else
                 {
-                    bodies = frame.GetSelectedBodyList(frameSeq.SelectedIntegratedIdList);
+                    bodies = frame.GetSelectedBodyList(integratedIds:frameSeq.selecteedIntegretedIdList);
                 }
                 if (bodies.Count() != frame.recordNum)
                     continue;
@@ -700,11 +706,11 @@ namespace KinectMotionCapture
                 {
                     if (frameSeq.Segmentations == null)
                     {
-                        bodies = frame.GetSelectedBodyList(frameSeq.selectedUserIdList);
+                        bodies = frame.GetSelectedBodyList(originalIds:frameSeq.selectedOriginalIdList);
                     }
                     else
                     {
-                        bodies = frame.GetSelectedBodyList(frameSeq.SelectedIntegratedIdList);
+                        bodies = frame.GetSelectedBodyList(integratedIds:frameSeq.selecteedIntegretedIdList);
                     }
                     if (bodies.Count() != frame.recordNum)
                         continue;

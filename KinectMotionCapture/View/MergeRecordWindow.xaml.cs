@@ -263,7 +263,8 @@ namespace KinectMotionCapture
                     for (int user = 0; user < pointsList.Count(); user++)
                     {
                         // Bodyの描画
-                        this.DrawBody(pointsList[user], jointsList[user], dc);
+                        if (pointsList[user] != null)
+                            this.DrawBody(pointsList[user], jointsList[user], dc);
                         // user id の描画
                         ulong userId = idPointList[user].Item1;
                         string text = userId.ToString();
@@ -418,16 +419,16 @@ namespace KinectMotionCapture
         {
             Frame frame = frameSequence.Frames[playingIndex];
             List<CvMat> convs;
-            if (this.isUserSelected.All(b => b == true))
+            if (this.isUserSelected.All(b => b))
             {
                 if (this.frameSequence.Segmentations == null)
                 {
-                    ulong[] selectedUsers = frameSequence.selectedUserIdList;
+                    ulong[] selectedUsers = frameSequence.selectedOriginalIdList;
                     convs = KinectMerge.GetConvMatrixFromBoneFrame(frame, frameSequence.ToWorldConversions, selectedUsers);
                 }
                 else
                 {
-                    List<List<ulong>> selectedUsers = frameSequence.SelectedIntegratedIdList;
+                    int[] selectedUsers = frameSequence.selecteedIntegretedIdList;
                     convs = KinectMerge.GetConvMatrixFromBoneFrame(frame, frameSequence.ToWorldConversions, selectedUsers);
                 }                
                 frameSequence.ToWorldConversions = convs;
@@ -436,8 +437,8 @@ namespace KinectMotionCapture
 
         private void MenuCalibBoneFrameRange_Click(object sender, RoutedEventArgs e)
         {
-            ulong[] selectedUsers = frameSequence.selectedUserIdList;
-            if (this.isUserSelected.All(b => b == true))
+            ulong[] selectedUsers = frameSequence.selectedOriginalIdList;
+            if (this.isUserSelected.All(b => b))
             {
                 List<CvMat> convs = KinectMerge.GetConvMatrixFromBoneFrameSequence(frameSequence, startIndex, endIndex);
                 frameSequence.ToWorldConversions = convs;
@@ -504,13 +505,24 @@ namespace KinectMotionCapture
 
         private void ExportSelectedBodiesAsBinary_Click(object sender, RoutedEventArgs e)
         {
-            Dictionary<int, List<Dictionary<JointType, CvPoint3D64f>>> mergedBodies = SkeletonInterpolator.ExportFromProject(frameSequence, startIndex, endIndex);
-            // IDは統合されているものとする
-            string path = Path.Combine(Environment.CurrentDirectory, @"SelectedUserBody.dump");
-            int id = this.frameSequence.selecteedIntegretedIdList[0];
-            if (this.frameSequence.selecteedIntegretedIdList.All(i => i == id))
+            if (this.isUserSelected.All(b => b))
             {
-                Utility.SaveBodySequence(mergedBodies[id], path);
+                Dictionary<int, List<Dictionary<JointType, CvPoint3D64f>>> mergedBodies = SkeletonInterpolator.ExportFromProject(frameSequence, startIndex, endIndex);
+                // IDは統合されているものとする
+                string path = Path.Combine(Environment.CurrentDirectory, @"SelectedUserBody.dump");
+                int id = this.frameSequence.selecteedIntegretedIdList[0];
+                if (this.frameSequence.selecteedIntegretedIdList.All(i => i == id))
+                {
+                    Utility.SaveBodySequence(mergedBodies[id], path);
+                }
+
+                //DEBUG
+                IEnumerable<Frame> frames = frameSequence.Slice(this.startIndex, this.endIndex).Where(f => f.IsAllBodyAvailable());
+                for (int i = 0; i < frameSequence.recordNum; i++)
+                {
+                    //List<Dictionary<JointType, Joint>> hoge = null;
+                    //Dictionary<JointType, Joint> joints = Utility.ApplyConversions(frames.First().GetMotionData(i).bodies[0].Joints, frameSequence.ToWorldConversions[i]);
+                }
             }
         }
 
@@ -540,19 +552,22 @@ namespace KinectMotionCapture
         {
             if (this.isRecordSelected.Any())
             {
+                int[] integratedIds = this.frameSequence.selecteedIntegretedIdList;
+                ulong[] originalIds = this.frameSequence.selectedOriginalIdList;
                 for (int recordNo = 0; recordNo < this.frameSequence.recordNum; recordNo++)
                 {
                     if (this.isRecordSelected[recordNo])
                     {
-                        List<ulong> userIds = new List<ulong>() { this.frameSequence.selectedUserIdList[recordNo] };
-                        if (this.frameSequence.Segmentations != null)
-                        {
-                            int selectedUser = this.frameSequence.selecteedIntegretedIdList[recordNo];
-                            userIds = this.frameSequence.InversedUserMapping[recordNo][selectedUser].ToList();
-                        }
                         foreach (Frame frame in this.frameSequence.Frames)
                         {
-                            frame.InverseBody(recordNo, userIds);
+                            if (frameSequence.Segmentations == null)
+                            {
+                                frame.InverseBody(recordNo, originalId: originalIds[recordNo]);
+                            }
+                            else
+                            {
+                                frame.InverseBody(recordNo, integratedId: integratedIds[recordNo]);
+                            }
                         }
                     }
                 }
