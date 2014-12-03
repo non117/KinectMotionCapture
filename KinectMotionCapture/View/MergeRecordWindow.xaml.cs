@@ -61,18 +61,28 @@ namespace KinectMotionCapture
         private void LoadFrames()
         {
             string[] datadir = new string[] {
-                                                    @"E:\kinect1",  
-                                                    @"E:\kinect2", 
-                                                    @"E:\kinect3", 
-                                                    @"E:\kinect4", 
+                                                    //@"E:\kinect1",  
+                                                    //@"E:\kinect2", 
+                                                    //@"E:\kinect3", 
+                                                    //@"E:\kinect4", 
+                                                    @"C:\Users\non\Desktop\Poyo\kinect1\matsu",
+                                                    @"C:\Users\non\Desktop\Poyo\kinect2\matsu",
+                                                    @"C:\Users\non\Desktop\Poyo\kinect3\matsu",
+                                                    @"C:\Users\non\Desktop\Poyo\kinect4\matsu",
+
             };
             List<string> mapdir = new List<string>() {
-                                                    @"E:\kinect1_coordmap.dump",  
-                                                    @"E:\kinect2_coordmap.dump", 
-                                                    @"E:\kinect3_coordmap.dump", 
-                                                    @"E:\kinect4_coordmap.dump", 
+                                                    //@"E:\kinect1_coordmap.dump",  
+                                                    //@"E:\kinect2_coordmap.dump", 
+                                                    //@"E:\kinect3_coordmap.dump", 
+                                                    //@"E:\kinect4_coordmap.dump", 
+                                                    @"C:\Users\non\Desktop\Poyo\kinect1\coordmap.dump",
+                                                    @"C:\Users\non\Desktop\Poyo\kinect2\coordmap.dump",
+                                                    @"C:\Users\non\Desktop\Poyo\kinect3\coordmap.dump",
+                                                    @"C:\Users\non\Desktop\Poyo\kinect4\coordmap.dump",
             };
-            string cameradir = @"E:\CameraInfo.dump";
+            //string cameradir = @"E:\CameraInfo.dump";
+            string cameradir = @"C:\Users\non\Desktop\Poyo\kinect4\CameraInfo.dump";
             this.frameSequence = new FrameSequence(datadir);
             this.frameSequence.LocalCoordinateMappers = mapdir.Select(s => (LocalCoordinateMapper)Utility.LoadFromBinary(s)).ToList();
             this.frameSequence.CameraInfo = (CameraIntrinsics)Utility.LoadFromBinary(cameradir);
@@ -282,19 +292,22 @@ namespace KinectMotionCapture
                         if (pointsList[user] != null)
                             this.DrawBody(pointsList[user], jointsList[user], dc);
                         // user id の描画
-                        ulong userId = idPointList[user].Item1;
-                        string text = userId.ToString();
-                        if (frameSequence.UserMapping.ContainsKey(userId))
+                        if (idPointList[user] != null)
                         {
-                            text = frameSequence.UserMapping[userId].ToString();
+                            ulong userId = idPointList[user].Item1;
+                            string text = userId.ToString();
+                            if (frameSequence.UserMapping.ContainsKey(userId))
+                            {
+                                text = frameSequence.UserMapping[userId].ToString();
+                            }
+                            // TODO: 縁取りテキスト, http://gushwell.ldblog.jp/archives/52312432.html
+                            fmt = new FormattedText(text,
+                                System.Globalization.CultureInfo.CurrentCulture,
+                                System.Windows.FlowDirection.LeftToRight,
+                                new Typeface("Arial"), 50.0, Brushes.Cyan
+                                );
+                            dc.DrawText(fmt, idPointList[user].Item2);
                         }
-                        // TODO: 縁取りテキスト, http://gushwell.ldblog.jp/archives/52312432.html
-                        fmt = new FormattedText(text,
-                            System.Globalization.CultureInfo.CurrentCulture,
-                            System.Windows.FlowDirection.LeftToRight,
-                            new Typeface("Arial"), 50.0, Brushes.Cyan
-                            );
-                        dc.DrawText(fmt, idPointList[user].Item2);
                     }
                     drawings[recordNo].ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, colorSize.Width, colorSize.Height));
                 }

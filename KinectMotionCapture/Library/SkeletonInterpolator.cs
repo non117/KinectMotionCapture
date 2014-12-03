@@ -137,9 +137,12 @@ namespace KinectMotionCapture
             return ret;
         }
 
-        public Dictionary<JointType, CvPoint3D64f> IntegrateSkeleton(Frame frame, int userInt, List<CvMat> ToWorldConversions,
-            CameraIntrinsics cameraInfo, List<UserSegmentation> segm)
+        public Dictionary<JointType, CvPoint3D64f> IntegrateSkeleton(Frame frame, int userInt, FrameSequence frameSeq)
         {
+            List<CvMat> ToWorldConversions = frameSeq.ToWorldConversions;
+            CameraIntrinsics cameraInfo = frameSeq.CameraInfo;
+            List<UserSegmentation> segm = frameSeq.Segmentations;
+
             Dictionary<JointType, CvPoint3D64f>[] jointsArr = new Dictionary<JointType, CvPoint3D64f>[frame.recordNum];
             double[] reliabilityList = new double[frame.recordNum];
             double[] weightList = new double[frame.recordNum];
@@ -223,8 +226,7 @@ namespace KinectMotionCapture
                 for (int i = 0; i < frames.Count() - 1; i++)
                 {
                     Frame curr = frames[i];
-                    Dictionary<JointType, CvPoint3D64f> joints = skeletonInterpolator.IntegrateSkeleton(curr, user, frameseq.ToWorldConversions,
-                        frameseq.CameraInfo, frameseq.Segmentations);
+                    Dictionary<JointType, CvPoint3D64f> joints = skeletonInterpolator.IntegrateSkeleton(curr, user, frameseq);
                         if (joints != null) {
                             jointsSeq.Add(joints);
                     }

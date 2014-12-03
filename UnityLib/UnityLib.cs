@@ -39,6 +39,9 @@ namespace UnityLib
             }
             return mapping[jointNum];
         }
+
+        // TODO : Jointsの移動平均によるフィルタリング
+
     }
 
     /// <summary>

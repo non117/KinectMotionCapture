@@ -31,6 +31,9 @@ namespace KinectMotionCapture
         public ulong[] selectedOriginalIdList;
         public int[] selecteedIntegretedIdList;
         public List<List<ulong>> userIdList;
+
+        public double[] offsets = new double[] { 0, 0, 0, 39.958 };
+
         // TODO: IEnumerableにしても良さそう。イテレータブロックとか使うらしい。        
         public List<Frame> Frames { get; set; }
         public List<LocalCoordinateMapper> LocalCoordinateMappers { get; set; }
@@ -177,6 +180,24 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
+        /// オフセットを適用する
+        /// </summary>
+        /// <param name="records"></param>
+        /// <returns></returns>
+        private List<List<MotionData>> ApplyOffset(List<List<MotionData>> records)
+        {
+            for (int recordNo = 0; recordNo < recordNum; recordNo++)
+            {
+                foreach (MotionData md in records[recordNo])
+                {
+                    TimeSpan offset = new TimeSpan(0, 0, 0, (int)Math.Truncate(offsets[recordNo]), (int)(offsets[recordNo] % 1.0));
+                    md.TimeStamp += offset;
+                }
+            }
+            return records;
+        }
+
+        /// <summary>
         /// 時刻を少しずつ進めながらフレームを作っていく
         /// </summary>
         /// <param name="records"></param>
@@ -284,6 +305,7 @@ namespace KinectMotionCapture
                 }
                 records.Add(mdList);
             }
+            records = this.ApplyOffset(records);
             records = this.SearchDupFrames(records);
 
             // いちばん短いレコードに合わせて単位時刻を決定する
@@ -390,8 +412,9 @@ namespace KinectMotionCapture
         /// <param name="recordNo"></param>
         /// <returns></returns>
         public List<Dictionary<JointType, Point>> GetBodyColorSpaceJoints(int recordNo)
-        {            
-            return new List<SerializableBody>(this.records[recordNo].bodies).Select((b) => b.colorSpacePoints).ToList();
+        {
+            SerializableBody[] bodies = this.records[recordNo].bodies;
+            return bodies.Select(b => b.colorSpacePoints).ToList();
         }
 
         /// <summary>
@@ -415,7 +438,14 @@ namespace KinectMotionCapture
             List<Tuple<ulong, Point>> ret = new List<Tuple<ulong, Point>>();
             foreach (SerializableBody body in md.bodies)
             {
-                ret.Add(Tuple.Create(body.TrackingId, Utility.GetAveragePoint(body.colorSpacePoints.Values)));
+                if (body.colorSpacePoints != null)
+                {
+                    ret.Add(Tuple.Create(body.TrackingId, Utility.GetAveragePoint(body.colorSpacePoints.Values)));
+                }
+                else
+                {
+                    ret.Add(null);
+                }
             }
             return ret;
         }
