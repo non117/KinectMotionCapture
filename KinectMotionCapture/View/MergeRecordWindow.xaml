@@ -158,7 +158,8 @@
                 <MenuItem Name="ExportSelectedBodiesAsBinary" Header="現在のフレーム範囲で選択中のユーザをバイナリで出力" Click="ExportSelectedBodiesAsBinary_Click"/>
             </MenuItem>
             <MenuItem Name="Edit" Header="Edit">
-                <MenuItem Name="MirrorSelectedRecord" Header="選択中のレコードの選択されたユーザの骨格情報を左右反転する" Click="MirrorSelectedRecord_Click"/>
+                <MenuItem Name="MirrorSelectedRecordFrame" Header="選択中のレコードの現在のフレームの選択されたユーザの骨格情報を左右反転する" Click="MirrorSelectedRecordFrame_Click"/>
+                <MenuItem Name="MirrorSelectedRecordRange" Header="選択中のレコードの現在のフレーム範囲の選択されたユーザの骨格情報を左右反転する" Click="MirrorSelectedRecordRange_Click"/>
                 <Separator/>
                 <MenuItem Name="ResetMirroredBodies" Header="全てのレコードの反転状態を初期化する" Click="ResetMirroredBodies_Click"/>
             </MenuItem>

@@ -548,7 +548,7 @@ namespace KinectMotionCapture
             this.isRecordSelected[index] = (bool)box.IsChecked;
         }
 
-        private void MirrorSelectedRecord_Click(object sender, RoutedEventArgs e)
+        private void MirrorSelectedRecordRange_Click(object sender, RoutedEventArgs e)
         {
             if (this.isRecordSelected.Any())
             {
@@ -556,7 +556,7 @@ namespace KinectMotionCapture
                 ulong[] originalIds = this.frameSequence.selectedOriginalIdList;
                 for (int recordNo = 0; recordNo < this.frameSequence.recordNum; recordNo++)
                 {
-                    if (this.isRecordSelected[recordNo])
+                    if (this.isRecordSelected[recordNo] && this.isUserSelected[recordNo])
                     {
                         foreach (Frame frame in this.frameSequence.Frames)
                         {
@@ -578,6 +578,31 @@ namespace KinectMotionCapture
         {
             foreach (Frame frame in this.frameSequence.Frames)
                 frame.ResetInversedBody();
+        }
+
+        private void MirrorSelectedRecordFrame_Click(object sender, RoutedEventArgs e)
+        {
+            if (this.isRecordSelected.Any())
+            {
+                int[] integratedIds = this.frameSequence.selecteedIntegretedIdList;
+                ulong[] originalIds = this.frameSequence.selectedOriginalIdList;
+                for (int recordNo = 0; recordNo < this.frameSequence.recordNum; recordNo++)
+                {
+                    if (this.isRecordSelected[recordNo] && this.isUserSelected[recordNo])
+                    {
+                        Frame frame = this.frameSequence.Frames[this.playingIndex];
+                        if (frameSequence.Segmentations == null)
+                        {
+                            frame.InverseBody(recordNo, originalId: originalIds[recordNo]);
+                        }
+                        else
+                        {
+                            frame.InverseBody(recordNo, integratedId: integratedIds[recordNo]);
+                        }
+
+                    }
+                }
+            }
         }
     }
 }
