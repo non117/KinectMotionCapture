@@ -434,6 +434,14 @@ namespace KinectMotionCapture
                     body.integratedId = integratedId;
                 }
             }
+            foreach (MotionData md in this.nextRecords)
+            {
+                foreach (SerializableBody body in md.bodies)
+                {
+                    int integratedId = mapping[body.TrackingId];
+                    body.integratedId = integratedId;
+                }
+            }
         }
 
         /// <summary>

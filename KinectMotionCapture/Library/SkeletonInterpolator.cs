@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -225,7 +226,7 @@ namespace KinectMotionCapture
                     Dictionary<JointType, CvPoint3D64f> joints = skeletonInterpolator.IntegrateSkeleton(curr, user, frameseq.ToWorldConversions,
                         frameseq.CameraInfo, frameseq.Segmentations);
                         if (joints != null) {
-                            jointsSeq.Add(joints);                            
+                            jointsSeq.Add(joints);
                     }
                 }
                 allBodies[user] = jointsSeq;
