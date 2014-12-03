@@ -488,7 +488,7 @@ namespace KinectMotionCapture
             {
                 body = this.records[recordNo].bodies.Where((b) => b.integratedId == integratedId).FirstOrDefault();
             }
-            else if (originalId == 0)
+            else if (originalId != 0)
             {
                 body = this.records[recordNo].bodies.Where((b) => b.TrackingId == originalId).FirstOrDefault();
             }           
