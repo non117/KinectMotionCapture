@@ -55,6 +55,9 @@ namespace KinectMotionCapture
         private readonly Brush inferredJointBrush = Brushes.Yellow;
         private const double JointThickness = 3;
 
+        /// <summary>
+        /// FrameSequenceの構築, そのうちダイアログとか出したい
+        /// </summary>
         private void LoadFrames()
         {
             string[] datadir = new string[] {
@@ -75,6 +78,9 @@ namespace KinectMotionCapture
             this.frameSequence.CameraInfo = (CameraIntrinsics)Utility.LoadFromBinary(cameradir);
         }
 
+        /// <summary>
+        /// こんすとらくたん
+        /// </summary>
         public MergeRecordWindow()
         {
             this.drawingGroup1 = new DrawingGroup();
@@ -133,6 +139,11 @@ namespace KinectMotionCapture
             InitializeComponent();
         }
 
+        /// <summary>
+        /// なんだっけこれ。。。
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void CompositionTargetRendering(object sender, EventArgs e)
         {
             if (this.isPlaying)
@@ -146,6 +157,11 @@ namespace KinectMotionCapture
 
         }
 
+        /// <summary>
+        /// Windowがロードされたら初期化しまくり
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             CompositionTarget.Rendering += this.CompositionTargetRendering;
@@ -163,7 +179,7 @@ namespace KinectMotionCapture
             this.PlaySlider.SelectionStart = this.startIndex;
             this.PlaySlider.SelectionEnd = this.endIndex;
 
-            // UserIdを選択するUI, あとで同様の処理で更新される
+            // UserIdを選択するUI
             ComboBox[] boxes = { UserIdBox1, UserIdBox2, UserIdBox3, UserIdBox4 };
             for (int recordNo = 0; recordNo < frameSequence.recordNum; recordNo++)
             {
@@ -251,7 +267,7 @@ namespace KinectMotionCapture
                 images[recordNo].Source = new BitmapImage(new Uri(frame.ColorImagePathList[recordNo]));
                 timeLabels[recordNo].Content = frame.GetMotionData(recordNo).TimeStamp.ToString(@"ss\:fff");
 
-                // Boneの描画
+                // 描画
                 using (DrawingContext dc = drawings[recordNo].Open())
                 {
                     CvSize colorSize = frame.ColorSize[recordNo];
@@ -323,6 +339,7 @@ namespace KinectMotionCapture
             }
         }
 
+        #region ImageSources
         public ImageSource BodyImageSource1
         {
             get
@@ -351,6 +368,7 @@ namespace KinectMotionCapture
                 return this.bodyImageSource4;
             }
         }
+        #endregion
 
         /// <summary>
         /// 再生制御
@@ -371,6 +389,11 @@ namespace KinectMotionCapture
             }
         }
 
+        /// <summary>
+        /// ユーザ選択UI
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void UserIdBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             ComboBox box = (ComboBox)sender;
@@ -393,6 +416,11 @@ namespace KinectMotionCapture
             }
         }
 
+        /// <summary>
+        /// 人間が再生スライダーを動かした時の処理
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void PlaySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             // このイベントは全ての変更にフックされるっぽいので、人間が弄った時に再生止めて動かす、みたいな。
@@ -403,18 +431,33 @@ namespace KinectMotionCapture
             }
         }
 
+        /// <summary>
+        /// フレーム範囲最小値を選択するUI
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void SetMinTime_Click(object sender, RoutedEventArgs e)
         {
             this.startIndex = (int)this.PlaySlider.Value;
             this.PlaySlider.SelectionStart = this.startIndex;
         }
 
+        /// <summary>
+        /// フレーム範囲最大値を選択するUI
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void SetMaxTime_Click(object sender, RoutedEventArgs e)
         {           
             this.endIndex = (int)this.PlaySlider.Value;
             this.PlaySlider.SelectionEnd = this.endIndex;
         }
 
+        /// <summary>
+        /// 現在のフレームでBoneから統合行列計算
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void MenuCalibBoneFrame_Click(object sender, RoutedEventArgs e)
         {
             Frame frame = frameSequence.Frames[playingIndex];
@@ -435,6 +478,11 @@ namespace KinectMotionCapture
             }
         }
 
+        /// <summary>
+        /// 現在のフレーム範囲でBoneから統合行列計算
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void MenuCalibBoneFrameRange_Click(object sender, RoutedEventArgs e)
         {
             ulong[] selectedUsers = frameSequence.selectedOriginalIdList;
@@ -454,6 +502,11 @@ namespace KinectMotionCapture
             }
         }
 
+        /// <summary>
+        /// 現在のフレームで深度画像から統合行列計算
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void MenuCalibDepthFrame_Click(object sender, RoutedEventArgs e)
         {
             Frame frame = frameSequence.Frames[playingIndex];
@@ -461,6 +514,11 @@ namespace KinectMotionCapture
             frameSequence.ToWorldConversions = convs;
         }
 
+        /// <summary>
+        /// 現在のフレーム範囲で深度画像から統合行列計算
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void MenuCalibDepthFrameRange_Click(object sender, RoutedEventArgs e)
         {
             List<CvMat> convs = KinectMerge.GetConvMatrixFromDepthFrameSequence(frameSequence, startIndex, endIndex);
@@ -468,6 +526,11 @@ namespace KinectMotionCapture
 
         }
 
+        /// <summary>
+        /// ユーザのセグメンテーションと新IDの割り当て
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Segmentation_Click(object sender, RoutedEventArgs e)
         {
             UserSegmentation[] segm = new UserSegmentation[frameSequence.recordNum];
@@ -476,9 +539,10 @@ namespace KinectMotionCapture
                 segm[i] = UserSegmentation.Segment(frameSequence.GetMotionDataSequence(i), new TimeSpan(0, 0, 1));
             }
             frameSequence.Segmentations = segm.ToList();
+            // 統合IDの生成
             segm = UserSegmentation.Identification(frameSequence, 1);
             frameSequence.Segmentations = segm.ToList();
-            // UserIdを選択するUI
+            // UserIdを選択するUIのリフレッシュ
             ComboBox[] boxes = { UserIdBox1, UserIdBox2, UserIdBox3, UserIdBox4 };
             for (int recordNo = 0; recordNo < frameSequence.recordNum; recordNo++)
             {
@@ -493,19 +557,32 @@ namespace KinectMotionCapture
             }
         }
 
+        /// <summary>
+        /// 全てのユーザを統合してバイナリで出力する
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ExportAllBodiesAsBinary_Click(object sender, RoutedEventArgs e)
         {
-            Dictionary<int, List<Dictionary<JointType, CvPoint3D64f>>> mergedBodies = SkeletonInterpolator.ExportFromProject(frameSequence, startIndex, endIndex);
-            foreach (int userId in mergedBodies.Keys)
+            if (frameSequence.Segmentations != null)
             {
-                string path = Path.Combine(Environment.CurrentDirectory, userId.ToString() + @"_Body.dump");
-                Utility.SaveBodySequence(mergedBodies[userId], path);
+                Dictionary<int, List<Dictionary<JointType, CvPoint3D64f>>> mergedBodies = SkeletonInterpolator.ExportFromProject(frameSequence, startIndex, endIndex);
+                foreach (int userId in mergedBodies.Keys)
+                {
+                    string path = Path.Combine(Environment.CurrentDirectory, userId.ToString() + @"_Body.dump");
+                    Utility.SaveBodySequence(mergedBodies[userId], path);
+                }
             }
         }
 
+        /// <summary>
+        /// 選択中のユーザを統合してバイナリで出力する
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ExportSelectedBodiesAsBinary_Click(object sender, RoutedEventArgs e)
         {
-            if (this.isUserSelected.All(b => b))
+            if (frameSequence.Segmentations != null && this.isUserSelected.All(b => b))
             {
                 Dictionary<int, List<Dictionary<JointType, CvPoint3D64f>>> mergedBodies = SkeletonInterpolator.ExportFromProject(frameSequence, startIndex, endIndex);
                 // IDは統合されているものとする
@@ -526,6 +603,12 @@ namespace KinectMotionCapture
             }
         }
 
+        /// <summary>
+        /// 統合行列を保存する
+        /// TODO : ダイアログ
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ExportConversionMatrix_Click(object sender, RoutedEventArgs e)
         {
             string path = Path.Combine(Environment.CurrentDirectory, @"ConversionMatrix.dump");
@@ -533,6 +616,12 @@ namespace KinectMotionCapture
             Utility.SaveToBinary(conversions, path);
         }
 
+        /// <summary>
+        /// 統合行列を読み込む
+        /// TODO : ダイアログ
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ImportConversionMatrix_Click(object sender, RoutedEventArgs e)
         {
             string path = Path.Combine(Environment.CurrentDirectory, @"ConversionMatrix.dump");
@@ -540,6 +629,11 @@ namespace KinectMotionCapture
             frameSequence.ToWorldConversions = conversions.Select(mat => mat.CreateCvMat()).ToList();
         }
 
+        /// <summary>
+        /// レコードを選択する
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void RecordSelect_Clicked(object sender, RoutedEventArgs e)
         {
             CheckBox box = (CheckBox)sender;
@@ -548,49 +642,21 @@ namespace KinectMotionCapture
             this.isRecordSelected[index] = (bool)box.IsChecked;
         }
 
+        /// <summary>
+        /// フレーム範囲の選択中ユーザ・レコードを左右反転する
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void MirrorSelectedRecordRange_Click(object sender, RoutedEventArgs e)
         {
-            if (this.isRecordSelected.Any())
+            int[] integratedIds = this.frameSequence.selecteedIntegretedIdList;
+            ulong[] originalIds = this.frameSequence.selectedOriginalIdList;
+            for (int recordNo = 0; recordNo < this.frameSequence.recordNum; recordNo++)
             {
-                int[] integratedIds = this.frameSequence.selecteedIntegretedIdList;
-                ulong[] originalIds = this.frameSequence.selectedOriginalIdList;
-                for (int recordNo = 0; recordNo < this.frameSequence.recordNum; recordNo++)
+                if (this.isRecordSelected[recordNo] && this.isUserSelected[recordNo])
                 {
-                    if (this.isRecordSelected[recordNo] && this.isUserSelected[recordNo])
+                    foreach (Frame frame in this.frameSequence.Frames)
                     {
-                        foreach (Frame frame in this.frameSequence.Frames)
-                        {
-                            if (frameSequence.Segmentations == null)
-                            {
-                                frame.InverseBody(recordNo, originalId: originalIds[recordNo]);
-                            }
-                            else
-                            {
-                                frame.InverseBody(recordNo, integratedId: integratedIds[recordNo]);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        private void ResetMirroredBodies_Click(object sender, RoutedEventArgs e)
-        {
-            foreach (Frame frame in this.frameSequence.Frames)
-                frame.ResetInversedBody();
-        }
-
-        private void MirrorSelectedRecordFrame_Click(object sender, RoutedEventArgs e)
-        {
-            if (this.isRecordSelected.Any())
-            {
-                int[] integratedIds = this.frameSequence.selecteedIntegretedIdList;
-                ulong[] originalIds = this.frameSequence.selectedOriginalIdList;
-                for (int recordNo = 0; recordNo < this.frameSequence.recordNum; recordNo++)
-                {
-                    if (this.isRecordSelected[recordNo] && this.isUserSelected[recordNo])
-                    {
-                        Frame frame = this.frameSequence.Frames[this.playingIndex];
                         if (frameSequence.Segmentations == null)
                         {
                             frame.InverseBody(recordNo, originalId: originalIds[recordNo]);
@@ -599,8 +665,45 @@ namespace KinectMotionCapture
                         {
                             frame.InverseBody(recordNo, integratedId: integratedIds[recordNo]);
                         }
-
                     }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 左右反転をリセットする
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ResetMirroredBodies_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (Frame frame in this.frameSequence.Frames)
+                frame.ResetInversedBody();
+        }
+
+        /// <summary>
+        /// 現在のフレームで選択中のユーザ・レコードに対して左右反転処理
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void MirrorSelectedRecordFrame_Click(object sender, RoutedEventArgs e)
+        {
+            int[] integratedIds = this.frameSequence.selecteedIntegretedIdList;
+            ulong[] originalIds = this.frameSequence.selectedOriginalIdList;
+            for (int recordNo = 0; recordNo < this.frameSequence.recordNum; recordNo++)
+            {
+                if (this.isRecordSelected[recordNo] && this.isUserSelected[recordNo])
+                {
+                    Frame frame = this.frameSequence.Frames[this.playingIndex];
+                    if (frameSequence.Segmentations == null)
+                    {
+                        frame.InverseBody(recordNo, originalId: originalIds[recordNo]);
+                    }
+                    else
+                    {
+                        frame.InverseBody(recordNo, integratedId: integratedIds[recordNo]);
+                    }
+
                 }
             }
         }
