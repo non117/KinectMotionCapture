@@ -32,7 +32,7 @@ namespace KinectMotionCapture
         public int[] selecteedIntegretedIdList;
         public List<List<ulong>> userIdList;
 
-        public double[] offsets = new double[] { 0, 0, 0, 39.958 };
+        public double[] offsets = new double[] { 0, 0, 0, 0};
 
         // TODO: IEnumerableにしても良さそう。イテレータブロックとか使うらしい。        
         public List<Frame> Frames { get; set; }

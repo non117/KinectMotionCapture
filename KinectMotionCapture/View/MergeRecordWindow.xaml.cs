@@ -61,28 +61,28 @@ namespace KinectMotionCapture
         private void LoadFrames()
         {
             string[] datadir = new string[] {
-                                                    //@"E:\kinect1",  
-                                                    //@"E:\kinect2", 
-                                                    //@"E:\kinect3", 
-                                                    //@"E:\kinect4", 
-                                                    @"C:\Users\non\Desktop\Poyo\kinect1\matsu",
-                                                    @"C:\Users\non\Desktop\Poyo\kinect2\matsu",
-                                                    @"C:\Users\non\Desktop\Poyo\kinect3\matsu",
-                                                    @"C:\Users\non\Desktop\Poyo\kinect4\matsu",
+                                                    @"E:\kinect1",  
+                                                    @"E:\kinect2", 
+                                                    @"E:\kinect3", 
+                                                    @"E:\kinect4", 
+                                                    //@"C:\Users\non\Desktop\Poyo\kinect1\matsu",
+                                                    //@"C:\Users\non\Desktop\Poyo\kinect2\matsu",
+                                                    //@"C:\Users\non\Desktop\Poyo\kinect3\matsu",
+                                                    //@"C:\Users\non\Desktop\Poyo\kinect4\matsu",
 
             };
             List<string> mapdir = new List<string>() {
-                                                    //@"E:\kinect1_coordmap.dump",  
-                                                    //@"E:\kinect2_coordmap.dump", 
-                                                    //@"E:\kinect3_coordmap.dump", 
-                                                    //@"E:\kinect4_coordmap.dump", 
-                                                    @"C:\Users\non\Desktop\Poyo\kinect1\coordmap.dump",
-                                                    @"C:\Users\non\Desktop\Poyo\kinect2\coordmap.dump",
-                                                    @"C:\Users\non\Desktop\Poyo\kinect3\coordmap.dump",
-                                                    @"C:\Users\non\Desktop\Poyo\kinect4\coordmap.dump",
+                                                    @"E:\kinect1_coordmap.dump",  
+                                                    @"E:\kinect2_coordmap.dump", 
+                                                    @"E:\kinect3_coordmap.dump", 
+                                                    @"E:\kinect4_coordmap.dump", 
+                                                    //@"C:\Users\non\Desktop\Poyo\kinect1\coordmap.dump",
+                                                    //@"C:\Users\non\Desktop\Poyo\kinect2\coordmap.dump",
+                                                    //@"C:\Users\non\Desktop\Poyo\kinect3\coordmap.dump",
+                                                    //@"C:\Users\non\Desktop\Poyo\kinect4\coordmap.dump",
             };
-            //string cameradir = @"E:\CameraInfo.dump";
-            string cameradir = @"C:\Users\non\Desktop\Poyo\kinect4\CameraInfo.dump";
+            string cameradir = @"E:\CameraInfo.dump";
+            //string cameradir = @"C:\Users\non\Desktop\Poyo\kinect4\CameraInfo.dump";
             this.frameSequence = new FrameSequence(datadir);
             this.frameSequence.LocalCoordinateMappers = mapdir.Select(s => (LocalCoordinateMapper)Utility.LoadFromBinary(s)).ToList();
             this.frameSequence.CameraInfo = (CameraIntrinsics)Utility.LoadFromBinary(cameradir);
