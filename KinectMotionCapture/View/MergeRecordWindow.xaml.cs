@@ -65,10 +65,10 @@ namespace KinectMotionCapture
                                                     @"E:\kinect2", 
                                                     @"E:\kinect3", 
                                                     @"E:\kinect4", 
-                                                    //@"C:\Users\non\Desktop\Poyo\kinect1\matsu",
-                                                    //@"C:\Users\non\Desktop\Poyo\kinect2\matsu",
-                                                    //@"C:\Users\non\Desktop\Poyo\kinect3\matsu",
-                                                    //@"C:\Users\non\Desktop\Poyo\kinect4\matsu",
+                                                    //@"C:\Users\non\Desktop\Poyo\1204\kinect1\matsu2",
+                                                    //@"C:\Users\non\Desktop\Poyo\1204\kinect2\matsu2",
+                                                    //@"C:\Users\non\Desktop\Poyo\1204\kinect3\matsu2",
+                                                    //@"C:\Users\non\Desktop\Poyo\1204\kinect4\matsu2",
 
             };
             List<string> mapdir = new List<string>() {
@@ -76,13 +76,13 @@ namespace KinectMotionCapture
                                                     @"E:\kinect2_coordmap.dump", 
                                                     @"E:\kinect3_coordmap.dump", 
                                                     @"E:\kinect4_coordmap.dump", 
-                                                    //@"C:\Users\non\Desktop\Poyo\kinect1\coordmap.dump",
-                                                    //@"C:\Users\non\Desktop\Poyo\kinect2\coordmap.dump",
-                                                    //@"C:\Users\non\Desktop\Poyo\kinect3\coordmap.dump",
-                                                    //@"C:\Users\non\Desktop\Poyo\kinect4\coordmap.dump",
+                                                    //@"C:\Users\non\Desktop\Poyo\1204\kinect1\coordmap.dump",
+                                                    //@"C:\Users\non\Desktop\Poyo\1204\kinect2\coordmap.dump",
+                                                    //@"C:\Users\non\Desktop\Poyo\1204\kinect3\coordmap.dump",
+                                                    //@"C:\Users\non\Desktop\Poyo\1204\kinect4\coordmap.dump",
             };
             string cameradir = @"E:\CameraInfo.dump";
-            //string cameradir = @"C:\Users\non\Desktop\Poyo\kinect4\CameraInfo.dump";
+            //string cameradir = @"C:\Users\non\Desktop\Poyo\1204\kinect4\CameraInfo.dump";
             this.frameSequence = new FrameSequence(datadir);
             this.frameSequence.LocalCoordinateMappers = mapdir.Select(s => (LocalCoordinateMapper)Utility.LoadFromBinary(s)).ToList();
             this.frameSequence.CameraInfo = (CameraIntrinsics)Utility.LoadFromBinary(cameradir);
