@@ -40,7 +40,46 @@ namespace UnityLib
             return mapping[jointNum];
         }
 
-        // TODO : Jointsの移動平均によるフィルタリング
+        /// <summary>
+        /// 単純移動平均. 真ん中を基準とする.
+        /// </summary>
+        /// <param name="sequence"></param>
+        /// <param name="windowSize"></param>
+        /// <returns></returns>
+        public static List<Dictionary<int, float[]>> MovingAverage(List<Dictionary<int, float[]>> sequence, int windowSize)
+        {
+            List<Dictionary<int, float[]>> res = new List<Dictionary<int, float[]>>();
+            int length = sequence.Count();
+            // 現在のフレームから前後に探索する窓を定義
+            List<int> window = new List<int>();
+            for (int i = -(windowSize / 2); i <= (windowSize / 2); i++)
+                window.Add(i);
+
+            for (int frameNo = 0; frameNo < length; frameNo++)
+            {
+                Dictionary<int, float[]> newJoints = new Dictionary<int, float[]>();
+                foreach (JointType key in Enum.GetValues(typeof(JointType)))
+                {
+                    float x = 0, y=0, z=0;
+                    int count = 0;
+                    foreach (int i in window)
+                    {
+                        int index = frameNo + i;
+                        if (index < 0 || index >= length)
+                            continue;
+                        float[] points;
+                        if (sequence[index].TryGetValue((int)key, out points))
+                        {
+                            x += points[0]; y += points[1]; z += points[2];
+                            count++;
+                        }
+                    }
+                    newJoints[(int)key] = new float[] { x / count, y / count, z / count };
+                }
+                res.Add(newJoints);
+            }
+            return res;
+        }
 
     }
 
