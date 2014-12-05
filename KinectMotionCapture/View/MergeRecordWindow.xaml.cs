@@ -81,6 +81,13 @@ namespace KinectMotionCapture
                                                     //@"C:\Users\non\Desktop\Poyo\1204\kinect3\coordmap.dump",
                                                     //@"C:\Users\non\Desktop\Poyo\1204\kinect4\coordmap.dump",
             };
+
+            //CvMat color = CvMat.LoadImageM(@"E:\kinect1\736_color.jpg", LoadMode.Unchanged);
+            //CvMat depth = CvMat.LoadImageM(@"E:\kinect1\736_depth.png", LoadMode.Unchanged);
+            //LocalCoordinateMapper lcm = (LocalCoordinateMapper)Utility.LoadFromBinary(mapdir[0]);
+            //var hoge = lcm.DepthColorMatToRealPoints(depth, color);
+
+
             string cameradir = @"E:\CameraInfo.dump";
             //string cameradir = @"C:\Users\non\Desktop\Poyo\1204\kinect4\CameraInfo.dump";
             this.frameSequence = new FrameSequence(datadir);
@@ -536,7 +543,14 @@ namespace KinectMotionCapture
         {
             List<CvMat> convs = KinectMerge.GetConvMatrixFromDepthFrameSequence(frameSequence, startIndex, endIndex);
             frameSequence.ToWorldConversions = convs;
-
+            // DEBUG
+            IEnumerable<Frame> frames = frameSequence.Slice(this.startIndex, this.endIndex).Where(f => f.IsAllBodyAvailable());
+            for (int i = 0; i < frameSequence.recordNum; i++)
+            {
+                Dictionary<JointType, Joint> joints = Utility.ApplyConversions(frames.First().GetMotionData(i).bodies[0].Joints, frameSequence.ToWorldConversions[i]);
+                CameraSpacePoint p = joints[JointType.SpineBase].Position;
+                Debug.WriteLine(string.Format("{0},{1},{2}", p.X, p.Y, p.Z));
+            }
         }
 
         /// <summary>

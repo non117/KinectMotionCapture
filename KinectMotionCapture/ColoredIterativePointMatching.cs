@@ -291,8 +291,8 @@ namespace KinectMotionCapture
                 if (minModelIndex != -1)
                 {
                     Tuple<CvPoint3D64f, CvColor> bestModelPoint = _flannModels[minModelIndex].ModelPoints[minPointIndex];
-                    double weightTo = 1.0 / (Math.Abs(bestModelPoint.Item1.Z - 1500) + 5000);
-                    double weightFrom = 1.0 / (Math.Abs(point.Z - 1500) + 5000);
+                    double weightTo = 1.0 / (Math.Abs(bestModelPoint.Item1.Z - 1500 / 1000f) + 5000 / 1000f);
+                    double weightFrom = 1.0 / (Math.Abs(point.Z - 1500 / 1000f) + 5000 / 1000f);
                     //weightFrom = weightTo = 1;
                     double weight = _weightFromDistanceSq(minDistanceSq) * weightFrom * weightTo;
                     CvPoint3D64f from = CvEx.ConvertPoint3D(point, targetTransform);
@@ -318,7 +318,7 @@ namespace KinectMotionCapture
                     ret.Add(CalculateTransform(i, true, randomSamplingRatio));
                 }
                 this.SetModelTransforms(ret);
-                this.SearchDistance = (this.SearchDistance - 50) * 0.997f + 50;
+                this.SearchDistance = (this.SearchDistance - 50 / 1000f) * 0.997f + 50 / 1000f;
             }
             return _modelTransforms.ToList();
         }

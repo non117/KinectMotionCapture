@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Media;
 
 using Microsoft.Kinect;
 using OpenCvSharp;
@@ -135,7 +134,7 @@ namespace KinectMotionCapture
         /// <returns></returns>
         public Dictionary<int, List<Tuple<CvPoint3D64f, CvColor>>> GetUserColorPoints(ushort[] depthData, byte[] colorFrameData, byte[] bodyIndexFrameData, CvSize colorSize)
         {
-            int bytesPerPixel = (PixelFormats.Bgr32.BitsPerPixel + 7) / 8;
+            int bytesPerPixel = 3;
             Dictionary<int, List<Tuple<CvPoint3D64f, CvColor>>> res = new Dictionary<int, List<Tuple<CvPoint3D64f, CvColor>>>();
             for (int y = 0; y < depthHeight; ++y)
             {
@@ -175,71 +174,75 @@ namespace KinectMotionCapture
         /// <param name="colorFrameData"></param>
         /// <param name="colorSize"></param>
         /// <returns></returns>
-        public List<Tuple<CvPoint3D64f, CvColor>> DepthColorMatToRealPoints(ushort[] depthData, byte[] colorFrameData, CvSize colorSize)
+        public List<Tuple<CvPoint3D64f, CvColor>> DepthColorMatToRealPoints(CvMat depthMat, CvMat colorMat)
         {
-            int bytesPerPixel = (PixelFormats.Bgr32.BitsPerPixel + 7) / 8;
             List<Tuple<CvPoint3D64f, CvColor>> res = new List<Tuple<CvPoint3D64f, CvColor>>();
-            for (int y = 0; y < depthHeight; ++y)
+            int bytesPerPixel = colorMat.ElemChannels;
+            CvSize colorSize = colorMat.GetSize();
+            unsafe
             {
-                for (int x = 0; x < depthWidth; ++x)
+                short* depthArr = depthMat.DataInt16;
+                byte* colorArr = colorMat.DataByte;                
+                
+                for (int y = 0; y < depthHeight; ++y)
                 {
-                    int depthIndex = (y * depthWidth) + x;
-                    ColorSpacePoint colorPoint = this.MapDepthPointToColorSpace(x, y, depthData[depthIndex], colorSize.Width, colorSize.Height);
-                    CameraSpacePoint cameraPoint = this.MapDepthPointToCameraSpace(x, y, depthData[depthIndex]);
-                    // make sure the depth pixel maps to a valid point in color space
-                    int colorX = (int)Math.Floor(colorPoint.X + 0.5);
-                    int colorY = (int)Math.Floor(colorPoint.Y + 0.5);
-                    if ((colorX >= 0) && (colorX < colorSize.Width) && (colorY >= 0) && (colorY < colorSize.Height))
+                    for (int x = 0; x < depthWidth; ++x)
                     {
-                        // calculate index into color array
-                        int colorIndex = ((colorY * colorSize.Width) + colorX) * bytesPerPixel;
-
-                        byte blue = colorFrameData[colorIndex++];
-                        byte green = colorFrameData[colorIndex++];
-                        byte red = colorFrameData[colorIndex];
-                        CvColor color = new CvColor(red, green, blue);
-                        res.Add(Tuple.Create((CvPoint3D64f)cameraPoint.ToCvPoint3D(), color));
+                        int depthIndex = (y * depthWidth) + x;
+                        ushort depthVal = (ushort)depthArr[depthIndex];
+                        ColorSpacePoint colorPoint = this.MapDepthPointToColorSpace(x, y, depthVal, colorSize.Width, colorSize.Height);
+                        CameraSpacePoint cameraPoint = this.MapDepthPointToCameraSpace(x, y, depthVal);
+                        // make sure the depth pixel maps to a valid point in color space
+                        int colorX = (int)Math.Floor(colorPoint.X + 0.5);
+                        int colorY = (int)Math.Floor(colorPoint.Y + 0.5);
+                        if ((colorX >= 0) && (colorX < colorSize.Width) && (colorY >= 0) && (colorY < colorSize.Height))
+                        {
+                            // calculate index into color array
+                            int colorIndex = ((colorY * colorSize.Width) + colorX) * bytesPerPixel;
+                            CvColor color = new CvColor(colorArr[colorIndex + 2], colorArr[colorIndex + 1], colorArr[colorIndex]);
+                            res.Add(Tuple.Create((CvPoint3D64f)cameraPoint.ToCvPoint3D(), color));
+                        }
                     }
                 }
             }
             return res;
         }
 
-        /// <summary>
-        /// 深度とカラーMatから点群の座標と色を返す
-        /// 微妙になってきた
-        /// </summary>
-        /// <param name="depthMat"></param>
-        /// <param name="colorMat"></param>
-        /// <returns></returns>
-        public List<Tuple<CvPoint3D64f, CvColor>> DepthColorMatToRealPoints(CvMat depthMat, CvMat colorMat)
-        {
-            List<Tuple<CvPoint3D64f, CvColor>> list = new List<Tuple<CvPoint3D64f, CvColor>>();
-            unsafe
-            {
-                short* depthArr = depthMat.DataInt16;
-                byte* colorArr = colorMat.DataByte;
-                for (int y = 0; y < depthMat.Rows; y++)
-                {
-                    int offset = y * depthMat.Cols;                    
-                    for (int x = 0; x < depthMat.Cols; x++)
-                    {
-                        ushort depth = (ushort)depthArr[offset + x];
-                        if (depth == 0)
-                            continue;
-                        ColorSpacePoint csp = this.MapDepthPointToColorSpace(x, y, depth, depthMat.Cols, depthMat.Rows);
-                        if (csp.Y < 0)
-                            csp.Y = 0;
-                        CvPoint3D64f point = this.MapDepthPointToCameraSpace(x, y, depth).ToCvPoint3D();
-                        int offsetXColor = (int)Math.Round(csp.X) * colorMat.ElemChannels;
-                        int offsetColor = (int)Math.Round(csp.Y) * colorMat.Cols * colorMat.ElemChannels;
-                        CvColor col = new CvColor(colorArr[offsetColor + offsetXColor + 0], colorArr[offsetColor + offsetXColor + 1], colorArr[offsetColor + offsetXColor + 2]);
-                        list.Add(new Tuple<CvPoint3D64f, CvColor>(point, col));
-                    }
-                }
-            }
-            return list;
-        }
+        ///// <summary>
+        ///// 深度とカラーMatから点群の座標と色を返す
+        ///// 微妙になってきた
+        ///// </summary>
+        ///// <param name="depthMat"></param>
+        ///// <param name="colorMat"></param>
+        ///// <returns></returns>
+        //public List<Tuple<CvPoint3D64f, CvColor>> DepthColorMatToRealPoints(CvMat depthMat, CvMat colorMat)
+        //{
+        //    List<Tuple<CvPoint3D64f, CvColor>> list = new List<Tuple<CvPoint3D64f, CvColor>>();
+        //    unsafe
+        //    {
+        //        short* depthArr = depthMat.DataInt16;
+        //        byte* colorArr = colorMat.DataByte;
+        //        for (int y = 0; y < depthMat.Rows; y++)
+        //        {
+        //            int offset = y * depthMat.Cols;                    
+        //            for (int x = 0; x < depthMat.Cols; x++)
+        //            {
+        //                ushort depth = (ushort)depthArr[offset + x];
+        //                if (depth == 0)
+        //                    continue;
+        //                ColorSpacePoint csp = this.MapDepthPointToColorSpace(x, y, depth, depthMat.Cols, depthMat.Rows);
+        //                if (csp.Y < 0)
+        //                    csp.Y = 0;
+        //                CvPoint3D64f point = this.MapDepthPointToCameraSpace(x, y, depth).ToCvPoint3D();
+        //                int offsetXColor = (int)Math.Round(csp.X) * colorMat.ElemChannels;
+        //                int offsetColor = (int)Math.Round(csp.Y) * colorMat.Cols * colorMat.ElemChannels;
+        //                CvColor col = new CvColor(colorArr[offsetColor + offsetXColor + 0], colorArr[offsetColor + offsetXColor + 1], colorArr[offsetColor + offsetXColor + 2]);
+        //                list.Add(new Tuple<CvPoint3D64f, CvColor>(point, col));
+        //            }
+        //        }
+        //    }
+        //    return list;
+        //}
 
         /// <summary>
         /// オフラインでLUTだけ与えるコンストラクタ
