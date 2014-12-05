@@ -227,10 +227,13 @@ namespace KinectMotionCapture
                 {
                     Frame curr = frames[i];
                     Dictionary<JointType, CvPoint3D64f> joints = skeletonInterpolator.IntegrateSkeleton(curr, user, frameseq);
-                        if (joints != null) {
-                            jointsSeq.Add(joints);
-                    }
+                    // jointsがnullの場合には空データを突っ込んで長さを稼ぐ
+                    if (joints == null)
+                        joints = new Dictionary<JointType, CvPoint3D64f>();
+                    jointsSeq.Add(joints);
                 }
+                // 長さの帳尻合わせ
+                jointsSeq.Add(jointsSeq.Last());
                 allBodies[user] = jointsSeq;
             }
             return allBodies;

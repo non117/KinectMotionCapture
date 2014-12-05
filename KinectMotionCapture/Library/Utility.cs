@@ -219,6 +219,17 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
+        /// Frameのリストから時刻のメタデータをUnity用に出力する
+        /// </summary>
+        /// <param name="Frames"></param>
+        public static void SaveTimeMetaData(IEnumerable<Frame> frames, string path)
+        {
+            DateTime startTime = frames.First().Time;
+            List<string> times = frames.Select(f => (f.Time - startTime).ToString(@"hh:mm:ss:fff")).ToList();
+            Utility.SaveToBinary(times, path);
+        }
+
+        /// <summary>
         /// Bodyの関節点をTrackedなものだけにフィルターして返す
         /// </summary>
         /// <param name="joints"></param>
