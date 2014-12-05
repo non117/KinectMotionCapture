@@ -588,6 +588,7 @@ namespace KinectMotionCapture
                     string path = Path.Combine(Environment.CurrentDirectory, userId.ToString() + @"_Body.dump");
                     Utility.SaveBodySequence(mergedBodies[userId], path);
                 }
+                Utility.SaveTimeMetaData(frameSequence.Frames, Path.Combine(Environment.CurrentDirectory, @"TimeData.dump"));
             }
         }
 
@@ -607,6 +608,7 @@ namespace KinectMotionCapture
                 {
                     Utility.SaveBodySequence(mergedBodies[id], path);
                 }
+                Utility.SaveTimeMetaData(frameSequence.Frames, Path.Combine(Environment.CurrentDirectory, @"TimeData.dump"));
 
                 //DEBUG
                 IEnumerable<Frame> frames = frameSequence.Slice(this.startIndex, this.endIndex).Where(f => f.IsAllBodyAvailable());

@@ -225,7 +225,7 @@ namespace KinectMotionCapture
         public static void SaveTimeMetaData(IEnumerable<Frame> frames, string path)
         {
             DateTime startTime = frames.First().Time;
-            List<string> times = frames.Select(f => (f.Time - startTime).ToString(@"hh:mm:ss:fff")).ToList();
+            List<double> times = frames.Select(f => (f.Time - startTime).TotalMilliseconds).ToList();
             Utility.SaveToBinary(times, path);
         }
 
