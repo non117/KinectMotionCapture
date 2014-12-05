@@ -11,19 +11,6 @@ namespace KinectMotionCapture
 {
     public class JointMirroredCorrection
     {
-        class Range {
-            public int RecordIndex;
-            public int User;
-            public int BeginFrameIndex, EndFrameIndex;
-            public double Reliability;
-            public Range(int recordIndex, int user, int beginFrameIndex, int endFrameIndex) {
-                this.RecordIndex = recordIndex;
-                this.User = user;
-                this.BeginFrameIndex = beginFrameIndex;
-                this.EndFrameIndex = endFrameIndex;
-            }
-        }
-
         class OrderTuple {
             public DateTime Timestamp;
             public int RecordIndex;
@@ -35,7 +22,7 @@ namespace KinectMotionCapture
             }
         }
 
-        public void Correct(FrameSequence frameSeq) {
+        public static void Correct(FrameSequence frameSeq) {
             List<OrderTuple> orders = new List<OrderTuple>();
             foreach (var pair in frameSeq.Frames.Select((frame, index) => Tuple.Create(frame, index)))
             {
@@ -51,7 +38,15 @@ namespace KinectMotionCapture
                 if (tuple.RecordIndex == 0)
                     continue;
                 Frame currFrame = frameSeq.Frames[tuple.RecordIndex];
-                Frame prevFrame = frameSeq.Frames[tuple.RecordIndex - 1];
+                Frame prevFrame = frameSeq.Frames[0];
+                int i = 1;
+                while (tuple.RecordIndex - i > 0)
+                {
+                    prevFrame = frameSeq.Frames[tuple.RecordIndex - i];
+                    if (currFrame.Time != prevFrame.Time)
+                        break;
+                    i++;
+                }
                 IEnumerable<int> users = currFrame.GetBodyList(tuple.RecordIndex).Select(b => b.integratedId);
                 foreach (int user in users)
                 {

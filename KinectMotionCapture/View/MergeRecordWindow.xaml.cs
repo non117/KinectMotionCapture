@@ -568,6 +568,9 @@ namespace KinectMotionCapture
                     boxes[recordNo].Items.Add(id.ToString());
                 }
             }
+            //debug
+            JointMirroredCorrection.Correct(frameSequence);
+
         }
 
         /// <summary>

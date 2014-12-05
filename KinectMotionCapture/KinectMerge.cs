@@ -220,7 +220,7 @@ namespace KinectMotionCapture
                 // 同時刻のフレーム集合. Kinectの数だけ入るはず.
                 List<MotionData> currentRecords = new List<MotionData>();
                 List<MotionData> nextRecords = new List<MotionData>();
-                for (int i = 0; i < this.recordNum;i++ )
+                for (int i = 0; i < this.recordNum; i++)
                 {
                     List<MotionData> record = records[i];
                     List<DateTime> dateTimes = timeInfos[i].Item1;
