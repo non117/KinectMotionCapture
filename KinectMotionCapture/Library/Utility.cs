@@ -175,6 +175,21 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
+        /// byte[]としてファイルから読み込む
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public static byte[] LoadAsBytes(string path)
+        {
+            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read))
+            {
+                byte[] bytes = new byte[fs.Length];
+                fs.Read(bytes, 0, bytes.Length);
+                return bytes;
+            }
+        }
+
+        /// <summary>
         /// Unityに吐くためのデータ変換
         /// </summary>
         /// <param name="originalJoints"></param>
