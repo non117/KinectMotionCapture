@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media;
 
 using Microsoft.Kinect;
 using OpenCvSharp;
@@ -125,7 +126,88 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
+        /// ユーザのボクセルを返す
+        /// </summary>
+        /// <param name="depthData"></param>
+        /// <param name="colorFrameData"></param>
+        /// <param name="bodyIndexFrameData"></param>
+        /// <param name="colorSize"></param>
+        /// <returns></returns>
+        public Dictionary<int, List<Tuple<CvPoint3D64f, CvColor>>> GetUserColorPoints(ushort[] depthData, byte[] colorFrameData, byte[] bodyIndexFrameData, CvSize colorSize)
+        {
+            int bytesPerPixel = (PixelFormats.Bgr32.BitsPerPixel + 7) / 8;
+            Dictionary<int, List<Tuple<CvPoint3D64f, CvColor>>> res = new Dictionary<int, List<Tuple<CvPoint3D64f, CvColor>>>();
+            for (int y = 0; y < depthHeight; ++y)
+            {
+                for (int x = 0; x < depthWidth; ++x)
+                {
+                    int depthIndex = (y * depthWidth) + x;
+                    byte player = bodyIndexFrameData[depthIndex];
+
+                    if (player != 0xff)
+                    {
+                        ColorSpacePoint colorPoint = this.MapDepthPointToColorSpace(x, y, depthData[depthIndex], colorSize.Width, colorSize.Height);
+                        CameraSpacePoint cameraPoint = this.MapDepthPointToCameraSpace(x, y, depthData[depthIndex]);
+                        // make sure the depth pixel maps to a valid point in color space
+                        int colorX = (int)Math.Floor(colorPoint.X + 0.5);
+                        int colorY = (int)Math.Floor(colorPoint.Y + 0.5);
+                        if ((colorX >= 0) && (colorX < colorSize.Width) && (colorY >= 0) && (colorY < colorSize.Height))
+                        {
+                            // calculate index into color array
+                            int colorIndex = ((colorY * colorSize.Width) + colorX) * bytesPerPixel;
+
+                            byte blue = colorFrameData[colorIndex++];
+                            byte green = colorFrameData[colorIndex++];
+                            byte red = colorFrameData[colorIndex];
+                            CvColor color = new CvColor(red, green, blue);
+                            res[(int)player].Add(Tuple.Create((CvPoint3D64f)cameraPoint.ToCvPoint3D(), color));
+                        }
+                    }
+                }
+            }
+            return res;
+        }
+
+        /// <summary>
+        /// 深度データからリアルワールドの色を見つける
+        /// </summary>
+        /// <param name="depthData"></param>
+        /// <param name="colorFrameData"></param>
+        /// <param name="colorSize"></param>
+        /// <returns></returns>
+        public List<Tuple<CvPoint3D64f, CvColor>> DepthColorMatToRealPoints(ushort[] depthData, byte[] colorFrameData, CvSize colorSize)
+        {
+            int bytesPerPixel = (PixelFormats.Bgr32.BitsPerPixel + 7) / 8;
+            List<Tuple<CvPoint3D64f, CvColor>> res = new List<Tuple<CvPoint3D64f, CvColor>>();
+            for (int y = 0; y < depthHeight; ++y)
+            {
+                for (int x = 0; x < depthWidth; ++x)
+                {
+                    int depthIndex = (y * depthWidth) + x;
+                    ColorSpacePoint colorPoint = this.MapDepthPointToColorSpace(x, y, depthData[depthIndex], colorSize.Width, colorSize.Height);
+                    CameraSpacePoint cameraPoint = this.MapDepthPointToCameraSpace(x, y, depthData[depthIndex]);
+                    // make sure the depth pixel maps to a valid point in color space
+                    int colorX = (int)Math.Floor(colorPoint.X + 0.5);
+                    int colorY = (int)Math.Floor(colorPoint.Y + 0.5);
+                    if ((colorX >= 0) && (colorX < colorSize.Width) && (colorY >= 0) && (colorY < colorSize.Height))
+                    {
+                        // calculate index into color array
+                        int colorIndex = ((colorY * colorSize.Width) + colorX) * bytesPerPixel;
+
+                        byte blue = colorFrameData[colorIndex++];
+                        byte green = colorFrameData[colorIndex++];
+                        byte red = colorFrameData[colorIndex];
+                        CvColor color = new CvColor(red, green, blue);
+                        res.Add(Tuple.Create((CvPoint3D64f)cameraPoint.ToCvPoint3D(), color));
+                    }
+                }
+            }
+            return res;
+        }
+
+        /// <summary>
         /// 深度とカラーMatから点群の座標と色を返す
+        /// 微妙になってきた
         /// </summary>
         /// <param name="depthMat"></param>
         /// <param name="colorMat"></param>
