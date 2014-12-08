@@ -356,6 +356,11 @@ namespace KinectMotionCapture
             get { return this.records.Select((m) => CvMat.LoadImageM(m.DepthPath, LoadMode.Unchanged)).ToList(); }
         }
 
+        public List<CvMat> UserMatList
+        {
+            get { return this.records.Select((m) => CvMat.LoadImageM(m.UserPath, LoadMode.Unchanged)).ToList(); }
+        }
+
         public List<CvSize> ColorSize
         {
             get { return this.records.Select((m) => new CvSize(m.ColorWidth, m.ColorHeight)).ToList(); }

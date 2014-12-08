@@ -741,9 +741,24 @@ namespace KinectMotionCapture
             for (int i = 0; i < frameSequence.recordNum; i++)
             {
                 List<Tuple<CvPoint3D64f, CvColor>> colors = frameSequence.LocalCoordinateMappers[i].DepthColorMatToRealPoints(frame.DepthMatList[i], frame.ColorMatList[i]);
-                List<Tuple<double[], int[]>> dumpColors = colors.Select(t => Tuple.Create(new double[]{t.Item1.X, t.Item1.Y, t.Item1.Z}, new int[]{t.Item2.R, t.Item2.G, t.Item2.B})).ToList();
+                List<double[]> dumpColors = colors.Select(t => new double[] { t.Item1.X, t.Item1.Y, t.Item1.Z, t.Item2.R, t.Item2.G, t.Item2.B }).ToList();
                 string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), i.ToString() + "_PointsCloud.dump");
                 Utility.SaveToBinary(dumpColors, path);
+            }
+        }
+
+        private void ExportFrameUserPointClouds_Click(object sender, RoutedEventArgs e)
+        {
+            Frame frame = frameSequence.Frames[playingIndex];
+            for (int i = 0; i < frameSequence.recordNum; i++)
+            {
+                Dictionary<int, List<Tuple<CvPoint3D64f, CvColor>>> colors = frameSequence.LocalCoordinateMappers[i].GetUserColorPoints(frame.DepthMatList[i], frame.ColorMatList[i], frame.UserMatList[i]);
+                foreach (var pair in colors)
+                {
+                    List<double[]> dumpColors = pair.Value.Select(t => new double[] { t.Item1.X, t.Item1.Y, t.Item1.Z, t.Item2.R, t.Item2.G, t.Item2.B }).ToList();
+                    string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), i.ToString() + "_User" + pair.Key.ToString() + "_PointsCloud.dump");
+                    Utility.SaveToBinary(dumpColors, path);
+                }
             }
         }
     }
