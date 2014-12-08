@@ -753,10 +753,11 @@ namespace KinectMotionCapture
             for (int i = 0; i < frameSequence.recordNum; i++)
             {
                 Dictionary<int, List<Tuple<CvPoint3D64f, CvColor>>> colors = frameSequence.LocalCoordinateMappers[i].GetUserColorPoints(frame.DepthMatList[i], frame.ColorMatList[i], frame.UserMatList[i]);
-                foreach (var pair in colors)
+                foreach (var pairs in colors)
                 {
-                    List<double[]> dumpColors = pair.Value.Select(t => new double[] { t.Item1.X, t.Item1.Y, t.Item1.Z, t.Item2.R, t.Item2.G, t.Item2.B }).ToList();
-                    string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), i.ToString() + "_User" + pair.Key.ToString() + "_PointsCloud.dump");
+                    var colorPointList = from pair in pairs.Value select Tuple.Create(CvEx.ConvertPoint3D(pair.Item1, frameSequence.ToWorldConversions[i]), pair.Item2);
+                    List<double[]> dumpColors = colorPointList.Select(t => new double[] { t.Item1.X, t.Item1.Y, t.Item1.Z, t.Item2.R, t.Item2.G, t.Item2.B }).ToList();
+                    string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), i.ToString() + "_User" + pairs.Key.ToString() + "_PointsCloud.dump");
                     Utility.SaveToBinary(dumpColors, path);
                 }
             }
