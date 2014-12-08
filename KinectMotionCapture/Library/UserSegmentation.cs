@@ -35,6 +35,12 @@ namespace KinectMotionCapture
             set { _conversions = value; }
         }
 
+        public void AddNewConversion(Dictionary<ulong, int> newMapping)
+        {
+            int newFrameNo = this._conversions.Last().Key + 1;
+            _conversions.Add(newFrameNo, newMapping);
+        }
+
         //public TupleStruct<int, TupleStruct<int, int>[]>[] SerializableConversions
         //{
         //    get

@@ -548,6 +548,25 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
+        /// 統合IDの選択UIとかをupdateする
+        /// </summary>
+        private void UpdateIntegratedIds()
+        {
+            ComboBox[] boxes = { UserIdBox1, UserIdBox2, UserIdBox3, UserIdBox4 };
+            for (int recordNo = 0; recordNo < frameSequence.recordNum; recordNo++)
+            {
+                boxes[recordNo].SelectedItem = null;
+                boxes[recordNo].Items.Clear();
+                this.isUserSelected[recordNo] = false;
+                Dictionary<ulong, int> map = frameSequence.Segmentations[recordNo].Conversions.Last().Value;
+                foreach (int id in map.Select(pair => pair.Value).OrderBy(num => num).Distinct())
+                {
+                    boxes[recordNo].Items.Add(id.ToString());
+                }
+            }
+        }
+
+        /// <summary>
         /// ユーザのセグメンテーションと新IDの割り当て
         /// </summary>
         /// <param name="sender"></param>
@@ -564,18 +583,7 @@ namespace KinectMotionCapture
             segm = UserSegmentation.Identification(frameSequence, 1);
             frameSequence.Segmentations = segm.ToList();
             // UserIdを選択するUIのリフレッシュ
-            ComboBox[] boxes = { UserIdBox1, UserIdBox2, UserIdBox3, UserIdBox4 };
-            for (int recordNo = 0; recordNo < frameSequence.recordNum; recordNo++)
-            {
-                boxes[recordNo].SelectedItem = null;
-                boxes[recordNo].Items.Clear();
-                this.isUserSelected[recordNo] = false;
-                Dictionary<ulong, int> map = frameSequence.Segmentations[recordNo].Conversions.Last().Value;
-                foreach (int id in map.Select(pair => pair.Value).OrderBy(num => num).Distinct())
-                {
-                    boxes[recordNo].Items.Add(id.ToString());
-                }
-            }
+            this.UpdateIntegratedIds();
             //debug
             JointMirroredCorrection.Correct(frameSequence);
 
@@ -735,6 +743,11 @@ namespace KinectMotionCapture
             }
         }
 
+        /// <summary>
+        /// あるフレームの点群を出力する
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ExportFramePointClouds_Click(object sender, RoutedEventArgs e)
         {
             Frame frame = frameSequence.Frames[playingIndex];
@@ -747,6 +760,11 @@ namespace KinectMotionCapture
             }
         }
 
+        /// <summary>
+        /// あるフレームの全ユーザの点群を出力する
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ExportFrameUserPointClouds_Click(object sender, RoutedEventArgs e)
         {
             Frame frame = frameSequence.Frames[playingIndex];
@@ -760,6 +778,20 @@ namespace KinectMotionCapture
                     string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), i.ToString() + "_User" + pairs.Key.ToString() + "_PointsCloud.dump");
                     Utility.SaveToBinary(dumpColors, path);
                 }
+            }
+        }
+
+        /// <summary>
+        /// 選択中の統合IDを新しいIDに振りかえる
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CreateNewIntegratedId_Click(object sender, RoutedEventArgs e)
+        {
+            if (frameSequence.Segmentations != null && this.isUserSelected.All(b => b))
+            {
+                frameSequence.CreateNewIds();
+                this.UpdateIntegratedIds();
             }
         }
     }

@@ -165,6 +165,8 @@
                 <MenuItem Name="MirrorSelectedRecordRange" Header="現在のフレーム範囲で選択中のレコード・ユーザの骨格情報を左右反転する" Click="MirrorSelectedRecordRange_Click"/>
                 <Separator/>
                 <MenuItem Name="ResetMirroredBodies" Header="全てのレコードの反転状態を初期化する" Click="ResetMirroredBodies_Click"/>
+                <Separator/>
+                <MenuItem Name="CreateNewIntegratedId" Header="選択中のユーザの統合IDを揃える新しい統合IDを振る" Click="CreateNewIntegratedId_Click"/>
             </MenuItem>
             <MenuItem Name="MenuCalib" Header="Calibration">
                 <MenuItem Name="Segmentation" Header="検出ユーザのセグメンテーションとフレーム間統合" Click="Segmentation_Click"/>

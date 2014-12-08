@@ -79,6 +79,31 @@ namespace KinectMotionCapture
                 return mapping;
             }
         }
+
+        /// <summary>
+        /// 新しいIDを作る
+        /// </summary>
+        public void CreateNewIds()
+        {
+            int newId = this.UserMapping.Values.Max() + 1;
+            foreach (UserSegmentation usm in this.Segmentations)
+            {
+                Dictionary<ulong, int> mapping = usm.Conversions.Last().Value;
+                Dictionary<ulong, int> newMapping = mapping.CloneDeep();
+                foreach (int destId in this.selecteedIntegretedIdList)
+                {
+                    foreach (var pair in mapping)
+                    {
+                        if (pair.Value == destId)
+                        {
+                            ulong destOriginal = pair.Key;
+                            newMapping[destOriginal] = newId;
+                        }
+                    }
+                }
+                usm.AddNewConversion(newMapping);
+            }
+        }
         
         /// <summary>
         /// 座標系を統合するための変換行列、各レコードに対して
