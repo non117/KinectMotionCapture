@@ -82,12 +82,6 @@ namespace KinectMotionCapture
                                                     //@"C:\Users\non\Desktop\Poyo\1204\kinect4\coordmap.dump",
             };
 
-            //CvMat color = CvMat.LoadImageM(@"E:\kinect1\736_color.jpg", LoadMode.Unchanged);
-            //CvMat depth = CvMat.LoadImageM(@"E:\kinect1\736_depth.png", LoadMode.Unchanged);
-            //LocalCoordinateMapper lcm = (LocalCoordinateMapper)Utility.LoadFromBinary(mapdir[0]);
-            //var hoge = lcm.DepthColorMatToRealPoints(depth, color);
-
-
             string cameradir = @"E:\CameraInfo.dump";
             //string cameradir = @"C:\Users\non\Desktop\Poyo\1204\kinect4\CameraInfo.dump";
             this.frameSequence = new FrameSequence(datadir);
@@ -738,6 +732,18 @@ namespace KinectMotionCapture
                     }
 
                 }
+            }
+        }
+
+        private void ExportFramePointClouds_Click(object sender, RoutedEventArgs e)
+        {
+            Frame frame = frameSequence.Frames[playingIndex];
+            for (int i = 0; i < frameSequence.recordNum; i++)
+            {
+                List<Tuple<CvPoint3D64f, CvColor>> colors = frameSequence.LocalCoordinateMappers[i].DepthColorMatToRealPoints(frame.DepthMatList[i], frame.ColorMatList[i]);
+                List<Tuple<double[], int[]>> dumpColors = colors.Select(t => Tuple.Create(new double[]{t.Item1.X, t.Item1.Y, t.Item1.Z}, new int[]{t.Item2.R, t.Item2.G, t.Item2.B})).ToList();
+                string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), i.ToString() + "_PointsCloud.dump");
+                Utility.SaveToBinary(dumpColors, path);
             }
         }
     }
