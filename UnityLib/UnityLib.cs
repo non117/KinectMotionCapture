@@ -70,11 +70,21 @@ namespace UnityLib
                         float[] points;
                         if (sequence[index].TryGetValue((int)key, out points))
                         {
+                            // ダミーデータチェック
+                            if (points[0] > 1e10)
+                                continue;
                             x += points[0]; y += points[1]; z += points[2];
                             count++;
                         }
                     }
-                    newJoints[(int)key] = new float[] { x / count, y / count, z / count };
+                    if (count == 0)
+                    {
+                        newJoints[(int)key] = new float[] { float.MaxValue, float.MaxValue, float.MaxValue };
+                    }
+                    else
+                    {
+                        newJoints[(int)key] = new float[] { x / count, y / count, z / count };
+                    }
                 }
                 res.Add(newJoints);
             }

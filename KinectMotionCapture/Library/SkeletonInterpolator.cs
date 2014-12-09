@@ -171,14 +171,28 @@ namespace KinectMotionCapture
                 reliabilityList[recordNo] = this.GetSkeletonReliability(prevData, nextData, prevBody, nextBody, time, cameraInfo);
                 weightList[recordNo] = this.GetVarianceWeight(prevData, nextData, prevBody, nextBody, time);
             }
-            if (skipped.Count(b => b) >= 2){
+            // 2個以上あればマージする
+            if (skipped.Count(b => b) >= 3){
                 return null;
             }
-            else if (skipped.Count(b => b) == 1)
+            else
             {
-                jointsArr = jointsArr.Where(j => j != default(Dictionary<JointType, CvPoint3D64f>)).ToArray();
-                reliabilityList = reliabilityList.Where(d => d != default(double)).ToArray();
-                weightList = weightList.Where(d => d != default(double)).ToArray();
+                List<Dictionary<JointType, CvPoint3D64f>> tempJoints = new List<Dictionary<JointType, CvPoint3D64f>>();
+                List<double> tempReliability = new List<double>();
+                List<double> tempWeight = new List<double>();
+
+                for (int no=0;no<frame.recordNum;no++)
+                {
+                    if (!skipped[no])
+                    {
+                        tempJoints.Add(jointsArr[no]);
+                        tempReliability.Add(reliabilityList[no]);
+                        tempWeight.Add(weightList[no]);
+                    }
+                }
+                jointsArr = tempJoints.ToArray();
+                reliabilityList = tempReliability.ToArray();
+                weightList = tempWeight.ToArray();
             }            
 
             double maxWeight = weightList.Max();
@@ -227,10 +241,15 @@ namespace KinectMotionCapture
                 {
                     Frame curr = frames[i];
                     Dictionary<JointType, CvPoint3D64f> joints = skeletonInterpolator.IntegrateSkeleton(curr, user, frameseq);
-                    // jointsがnullの場合には空データを突っ込んで長さを稼ぐ
+                    // jointsがnullの場合にはダミーデータを突っ込んで長さを稼ぐ
                     if (joints == null)
-                        joints = new Dictionary<JointType, CvPoint3D64f>();
-                    jointsSeq.Add(joints);
+                    {
+                        jointsSeq.Add(new Dictionary<JointType, CvPoint3D64f>() { { JointType.SpineBase, new CvPoint3D64f(float.MaxValue, float.MaxValue, float.MaxValue) } });
+                    }
+                    else
+                    {
+                        jointsSeq.Add(joints);
+                    }
                 }
                 // 長さの帳尻合わせ
                 jointsSeq.Add(jointsSeq.Last());
