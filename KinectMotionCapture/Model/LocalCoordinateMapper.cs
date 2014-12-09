@@ -221,42 +221,6 @@ namespace KinectMotionCapture
             return res;
         }
 
-        ///// <summary>
-        ///// 深度とカラーMatから点群の座標と色を返す
-        ///// 微妙になってきた
-        ///// </summary>
-        ///// <param name="depthMat"></param>
-        ///// <param name="colorMat"></param>
-        ///// <returns></returns>
-        //public List<Tuple<CvPoint3D64f, CvColor>> DepthColorMatToRealPoints(CvMat depthMat, CvMat colorMat)
-        //{
-        //    List<Tuple<CvPoint3D64f, CvColor>> list = new List<Tuple<CvPoint3D64f, CvColor>>();
-        //    unsafe
-        //    {
-        //        short* depthArr = depthMat.DataInt16;
-        //        byte* colorArr = colorMat.DataByte;
-        //        for (int y = 0; y < depthMat.Rows; y++)
-        //        {
-        //            int offset = y * depthMat.Cols;                    
-        //            for (int x = 0; x < depthMat.Cols; x++)
-        //            {
-        //                ushort depth = (ushort)depthArr[offset + x];
-        //                if (depth == 0)
-        //                    continue;
-        //                ColorSpacePoint csp = this.MapDepthPointToColorSpace(x, y, depth, depthMat.Cols, depthMat.Rows);
-        //                if (csp.Y < 0)
-        //                    csp.Y = 0;
-        //                CvPoint3D64f point = this.MapDepthPointToCameraSpace(x, y, depth).ToCvPoint3D();
-        //                int offsetXColor = (int)Math.Round(csp.X) * colorMat.ElemChannels;
-        //                int offsetColor = (int)Math.Round(csp.Y) * colorMat.Cols * colorMat.ElemChannels;
-        //                CvColor col = new CvColor(colorArr[offsetColor + offsetXColor + 0], colorArr[offsetColor + offsetXColor + 1], colorArr[offsetColor + offsetXColor + 2]);
-        //                list.Add(new Tuple<CvPoint3D64f, CvColor>(point, col));
-        //            }
-        //        }
-        //    }
-        //    return list;
-        //}
-
         /// <summary>
         /// オフラインでLUTだけ与えるコンストラクタ
         /// </summary>
