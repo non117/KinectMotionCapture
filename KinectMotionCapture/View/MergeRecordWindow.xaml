@@ -157,8 +157,8 @@
                 <MenuItem Name="ExportAllBodiesAsBinary" Header="現在のフレーム範囲の全ユーザをバイナリで出力" Click="ExportAllBodiesAsBinary_Click"/>
                 <MenuItem Name="ExportSelectedBodiesAsBinary" Header="現在のフレーム範囲で選択中のユーザをバイナリで出力" Click="ExportSelectedBodiesAsBinary_Click"/>
                 <Separator/>
-                <MenuItem Name="ExportFramePointClouds" Header="現在のフレームの点群を出力" Click="ExportFramePointClouds_Click" />
-                <MenuItem Name="ExportFrameUserPointClouds" Header="現在のフレームのユーザの点群を出力" Click="ExportFrameUserPointClouds_Click" />
+                <MenuItem Name="ExportFrameRangePointClouds" Header="現在のフレーム範囲の点群を出力" Click="ExportFrameRangePointClouds_Click" />
+                <MenuItem Name="ExportFrameRangeUserPointClouds" Header="現在のフレーム範囲のユーザの点群を出力" Click="ExportFrameRangeUserPointClouds_Click" />
             </MenuItem>
             <MenuItem Name="Edit" Header="Edit">
                 <MenuItem Name="MirrorSelectedRecordFrame" Header="現在のフレームで選択中のレコード・ユーザの骨格情報を左右反転する" Click="MirrorSelectedRecordFrame_Click"/>

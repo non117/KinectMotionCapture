@@ -124,6 +124,12 @@ namespace KinectMotionCapture
             return this.MapDepthPointToColorSpace(new DepthSpacePoint() { X = x, Y = y }, depth, colorWidth, colorHeight);
         }
 
+        public List<Tuple<CvPoint3D64f, CvColor>> GetUserColorPoints(CvMat depthMat, CvMat colorMat, CvMat userMat)
+        {
+            Dictionary<int, List<Tuple<CvPoint3D64f, CvColor>>> eachUserColorPoints = this.GetEachUserColorPoints(depthMat, colorMat, userMat);
+            return eachUserColorPoints.Values.SelectMany(l => l).ToList();
+        }
+
         /// <summary>
         /// ユーザのボクセルを返す
         /// </summary>
@@ -132,7 +138,7 @@ namespace KinectMotionCapture
         /// <param name="bodyIndexFrameData"></param>
         /// <param name="colorSize"></param>
         /// <returns></returns>
-        public Dictionary<int, List<Tuple<CvPoint3D64f, CvColor>>> GetUserColorPoints(CvMat depthMat, CvMat colorMat, CvMat userMat)
+        public Dictionary<int, List<Tuple<CvPoint3D64f, CvColor>>> GetEachUserColorPoints(CvMat depthMat, CvMat colorMat, CvMat userMat)
         {
             Dictionary<int, List<Tuple<CvPoint3D64f, CvColor>>> res = new Dictionary<int, List<Tuple<CvPoint3D64f, CvColor>>>();
             List<Tuple<CvPoint3D64f, CvColor>> lis;
