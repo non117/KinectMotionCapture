@@ -623,8 +623,8 @@ namespace KinectMotionCapture
         /// <param name="frame"></param>
         public static List<CvMat> GetConvMatrixFromDepthFrame(Frame frame, List<CvMat> convList, List<LocalCoordinateMapper> localCoordinateMappers)
         {
-            Func<float, double> distance2weight = x => 1.0 / (x * 0 + 400);
-            using (ColoredIterativePointMatching sipm = new ColoredIterativePointMatching(frame.DepthMatList, frame.ColorMatList, localCoordinateMappers, convList, distance2weight, 200))
+            Func<float, double> distance2weight = x => 1.0 / (x * 0 + 400 / 1000f);
+            using (ColoredIterativePointMatching sipm = new ColoredIterativePointMatching(frame, localCoordinateMappers, convList, distance2weight, 200))
             {
                 List<CvMat> conversions = sipm.CalculateTransformSequntially(0.2, 3);
                 return conversions;
@@ -642,7 +642,7 @@ namespace KinectMotionCapture
             foreach (Frame frame in frames)
             {
                 Func<float, double> distance2weight = x => 1.0 / (x * 0 + 400 / 1000f);
-                using (ColoredIterativePointMatching sipm = new ColoredIterativePointMatching(frame.DepthMatList, frame.ColorMatList, frameSeq.LocalCoordinateMappers, conversions, distance2weight, 200))
+                using (ColoredIterativePointMatching sipm = new ColoredIterativePointMatching(frame, frameSeq.LocalCoordinateMappers, conversions, distance2weight, 200))
                 {
                     conversions = sipm.CalculateTransformSequntially(0.1, 1);                    
                 }

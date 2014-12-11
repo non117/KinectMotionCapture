@@ -619,10 +619,10 @@ namespace KinectMotionCapture
                 IEnumerable<Frame> frames = frameSequence.Slice(this.startIndex, this.endIndex).Where(f => f.IsAllBodyAvailable());
                 for (int i = 0; i < frameSequence.recordNum; i++)
                 {
-                    //var bodies = frames.Select(f => f.GetMotionData(i).bodies.Where(b => b.integratedId == frameSequence.selecteedIntegretedIdList[i]).First());
-                    //List<Dictionary<JointType, Joint>> joints = bodies.Select(b => Utility.ApplyConversions(b.Joints, frameSequence.ToWorldConversions[i])).ToList();
-                    //path = Path.Combine(Environment.CurrentDirectory, i.ToString() + @"_RecordBodies.dump");
-                    //Utility.SaveBodySequence(joints, path);
+                    var bodies = frames.Select(f => f.GetMotionData(i).bodies.Where(b => b.integratedId == frameSequence.selecteedIntegretedIdList[i]).First());
+                    List<Dictionary<JointType, Joint>> joints = bodies.Select(b => Utility.ApplyConversions(b.Joints, frameSequence.ToWorldConversions[i])).ToList();
+                    path = Path.Combine(Environment.CurrentDirectory, i.ToString() + @"_RecordBodies.dump");
+                    Utility.SaveBodySequence(joints, path);
                 }
             }
         }
