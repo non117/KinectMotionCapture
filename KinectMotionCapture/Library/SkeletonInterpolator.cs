@@ -181,7 +181,7 @@ namespace KinectMotionCapture
                 List<double> tempReliability = new List<double>();
                 List<double> tempWeight = new List<double>();
 
-                for (int no=0;no<frame.recordNum;no++)
+                for (int no = 0; no < frame.recordNum; no++)
                 {
                     if (!skipped[no])
                     {
