@@ -117,7 +117,7 @@ namespace KinectMotionCapture
         List<FlannColoredModelPoints> _flannModels = new List<FlannColoredModelPoints>();
         List<CvMat> _modelTransforms = new List<CvMat>();
         Func<float, double> _weightFromDistanceSq;
-        public float SearchDistance = 200f / 1000f;
+        public float SearchDistance = 0.1f;
 
         public ColoredIterativePointMatching(Frame frame, List<LocalCoordinateMapper> localCoordinateMappers, IList<CvMat> initialModelTransforms, Func<float, double> weightFromDistanceSq, double colorScale)
         {
