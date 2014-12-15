@@ -144,9 +144,9 @@ namespace KinectMotionCapture
             List<UserSegmentation> segm = frameSeq.Segmentations;
 
             Dictionary<JointType, CvPoint3D64f>[] jointsArr = new Dictionary<JointType, CvPoint3D64f>[frame.recordNum];
-            double[] reliabilityList = new double[frame.recordNum];
-            double[] weightList = new double[frame.recordNum];
-            bool[] skipped = new bool[frame.recordNum];
+            double[] reliabilityArr = new double[frame.recordNum];
+            double[] weightArr = new double[frame.recordNum];
+
             for (int recordNo = 0; recordNo < frame.recordNum; recordNo++)
             {
                 MotionData prevData = frameSeq.GetPrevData(recordNo, frame.Time);
@@ -154,7 +154,9 @@ namespace KinectMotionCapture
 
                 if (prevData == null || nextData == null || prevData.bodies.Length * nextData.bodies.Length == 0)
                 {
-                    skipped[recordNo] = true;
+                    jointsArr[recordNo] = null;
+                    reliabilityArr[recordNo] = 0;
+                    weightArr[recordNo] = 0;
                     continue;
                 }
 
@@ -163,40 +165,19 @@ namespace KinectMotionCapture
                 SerializableBody nextBody = nextData.bodies.Where(b => b.integratedId == userInt).FirstOrDefault();
                 if (prevBody == null || nextBody == null || prevBody.Equals(default(SerializableBody)) || nextBody.Equals(default(SerializableBody)))
                 {
-                    skipped[recordNo] = true;
+                    jointsArr[recordNo] = null;
+                    reliabilityArr[recordNo] = 0;
+                    weightArr[recordNo] = 0;
                     continue;
                 }
 
                 jointsArr[recordNo] = this.InterpolateSkeleton(prevData, nextData, prevBody, nextBody, time, ToWorldConversions[recordNo]);
-                reliabilityList[recordNo] = this.GetSkeletonReliability(prevData, nextData, prevBody, nextBody, time, cameraInfo);
-                weightList[recordNo] = this.GetVarianceWeight(prevData, nextData, prevBody, nextBody, time);
-            }
-            // 2個以上あればマージする
-            if (skipped.Count(b => b) >= 3){
-                return null;
-            }
-            else
-            {
-                List<Dictionary<JointType, CvPoint3D64f>> tempJoints = new List<Dictionary<JointType, CvPoint3D64f>>();
-                List<double> tempReliability = new List<double>();
-                List<double> tempWeight = new List<double>();
-
-                for (int no = 0; no < frame.recordNum; no++)
-                {
-                    if (!skipped[no])
-                    {
-                        tempJoints.Add(jointsArr[no]);
-                        tempReliability.Add(reliabilityList[no]);
-                        tempWeight.Add(weightList[no]);
-                    }
-                }
-                jointsArr = tempJoints.ToArray();
-                reliabilityList = tempReliability.ToArray();
-                weightList = tempWeight.ToArray();
+                reliabilityArr[recordNo] = this.GetSkeletonReliability(prevData, nextData, prevBody, nextBody, time, cameraInfo);
+                weightArr[recordNo] = this.GetVarianceWeight(prevData, nextData, prevBody, nextBody, time);
             }            
 
-            double maxWeight = weightList.Max();
-            double[] modifiedReliabilityList = weightList.Select(w => Math.Max(0, (w / maxWeight) - _weightBase)).Zip(reliabilityList, (a, b) => a * b).ToArray();
+            double maxWeight = weightArr.Max();
+            double[] modifiedReliabilityList = weightArr.Select(w => Math.Max(0, (w / maxWeight) - _weightBase)).Zip(reliabilityArr, (a, b) => a * b).ToArray();
             var keys = jointsArr.Where(j => j != null).SelectMany(j => j.Keys).Distinct().ToList();
             if (maxWeight == 0)
                 return null;
