@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -35,7 +36,7 @@ namespace KinectMotionCapture
             orders = orders.OrderBy(x => x.Timestamp.Ticks).ToList();
             SkeletonInterpolator interp = new SkeletonInterpolator(0.5, true);
             foreach (OrderTuple tuple in orders) {
-                Frame currFrame = frameSeq.Frames[tuple.RecordIndex];
+                Frame currFrame = frameSeq.Frames[tuple.FrameIndex];
                 const long maxInterval = (long)(10000000 * 0.1);
                 DateTime prev = new DateTime(tuple.Timestamp.Ticks - maxInterval);
                 if (tuple.FrameIndex >= 1)

@@ -697,11 +697,12 @@ namespace KinectMotionCapture
         {
             int[] integratedIds = this.frameSequence.selecteedIntegretedIdList;
             ulong[] originalIds = this.frameSequence.selectedOriginalIdList;
+            IEnumerable<Frame> frames = this.frameSequence.Slice(startIndex, endIndex);
             for (int recordNo = 0; recordNo < this.frameSequence.recordNum; recordNo++)
             {
                 if (this.isRecordSelected[recordNo] && this.isUserSelected[recordNo])
                 {
-                    foreach (Frame frame in this.frameSequence.Frames)
+                    foreach (Frame frame in frames)
                     {
                         if (frameSequence.Segmentations == null)
                         {
