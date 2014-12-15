@@ -137,20 +137,20 @@ namespace KinectMotionCapture
             return ret;
         }
 
-        public Dictionary<JointType, CvPoint3D64f> IntegrateSkeleton(Frame frame, int userInt, FrameSequence frameSeq)
+        public Dictionary<JointType, CvPoint3D64f> IntegrateSkeleton(DateTime time, int userInt, FrameSequence frameSeq)
         {
             List<CvMat> ToWorldConversions = frameSeq.ToWorldConversions;
             CameraIntrinsics cameraInfo = frameSeq.CameraInfo;
             List<UserSegmentation> segm = frameSeq.Segmentations;
 
-            Dictionary<JointType, CvPoint3D64f>[] jointsArr = new Dictionary<JointType, CvPoint3D64f>[frame.recordNum];
-            double[] reliabilityArr = new double[frame.recordNum];
-            double[] weightArr = new double[frame.recordNum];
+            Dictionary<JointType, CvPoint3D64f>[] jointsArr = new Dictionary<JointType, CvPoint3D64f>[frameSeq.recordNum];
+            double[] reliabilityArr = new double[frameSeq.recordNum];
+            double[] weightArr = new double[frameSeq.recordNum];
 
-            for (int recordNo = 0; recordNo < frame.recordNum; recordNo++)
+            for (int recordNo = 0; recordNo < frameSeq.recordNum; recordNo++)
             {
-                MotionData prevData = frameSeq.GetPrevData(recordNo, frame.Time);
-                MotionData nextData = frameSeq.GetNextData(recordNo, frame.Time);
+                MotionData prevData = frameSeq.GetPrevData(recordNo, time);
+                MotionData nextData = frameSeq.GetNextData(recordNo, time);
 
                 if (prevData == null || nextData == null || prevData.bodies.Length * nextData.bodies.Length == 0)
                 {
@@ -160,7 +160,6 @@ namespace KinectMotionCapture
                     continue;
                 }
 
-                DateTime time = frame.Time;
                 SerializableBody prevBody = prevData.bodies.Where(b => b.integratedId == userInt).FirstOrDefault();
                 SerializableBody nextBody = nextData.bodies.Where(b => b.integratedId == userInt).FirstOrDefault();
                 if (prevBody == null || nextBody == null || prevBody.Equals(default(SerializableBody)) || nextBody.Equals(default(SerializableBody)))
@@ -187,6 +186,13 @@ namespace KinectMotionCapture
 
         public static Dictionary<int, List<Dictionary<JointType, CvPoint3D64f>>> ExportFromProject(FrameSequence frameseq, int startIndex, int endIndex)
         {
+            TimeSpan period = new TimeSpan((long)(10000000 / frameseq.frameRate));
+            List<DateTime> timestamps = new List<DateTime>();
+            for (DateTime time = frameseq.Frames[startIndex].Time; time < frameseq.Frames[endIndex].Time; time += period)
+            {
+                timestamps.Add(time);
+            }
+
             HashSet<Tuple<int, JointType>> uniqueUserJoint = new HashSet<Tuple<int, JointType>>();
             List<Frame> frames = frameseq.Slice(startIndex, endIndex);
             foreach(Frame frame in frames){
@@ -218,10 +224,9 @@ namespace KinectMotionCapture
             foreach (int user in userJointPairs.Select(p => p.Item1).Distinct())            
             {
                 List<Dictionary<JointType, CvPoint3D64f>> jointsSeq = new List<Dictionary<JointType, CvPoint3D64f>>();
-                for (int i = 0; i < frames.Count() - 1; i++)
+                foreach(DateTime time in timestamps)
                 {
-                    Frame curr = frames[i];
-                    Dictionary<JointType, CvPoint3D64f> joints = skeletonInterpolator.IntegrateSkeleton(curr, user, frameseq);
+                    Dictionary<JointType, CvPoint3D64f> joints = skeletonInterpolator.IntegrateSkeleton(time, user, frameseq);
                     // jointsがnullの場合にはダミーデータを突っ込んで長さを稼ぐ
                     if (joints == null)
                     {

@@ -35,22 +35,22 @@ namespace KinectMotionCapture
             orders = orders.OrderBy(x => x.Timestamp.Ticks).ToList();
             SkeletonInterpolator interp = new SkeletonInterpolator(0.5, true);
             foreach (OrderTuple tuple in orders) {
-                if (tuple.RecordIndex == 0)
-                    continue;
                 Frame currFrame = frameSeq.Frames[tuple.RecordIndex];
-                Frame prevFrame = frameSeq.Frames[0];
-                int i = 1;
-                while (tuple.RecordIndex - i > 0)
+                const long maxInterval = (long)(10000000 * 0.1);
+                DateTime prev = new DateTime(tuple.Timestamp.Ticks - maxInterval);
+                if (tuple.FrameIndex >= 1)
                 {
-                    prevFrame = frameSeq.Frames[tuple.RecordIndex - i];
-                    if (currFrame.Time != prevFrame.Time)
-                        break;
-                    i++;
+                    Frame prevFrame = frameSeq.Frames[tuple.FrameIndex - 1];
+                    prev = new DateTime(Math.Max(prevFrame.Time.Ticks, prev.Ticks));
+                }
+                else
+                {
+                    continue;
                 }
                 IEnumerable<int> users = currFrame.GetBodyList(tuple.RecordIndex).Select(b => b.integratedId);
                 foreach (int user in users)
                 {
-                    Dictionary<JointType, CvPoint3D64f> prevJoints = interp.IntegrateSkeleton(prevFrame, user, frameSeq);
+                    Dictionary<JointType, CvPoint3D64f> prevJoints = interp.IntegrateSkeleton(prev, user, frameSeq);
                     if (prevJoints != null)
                     {
                         SerializableBody currBody = currFrame.GetSelectedBody(tuple.RecordIndex, integratedId: user);
