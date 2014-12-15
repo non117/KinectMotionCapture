@@ -149,10 +149,10 @@ namespace KinectMotionCapture
             bool[] skipped = new bool[frame.recordNum];
             for (int recordNo = 0; recordNo < frame.recordNum; recordNo++)
             {
-                MotionData prevData = frame.GetMotionData(recordNo);
-                MotionData nextData = frame.GetNextMotionData(recordNo);
+                MotionData prevData = frameSeq.GetPrevData(recordNo, frame.Time);
+                MotionData nextData = frameSeq.GetNextData(recordNo, frame.Time);
 
-                if (prevData.bodies.Length * nextData.bodies.Length == 0)
+                if (prevData == null || nextData == null || prevData.bodies.Length * nextData.bodies.Length == 0)
                 {
                     skipped[recordNo] = true;
                     continue;
