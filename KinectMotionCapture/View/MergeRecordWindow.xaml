@@ -62,14 +62,14 @@
 
                             <Grid Grid.Row="0">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="120"/>
                                     <ColumnDefinition Width="220"/>
-                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="140"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <Label Name="Box1Text" Content="User Selection" Grid.Column="0" Margin="5" Height="25" Width="100"/>
                                 <ComboBox Name="UserIdBox1" Grid.Column="1" Margin="10" Height="25" Width="200" HorizontalAlignment="Left" SelectionChanged="UserIdBox_SelectionChanged"/>
-                                <CheckBox Name="RecordSelect1" Content="Select" Margin="10" Grid.Column="2" VerticalAlignment="Center" Click="RecordSelect_Clicked"/>
+                                <CheckBox Name="RecordSelect1" Content="Record Selection" Margin="10" Grid.Column="2" VerticalAlignment="Center" Click="RecordSelect_Clicked"/>
                                 <Label Name="Box1Timer" Content="00:000" Grid.Column="3" Margin="5" Height="25" Width="60"/>
 
                             </Grid>
@@ -85,14 +85,14 @@
 
                             <Grid Grid.Row="0">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="120"/>
                                     <ColumnDefinition Width="220"/>
-                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="140"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <Label Name="Box2Text" Content="User Selection" Grid.Column="0" Margin="5" Height="25" Width="100"/>
                                 <ComboBox Name="UserIdBox2" Grid.Column="1" Margin="10" Height="25" Width="200" HorizontalAlignment="Left" SelectionChanged="UserIdBox_SelectionChanged"/>
-                                <CheckBox Name="RecordSelect2" Content="Select" Margin="10" Grid.Column="2" VerticalAlignment="Center" Click="RecordSelect_Clicked"/>
+                                <CheckBox Name="RecordSelect2" Content="Record Selection" Margin="10" Grid.Column="2" VerticalAlignment="Center" Click="RecordSelect_Clicked"/>
                                 <Label Name="Box2Timer" Content="00:000" Grid.Column="3" Margin="5" Height="25" Width="60"/>
 
                             </Grid>
@@ -108,14 +108,14 @@
 
                             <Grid Grid.Row="0">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="120"/>
                                     <ColumnDefinition Width="220"/>
-                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="140"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <Label Name="Box3Text" Content="User Selection" Grid.Column="0" Margin="5" Height="25" Width="100"/>
                                 <ComboBox Name="UserIdBox3" Grid.Column="1" Margin="10" Height="25" Width="200" HorizontalAlignment="Left" SelectionChanged="UserIdBox_SelectionChanged"/>
-                                <CheckBox Name="RecordSelect3" Content="Select" Margin="10" Grid.Column="2" VerticalAlignment="Center" Click="RecordSelect_Clicked"/>
+                                <CheckBox Name="RecordSelect3" Content="Record Selection" Margin="10" Grid.Column="2" VerticalAlignment="Center" Click="RecordSelect_Clicked"/>
                                 <Label Name="Box3Timer" Content="00:000" Grid.Column="3" Margin="5" Height="25" Width="60"/>
                             </Grid>
                             <Image Name="Image3" Grid.Row="1" Margin="5"/>
@@ -130,14 +130,14 @@
 
                             <Grid Grid.Row="0">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="120"/>
                                     <ColumnDefinition Width="220"/>
-                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="140"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <Label Name="Box4Text" Content="User Selection" Grid.Column="0" Margin="5" Height="25" Width="100"/>
                                 <ComboBox Name="UserIdBox4" Grid.Column="1" Margin="10" Height="25" Width="200" HorizontalAlignment="Left" SelectionChanged="UserIdBox_SelectionChanged"/>
-                                <CheckBox Name="RecordSelect4" Content="Select" Margin="10" Grid.Column="2" VerticalAlignment="Center" Click="RecordSelect_Clicked"/>
+                                <CheckBox Name="RecordSelect4" Content="Record Selection" Margin="10" Grid.Column="2" VerticalAlignment="Center" Click="RecordSelect_Clicked"/>
                                 <Label Name="Box4Timer" Content="00:000" Grid.Column="3" Margin="5" Height="25" Width="60"/>
                             </Grid>
                             <Image Name="Image4" Grid.Row="1" Margin="5"/>
