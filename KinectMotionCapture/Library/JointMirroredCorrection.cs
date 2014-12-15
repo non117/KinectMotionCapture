@@ -41,8 +41,8 @@ namespace KinectMotionCapture
                 DateTime prev = new DateTime(tuple.Timestamp.Ticks - maxInterval);
                 if (tuple.FrameIndex >= 1)
                 {
-                    Frame prevFrame = frameSeq.Frames[tuple.FrameIndex - 1];
-                    prev = new DateTime(Math.Max(prevFrame.Time.Ticks, prev.Ticks));
+                    //Frame prevFrame = frameSeq.Frames[tuple.FrameIndex - 1];
+                    //prev = new DateTime(Math.Max(prevFrame.Time.Ticks, prev.Ticks));
                 }
                 else
                 {
