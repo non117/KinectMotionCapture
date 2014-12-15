@@ -23,6 +23,8 @@ namespace KinectMotionCapture
         private string[] dataDirs;
         private TimeSpan timePeriod;
         private List<UserSegmentation> segms;
+        private List<List<MotionData>> originalRecords;
+        private List<Tuple<List<DateTime>, int[]>> timeInfos;
 
         public int recordNum;
         public double frameRate = 30;
@@ -33,7 +35,7 @@ namespace KinectMotionCapture
         public List<List<ulong>> userIdList;
 
         public double[] offsets = new double[] { 0, 0, 0, 0};
-
+        
         // TODO: IEnumerableにしても良さそう。イテレータブロックとか使うらしい。        
         public List<Frame> Frames { get; set; }
         public List<LocalCoordinateMapper> LocalCoordinateMappers { get; set; }
@@ -227,17 +229,18 @@ namespace KinectMotionCapture
         /// </summary>
         /// <param name="records"></param>
         /// <returns></returns>
-        private List<Frame> GenerateFrames(List<List<MotionData>> records)
+        private List<Frame> GenerateFrames()
         {
             List<Frame> frames = new List<Frame>();
             List<Tuple<List<DateTime>, int[]>> timeInfos = new List<Tuple<List<DateTime>, int[]>>();
-            foreach (List<MotionData> record in records)
+            foreach (List<MotionData> record in this.originalRecords)
             {
                 DateTime[] dateTimes = record.Select(m => m.TimeStamp).ToArray();
                 int[] indexes = record.Select((m, i) => i).ToArray();
                 Array.Sort(dateTimes, indexes);
                 timeInfos.Add(Tuple.Create(dateTimes.ToList(), indexes));
             }
+            this.timeInfos = timeInfos;
 
             for (DateTime time = this.startTime; time <= this.endTime; time += this.timePeriod)
 
@@ -247,7 +250,7 @@ namespace KinectMotionCapture
                 List<MotionData> nextRecords = new List<MotionData>();
                 for (int i = 0; i < this.recordNum; i++)
                 {
-                    List<MotionData> record = records[i];
+                    List<MotionData> record = this.originalRecords[i];
                     List<DateTime> dateTimes = timeInfos[i].Item1;
                     int[] indexes = timeInfos[i].Item2;
                     int frameIndex = ListEx.GetMaxLessEqualIndexFromBinarySearch(dateTimes.BinarySearch(time));
@@ -305,6 +308,40 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
+        /// ある時刻の近傍で前のMotionDataを取ってくる
+        /// </summary>
+        /// <param name="recordNo"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public MotionData GetPrevData(int recordNo, DateTime time)
+        {
+            List<MotionData> record = this.originalRecords[recordNo];
+            List<DateTime> dateTimes = timeInfos[recordNo].Item1;
+            int[] indexes = timeInfos[recordNo].Item2;
+            int prevIndex = ListEx.GetMaxLessEqualIndexFromBinarySearch(dateTimes.BinarySearch(time));
+            if (prevIndex == -1)
+                return null;
+            return record[indexes[prevIndex]];
+        }
+
+        /// <summary>
+        /// ある時刻の近傍で次のMotionDataを取ってくる
+        /// </summary>
+        /// <param name="recordNo"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public MotionData GetNextData(int recordNo, DateTime time)
+        {
+            List<MotionData> record = this.originalRecords[recordNo];
+            List<DateTime> dateTimes = timeInfos[recordNo].Item1;
+            int[] indexes = timeInfos[recordNo].Item2;
+            int nextIndex = ListEx.GetMinGreaterEqualIndexFromBinarySearch(dateTimes.BinarySearch(time));
+            if (nextIndex == indexes.Count())
+                return null;
+            return record[indexes[nextIndex]];
+        }
+
+        /// <summary>
         /// コンストラクタ
         /// </summary>
         /// <param name="dataDirs"></param>
@@ -332,12 +369,13 @@ namespace KinectMotionCapture
             }
             records = this.ApplyOffset(records);
             records = this.SearchDupFrames(records);
+            this.originalRecords = records;
 
             // いちばん短いレコードに合わせて単位時刻を決定する
             int shortestRecordLength = records.Select((List<MotionData> record) => record.Count()).Min();
             this.timePeriod = new TimeSpan((this.endTime - this.startTime).Ticks / shortestRecordLength);
 
-            this.Frames = this.GenerateFrames(records);
+            this.Frames = this.GenerateFrames();
 
             // レコードごとに含まれるidを列挙する
             this.userIdList = new List<List<ulong>>();
