@@ -641,6 +641,27 @@ namespace KinectMotionCapture
             Utility.SaveToBinary(conversions, path);
         }
 
+        private void ExportConversionMatrixAsCsv_Click(object sender, RoutedEventArgs e)
+        {
+            for (int recordNo = 0; recordNo < frameSequence.recordNum; recordNo++)
+            {
+                string path = Path.Combine(Environment.CurrentDirectory, @"ConversionMatrix_" + recordNo.ToString() + ".csv");
+                CvMat mat = frameSequence.ToWorldConversions[recordNo];
+                using (StreamWriter sw = new StreamWriter(path))
+                {                    
+                    for (int i = 0; i < 4; i++)
+                    {
+                        for (int j = 0; j < 4; j++)
+                        {
+                            double val = mat[i, j];
+                            sw.Write("{0}, ", val);
+                        }
+                        sw.WriteLine();
+                    }                    
+                }
+            }
+        }
+
         /// <summary>
         /// 統合行列を読み込む
         /// TODO : ダイアログ

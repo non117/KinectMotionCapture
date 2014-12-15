@@ -152,6 +152,7 @@
         <Menu Name="Menu" VerticalAlignment="Top">
             <MenuItem Name="MenuFile" Header="File">
                 <MenuItem Name="ExportConversionMatrix" Header="座標変換行列を保存" Click="ExportConversionMatrix_Click"/>
+                <MenuItem Name="ExportConversionMatrixAsCsv" Header="座標変換行列をCSVで保存" Click="ExportConversionMatrixAsCsv_Click"/>
                 <MenuItem Name="ImportConversionMatrix" Header="座標変換行列を読み込む" Click="ImportConversionMatrix_Click"/>
                 <Separator/>
                 <MenuItem Name="ExportAllBodiesAsBinary" Header="現在のフレーム範囲の全ユーザをバイナリで出力" Click="ExportAllBodiesAsBinary_Click"/>
