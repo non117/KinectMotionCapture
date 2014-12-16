@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -26,7 +27,6 @@ namespace KinectMotionCapture
     public class MotionDataHandler
     {
         private string dataDir = "";
-        //private string bodyInfoFilename = @"BodyInfo.mpac";
         private string bodyInfoFilename = @"BodyInfo.dump";
         private string recordPath = "";
 
@@ -36,6 +36,10 @@ namespace KinectMotionCapture
         private int depthHeight = 0;
 
         private FileStream fileStream = null;
+        private Queue<MotionData> motioDataQueue = null;
+        private BackgroundWorker worker = null;
+
+        // キャリブレーションが無くなったらいらない可能性が高い
         public List<MotionData> motionDataList { get; set; }
 
         /// <summary>
@@ -47,13 +51,14 @@ namespace KinectMotionCapture
         /// <param name="depthHeight"></param>
         public MotionDataHandler(string dataDir, int colorWidth, int colorHeight, int depthWidth, int depthHeight)
         {
-            this.dataDir = dataDir;
-            this.recordPath = Path.Combine(dataDir, this.bodyInfoFilename);
+            
             // 上書き防止
-            if (File.Exists(this.recordPath))
+            if (File.Exists(Path.Combine(dataDir, this.bodyInfoFilename)))
             {
-                this.recordPath = Path.Combine(dataDir + "_", this.bodyInfoFilename);
+                dataDir = dataDir + "_";
             }
+            this.dataDir = dataDir;            
+            this.recordPath = Path.Combine(dataDir, this.bodyInfoFilename);
             Utility.CreateDirectories(this.dataDir);
             
             this.motionDataList = new List<MotionData>();
@@ -62,8 +67,13 @@ namespace KinectMotionCapture
             this.depthWidth = depthWidth;
             this.depthHeight = depthHeight;
 
+            this.motioDataQueue = new Queue<MotionData>();
+            this.worker = new BackgroundWorker();
+            this.worker.WorkerSupportsCancellation = true;
+            this.worker.DoWork += new DoWorkEventHandler(this.worker_DoWork);
+            this.worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(this.worker_Completed);
             // closeしないと
-            this.fileStream = new FileStream(this.recordPath, FileMode.Append, FileAccess.Write, FileShare.None);
+            this.fileStream = new FileStream(this.recordPath, FileMode.Create, FileAccess.Write, FileShare.None);
         }
 
         /// <summary>
@@ -84,7 +94,6 @@ namespace KinectMotionCapture
             this.dataDir = dataDir;
             this.recordPath = Path.Combine(dataDir, bodyInfoFilename);
 
-            //this.ClearAll();
             this.motionDataList = this.GetMotionDataFromFile(this.recordPath);
             MotionData md = this.motionDataList[0];
             this.colorWidth = md.ColorWidth;
@@ -93,32 +102,27 @@ namespace KinectMotionCapture
             this.depthHeight = md.DepthUserHeight;
         }
 
-        ///// <summary>
-        ///// すべてのデータを破棄する
-        ///// </summary>
-        //public void ClearAll()
-        //{
-        //    if (this.motionDataList != null)
-        //    {
-        //        this.motionDataList.Clear();
-        //    }
-        //}
-
         public string DataDir
         {
             get{ return this.dataDir; }
             set
             {
-                this.dataDir = value;
+                string dataDir = value;
+                // 上書き防止
+                if (File.Exists(Path.Combine(value, this.bodyInfoFilename)))
+                {
+                    dataDir = dataDir + "_";
+                }
+                this.dataDir = dataDir;
+                Utility.CreateDirectories(this.dataDir);
                 this.recordPath = Path.Combine(this.dataDir, this.bodyInfoFilename);
-                this.CloseFile();
                 this.fileStream = new FileStream(this.recordPath, FileMode.Append, FileAccess.Write, FileShare.None);
             }
         }
 
         public int FrameCount
         {
-            get { return this.motionDataList.Count();  }
+            get { return this.motionDataList.Count(); }
         }
 
         public PointF[] DepthLUT { get; set; }
@@ -159,6 +163,22 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
+        /// BackgroundWorkerをスタートする
+        /// </summary>
+        public void StartWorker()
+        {
+            this.worker.RunWorkerAsync();
+        }
+
+        /// <summary>
+        /// BackgroundWorkerを止めてファイルを閉じる
+        /// </summary>
+        public void StopWorker()
+        {
+            this.worker.CancelAsync();
+        }
+
+        /// <summary>
         /// データを追加
         /// </summary>
         /// <param name="frameNo"></param>
@@ -167,8 +187,6 @@ namespace KinectMotionCapture
         public void AddData(int frameNo, DateTime dateTime, Body[] bodies, ref byte[] colorPixels, ref ushort[] depthBuffer, ref byte[] bodyIndexBuffer, Dictionary<ulong, PointsPair> pointPairs)
         {
             this.SaveImages(frameNo, ref colorPixels, ref depthBuffer, ref bodyIndexBuffer);
-            //lock (this.motionDataList)
-            //{
             MotionData motionData = new MotionData(frameNo, this.dataDir, dateTime, bodies, pointPairs);
             motionData.ColorWidth = this.colorWidth;
             motionData.ColorHeight = this.colorHeight;
@@ -178,35 +196,50 @@ namespace KinectMotionCapture
             {
                 motionData.depthLUT = this.DepthLUT;
             }
-            //this.motionDataList.Add(motionData);
-            //}
-            // 開きっぱなしのファイルに逐次書き込み
-            IFormatter formatter = new BinaryFormatter();
-            formatter.Serialize(this.fileStream, motionData);
+            lock (this.motioDataQueue)
+            {
+                this.motioDataQueue.Enqueue(motionData);
+            }
         }
 
-        ///// <summary>
-        ///// 骨格情報をファイルに書き出して、リストを空にする。
-        ///// MessagePackであとから書き出すやつ。
-        ///// もう使わないかも。2014/12/16
-        ///// </summary>
-        //public void Flush()
-        //{
-        //    var serializer = MessagePackSerializer.Get<List<MotionData>>();
-        //    using (FileStream fs = File.Open(this.recordPath, FileMode.OpenOrCreate, FileAccess.Write))
-        //    {
-        //        lock (this.motionDataList)
-        //        {
-        //            serializer.Pack(fs, this.motionDataList);
-        //        }
-        //    }
-        //    this.motionDataList.Clear();
-        //}
+        /// <summary>
+        /// BackgroundWorkerのworker
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void worker_DoWork(object sender, DoWorkEventArgs e)
+        {
+            BackgroundWorker bw = sender as BackgroundWorker;
+            int interval = (int)(1000 / 30);
+            IFormatter formatter = new BinaryFormatter();
+            MotionData motionData;
+
+            while (true)
+            {
+                lock (this.motioDataQueue)
+                {
+                    if (bw.CancellationPending && this.motioDataQueue.Count != 0)
+                    {
+                        e.Cancel = true;
+                        break;
+                    }
+
+                    if (this.motioDataQueue.Count() > 0)
+                    {
+                        motionData = this.motioDataQueue.Dequeue();
+                        // 開きっぱなしのファイルに逐次書き込み            
+                        formatter.Serialize(this.fileStream, motionData);
+                    }
+
+                }
+                System.Threading.Thread.Sleep(interval);
+            }
+        }
 
         /// <summary>
-        /// もちろんDisposeインターフェイスにすべき
+        /// RunWorkerCompletedのイベントハンドラ
         /// </summary>
-        public void CloseFile()
+        public void worker_Completed(object sender, RunWorkerCompletedEventArgs e)
         {
             this.fileStream.Close();
         }

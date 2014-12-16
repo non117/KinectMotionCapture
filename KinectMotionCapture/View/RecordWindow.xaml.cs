@@ -205,20 +205,18 @@ namespace KinectMotionCapture
         public void RecordButton_Click(object sender, RoutedEventArgs e)
         {
             if (this.isRecording)
-            {
-                //this.motionDataHandler.Flush();
-                this.motionDataHandler.CloseFile();
+            {                
                 this.counter = 0;
-
                 RecordButton.Content = "Record";
                 this.isRecording = false;
                 this.StatusText = Properties.Resources.RecordingReadyStatusText;
+                this.motionDataHandler.StopWorker();
             }else
             {
                 RecordButton.Content = "Stop";
-                //this.motionDataHandler.ClearAll();
                 this.isRecording = true;
-                this.StatusText = Properties.Resources.RecordingStatusText;                
+                this.StatusText = Properties.Resources.RecordingStatusText;
+                this.motionDataHandler.StartWorker();
             }
         }
 
