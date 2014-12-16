@@ -23,6 +23,11 @@ namespace KinectMotionCapture
             }
         }
 
+        /// <summary>
+        /// 修正してくれるやつ
+        /// TODO : 時系列的なMirror Correctionも必要
+        /// </summary>
+        /// <param name="frameSeq"></param>
         public static void Correct(FrameSequence frameSeq) {
             List<OrderTuple> orders = new List<OrderTuple>();
             foreach (var pair in frameSeq.Frames.Select((frame, index) => Tuple.Create(frame, index)))
@@ -39,15 +44,6 @@ namespace KinectMotionCapture
                 Frame currFrame = frameSeq.Frames[tuple.FrameIndex];
                 const long maxInterval = (long)(10000000 * 0.1);
                 DateTime prev = new DateTime(tuple.Timestamp.Ticks - maxInterval);
-                if (tuple.FrameIndex >= 1)
-                {
-                    Frame prevFrame = frameSeq.Frames[tuple.FrameIndex - 1];
-                    prev = new DateTime(Math.Max(prevFrame.Time.Ticks, prev.Ticks));
-                }
-                else
-                {
-                    continue;
-                }
                 IEnumerable<int> users = currFrame.GetBodyList(tuple.RecordIndex).Select(b => b.integratedId);
                 foreach (int user in users)
                 {
