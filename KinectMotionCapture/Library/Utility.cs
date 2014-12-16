@@ -175,6 +175,25 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
+        /// バイナリから読み込む
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public static List<object> LoadFromSequentialBinary(string path)
+        {
+            IFormatter formatter = new BinaryFormatter();
+            List<object> res = new List<object>();
+            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.None))
+            {
+                while (fs.Length != fs.Position)
+                {
+                    res.Add(formatter.Deserialize(fs));
+                }
+            }
+            return res;
+        }
+
+        /// <summary>
         /// byte[]としてファイルから読み込む
         /// </summary>
         /// <param name="path"></param>

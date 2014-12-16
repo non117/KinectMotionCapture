@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.Reflection;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Media3D;
@@ -24,7 +26,8 @@ namespace KinectMotionCapture
     public class MotionDataHandler
     {
         private string dataDir = "";
-        private string bodyInfoFilename = @"BodyInfo.mpac";
+        //private string bodyInfoFilename = @"BodyInfo.mpac";
+        private string bodyInfoFilename = @"BodyInfo.dump";
         private string recordPath = "";
 
         private int colorWidth = 0;
@@ -32,6 +35,7 @@ namespace KinectMotionCapture
         private int depthWidth = 0;
         private int depthHeight = 0;
 
+        private FileStream fileStream = null;
         public List<MotionData> motionDataList { get; set; }
 
         /// <summary>
@@ -44,8 +48,12 @@ namespace KinectMotionCapture
         public MotionDataHandler(string dataDir, int colorWidth, int colorHeight, int depthWidth, int depthHeight)
         {
             this.dataDir = dataDir;
-            // TODO: 上書き防止機能をつくる
             this.recordPath = Path.Combine(dataDir, this.bodyInfoFilename);
+            // 上書き防止
+            if (File.Exists(this.recordPath))
+            {
+                this.recordPath = Path.Combine(dataDir + "_", this.bodyInfoFilename);
+            }
             Utility.CreateDirectories(this.dataDir);
             
             this.motionDataList = new List<MotionData>();
@@ -53,6 +61,9 @@ namespace KinectMotionCapture
             this.colorHeight = colorHeight;
             this.depthWidth = depthWidth;
             this.depthHeight = depthHeight;
+
+            // closeしないと
+            this.fileStream = new FileStream(this.recordPath, FileMode.Append, FileAccess.Write, FileShare.None);
         }
 
         /// <summary>
@@ -73,7 +84,7 @@ namespace KinectMotionCapture
             this.dataDir = dataDir;
             this.recordPath = Path.Combine(dataDir, bodyInfoFilename);
 
-            this.ClearAll();
+            //this.ClearAll();
             this.motionDataList = this.GetMotionDataFromFile(this.recordPath);
             MotionData md = this.motionDataList[0];
             this.colorWidth = md.ColorWidth;
@@ -82,16 +93,16 @@ namespace KinectMotionCapture
             this.depthHeight = md.DepthUserHeight;
         }
 
-        /// <summary>
-        /// すべてのデータを破棄する
-        /// </summary>
-        public void ClearAll()
-        {
-            if (this.motionDataList != null)
-            {
-                this.motionDataList.Clear();
-            }
-        }
+        ///// <summary>
+        ///// すべてのデータを破棄する
+        ///// </summary>
+        //public void ClearAll()
+        //{
+        //    if (this.motionDataList != null)
+        //    {
+        //        this.motionDataList.Clear();
+        //    }
+        //}
 
         public string DataDir
         {
@@ -100,6 +111,8 @@ namespace KinectMotionCapture
             {
                 this.dataDir = value;
                 this.recordPath = Path.Combine(this.dataDir, this.bodyInfoFilename);
+                this.CloseFile();
+                this.fileStream = new FileStream(this.recordPath, FileMode.Append, FileAccess.Write, FileShare.None);
             }
         }
 
@@ -154,35 +167,48 @@ namespace KinectMotionCapture
         public void AddData(int frameNo, DateTime dateTime, Body[] bodies, ref byte[] colorPixels, ref ushort[] depthBuffer, ref byte[] bodyIndexBuffer, Dictionary<ulong, PointsPair> pointPairs)
         {
             this.SaveImages(frameNo, ref colorPixels, ref depthBuffer, ref bodyIndexBuffer);
-            lock (this.motionDataList)
+            //lock (this.motionDataList)
+            //{
+            MotionData motionData = new MotionData(frameNo, this.dataDir, dateTime, bodies, pointPairs);
+            motionData.ColorWidth = this.colorWidth;
+            motionData.ColorHeight = this.colorHeight;
+            motionData.DepthUserWidth = this.depthWidth;
+            motionData.DepthUserHeight = this.depthHeight;
+            if (frameNo == 0)
             {
-                MotionData motionData = new MotionData(frameNo, this.dataDir, dateTime, bodies, pointPairs);
-                motionData.ColorWidth = this.colorWidth;
-                motionData.ColorHeight = this.colorHeight;
-                motionData.DepthUserWidth = this.depthWidth;
-                motionData.DepthUserHeight = this.depthHeight;
-                if (frameNo == 0)
-                {
-                    motionData.depthLUT = this.DepthLUT;
-                }
-                this.motionDataList.Add(motionData);
+                motionData.depthLUT = this.DepthLUT;
             }
+            //this.motionDataList.Add(motionData);
+            //}
+            // 開きっぱなしのファイルに逐次書き込み
+            IFormatter formatter = new BinaryFormatter();
+            formatter.Serialize(this.fileStream, motionData);
         }
 
+        ///// <summary>
+        ///// 骨格情報をファイルに書き出して、リストを空にする。
+        ///// MessagePackであとから書き出すやつ。
+        ///// もう使わないかも。2014/12/16
+        ///// </summary>
+        //public void Flush()
+        //{
+        //    var serializer = MessagePackSerializer.Get<List<MotionData>>();
+        //    using (FileStream fs = File.Open(this.recordPath, FileMode.OpenOrCreate, FileAccess.Write))
+        //    {
+        //        lock (this.motionDataList)
+        //        {
+        //            serializer.Pack(fs, this.motionDataList);
+        //        }
+        //    }
+        //    this.motionDataList.Clear();
+        //}
+
         /// <summary>
-        /// 骨格情報をファイルに書き出して、リストを空にする。
+        /// もちろんDisposeインターフェイスにすべき
         /// </summary>
-        public void Flush()
+        public void CloseFile()
         {
-            var serializer = MessagePackSerializer.Get<List<MotionData>>();
-            using (FileStream fs = File.Open(this.recordPath, FileMode.OpenOrCreate, FileAccess.Write))
-            {
-                lock (this.motionDataList)
-                {
-                    serializer.Pack(fs, this.motionDataList);
-                }
-            }
-            this.motionDataList.Clear();
+            this.fileStream.Close();
         }
 
         /// <summary>

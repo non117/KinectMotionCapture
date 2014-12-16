@@ -206,7 +206,8 @@ namespace KinectMotionCapture
         {
             if (this.isRecording)
             {
-                this.motionDataHandler.Flush();
+                //this.motionDataHandler.Flush();
+                this.motionDataHandler.CloseFile();
                 this.counter = 0;
 
                 RecordButton.Content = "Record";
@@ -215,7 +216,7 @@ namespace KinectMotionCapture
             }else
             {
                 RecordButton.Content = "Stop";
-                this.motionDataHandler.ClearAll();
+                //this.motionDataHandler.ClearAll();
                 this.isRecording = true;
                 this.StatusText = Properties.Resources.RecordingStatusText;                
             }
