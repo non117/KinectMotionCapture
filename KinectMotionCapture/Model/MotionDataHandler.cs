@@ -51,15 +51,7 @@ namespace KinectMotionCapture
         /// <param name="depthHeight"></param>
         public MotionDataHandler(string dataDir, int colorWidth, int colorHeight, int depthWidth, int depthHeight)
         {
-            
-            // 上書き防止
-            if (File.Exists(Path.Combine(dataDir, this.bodyInfoFilename)))
-            {
-                dataDir = dataDir + "_";
-            }
-            this.dataDir = dataDir;            
-            this.recordPath = Path.Combine(dataDir, this.bodyInfoFilename);
-            Utility.CreateDirectories(this.dataDir);
+            this.dataDir = dataDir;
             
             this.motionDataList = new List<MotionData>();
             this.colorWidth = colorWidth;
@@ -72,8 +64,6 @@ namespace KinectMotionCapture
             this.worker.WorkerSupportsCancellation = true;
             this.worker.DoWork += new DoWorkEventHandler(this.worker_DoWork);
             this.worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(this.worker_Completed);
-            // closeしないと
-            this.fileStream = new FileStream(this.recordPath, FileMode.Create, FileAccess.Write, FileShare.None);
         }
 
         /// <summary>
@@ -107,16 +97,8 @@ namespace KinectMotionCapture
             get{ return this.dataDir; }
             set
             {
-                string dataDir = value;
-                // 上書き防止
-                if (File.Exists(Path.Combine(value, this.bodyInfoFilename)))
-                {
-                    dataDir = dataDir + "_";
-                }
-                this.dataDir = dataDir;
-                Utility.CreateDirectories(this.dataDir);
-                this.recordPath = Path.Combine(this.dataDir, this.bodyInfoFilename);
-                this.fileStream = new FileStream(this.recordPath, FileMode.Append, FileAccess.Write, FileShare.None);
+                this.dataDir = value;
+                this.CheckRecordExistsAndCreateOpen(this.dataDir);
             }
         }
 
@@ -140,6 +122,23 @@ namespace KinectMotionCapture
             {
                 return serializer.Unpack(fs);
             }
+        }
+
+        /// <summary>
+        /// ディレクトリが上書きになってないかチェックしてかぶってたら新しいの作る。ついでにファイルを開く。
+        /// </summary>
+        /// <param name="dir"></param>
+        private void CheckRecordExistsAndCreateOpen(string dir)
+        {
+            string dataDir = dir;
+            if (File.Exists(Path.Combine(dataDir, this.bodyInfoFilename)))
+            {
+                dataDir = dataDir + "_";
+            }
+            this.dataDir = dataDir;
+            this.recordPath = Path.Combine(dataDir, this.bodyInfoFilename);
+            Utility.CreateDirectories(this.dataDir);
+            this.fileStream = new FileStream(this.recordPath, FileMode.Append, FileAccess.Write, FileShare.None);
         }
 
         /// <summary>
@@ -180,6 +179,7 @@ namespace KinectMotionCapture
 
         /// <summary>
         /// データを追加
+        /// TODO : 2回目を同じファイル名でレコードすると確実に落ちる
         /// </summary>
         /// <param name="frameNo"></param>
         /// <param name="dateTime"></param>
@@ -196,6 +196,7 @@ namespace KinectMotionCapture
             {
                 motionData.depthLUT = this.DepthLUT;
             }
+            
             lock (this.motioDataQueue)
             {
                 this.motioDataQueue.Enqueue(motionData);
