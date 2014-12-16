@@ -51,7 +51,7 @@ namespace KinectMotionCapture
         /// <param name="depthHeight"></param>
         public MotionDataHandler(string dataDir, int colorWidth, int colorHeight, int depthWidth, int depthHeight)
         {
-            this.dataDir = dataDir;
+            this.CheckRecordExistsAndCreateOpen(dataDir);
             
             this.motionDataList = new List<MotionData>();
             this.colorWidth = colorWidth;
@@ -97,8 +97,7 @@ namespace KinectMotionCapture
             get{ return this.dataDir; }
             set
             {
-                this.dataDir = value;
-                this.CheckRecordExistsAndCreateOpen(this.dataDir);
+                this.CheckRecordExistsAndCreateOpen(value);
             }
         }
 
