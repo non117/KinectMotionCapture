@@ -21,6 +21,8 @@ namespace KinectMotionCapture
     {
         private List<CvMat> convList;
         private string[] dataDirs;
+        private string bodyInfoFilename = @"BodyInfo.mpac";
+        //private string bodyInfoFilename = @"BodyInfo.dump";
         private TimeSpan timePeriod;
         private List<UserSegmentation> segms;
         private List<List<MotionData>> originalRecords;
@@ -156,11 +158,20 @@ namespace KinectMotionCapture
         /// <returns></returns>
         private List<MotionData> GetMotionDataFromFile(string filepath)
         {
-            var serializer = MessagePackSerializer.Get<List<MotionData>>();
-            using (FileStream fs = File.Open(filepath, FileMode.Open))
+            string ext = Path.GetExtension(filepath);
+            if (ext == ".mpac")
             {
-                return serializer.Unpack(fs);
+                var serializer = MessagePackSerializer.Get<List<MotionData>>();
+                using (FileStream fs = File.Open(filepath, FileMode.Open))
+                {
+                    return serializer.Unpack(fs);
+                }
             }
+            else if (ext == ".dump")
+            {
+                return Utility.LoadFromSequentialBinary(filepath).Select(o => (MotionData)o).ToList();
+            }
+            return new List<MotionData>();
         }
 
         /// <summary>
@@ -357,7 +368,7 @@ namespace KinectMotionCapture
             List<List<MotionData>> records = new List<List<MotionData>>();
             foreach (string dataDir in dataDirs)
             {
-                string metaDataFilePath = Path.Combine(dataDir, "BodyInfo.mpac");
+                string metaDataFilePath = Path.Combine(dataDir, this.bodyInfoFilename);
                 // ここでソートしてる
                 List<MotionData> mdList = this.GetMotionDataFromFile(metaDataFilePath).OrderBy(md => md.TimeStamp).ToList();
                 // 画像のパスを修正する
