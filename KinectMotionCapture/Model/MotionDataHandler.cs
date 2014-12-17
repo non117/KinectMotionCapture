@@ -215,7 +215,7 @@ namespace KinectMotionCapture
         private void worker_DoWork(object sender, DoWorkEventArgs e)
         {
             BackgroundWorker bw = sender as BackgroundWorker;
-            int interval = (int)(1000 / 30);
+            int interval = (int)(1000 / 40);
             IFormatter formatter = new BinaryFormatter();
             MotionData motionData;
 
@@ -223,7 +223,7 @@ namespace KinectMotionCapture
             {
                 lock (this.motioDataQueue)
                 {
-                    if (bw.CancellationPending && this.motioDataQueue.Count != 0)
+                    if (bw.CancellationPending && this.motioDataQueue.Count == 0)
                     {
                         e.Cancel = true;
                         break;
