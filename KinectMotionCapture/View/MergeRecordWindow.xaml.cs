@@ -13,8 +13,9 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using MsgPack.Serialization;
+using System.Windows.Shapes;
 
+using MsgPack.Serialization;
 using Microsoft.Kinect;
 using OpenCvSharp;
 using OpenCvSharp.Extensions;
@@ -590,10 +591,10 @@ namespace KinectMotionCapture
                 Dictionary<int, List<Dictionary<JointType, CvPoint3D64f>>> mergedBodies = SkeletonInterpolator.ExportFromProject(frameSequence, startIndex, endIndex);
                 foreach (int userId in mergedBodies.Keys)
                 {
-                    string path = Path.Combine(Environment.CurrentDirectory, userId.ToString() + @"_Body.dump");
+                    string path = System.IO.Path.Combine(Environment.CurrentDirectory, userId.ToString() + @"_Body.dump");
                     Utility.SaveBodySequence(mergedBodies[userId], path);
                 }
-                Utility.SaveTimeMetaData(frameSequence.Frames, Path.Combine(Environment.CurrentDirectory, @"TimeData.dump"));
+                Utility.SaveTimeMetaData(frameSequence.Frames, System.IO.Path.Combine(Environment.CurrentDirectory, @"TimeData.dump"));
             }
         }
 
@@ -607,13 +608,13 @@ namespace KinectMotionCapture
             if (frameSequence.Segmentations != null && this.isUserSelected.All(b => b))
             {
                 Dictionary<int, List<Dictionary<JointType, CvPoint3D64f>>> mergedBodies = SkeletonInterpolator.ExportFromProject(frameSequence, startIndex, endIndex);
-                string path = Path.Combine(Environment.CurrentDirectory, @"SelectedUserBody.dump");
+                string path = System.IO.Path.Combine(Environment.CurrentDirectory, @"SelectedUserBody.dump");
                 int id = this.frameSequence.selecteedIntegretedIdList[0];
                 if (this.frameSequence.selecteedIntegretedIdList.All(i => i == id))
                 {
                     Utility.SaveBodySequence(mergedBodies[id], path);
                 }
-                Utility.SaveTimeMetaData(frameSequence.Frames, Path.Combine(Environment.CurrentDirectory, @"TimeData.dump"));
+                Utility.SaveTimeMetaData(frameSequence.Frames, System.IO.Path.Combine(Environment.CurrentDirectory, @"TimeData.dump"));
 
                 //DEBUG
                 IEnumerable<Frame> frames = frameSequence.Slice(this.startIndex, this.endIndex).Where(f => f.IsAllBodyAvailable());
@@ -622,7 +623,7 @@ namespace KinectMotionCapture
                     var bodies = frames.Select(f => f.GetMotionData(i).bodies.Where(b => b.integratedId == frameSequence.selecteedIntegretedIdList[i]).First());
 
                     List<Dictionary<JointType, Joint>> joints = bodies.Select(b => Utility.GetValidJoints(Utility.ApplyConversions(b.Joints, frameSequence.ToWorldConversions[i]))).ToList();
-                    path = Path.Combine(Environment.CurrentDirectory, i.ToString() + @"_RecordBodies.dump");
+                    path = System.IO.Path.Combine(Environment.CurrentDirectory, i.ToString() + @"_RecordBodies.dump");
                     Utility.SaveBodySequence(joints, path);
                 }
             }
@@ -636,7 +637,7 @@ namespace KinectMotionCapture
         /// <param name="e"></param>
         private void ExportConversionMatrix_Click(object sender, RoutedEventArgs e)
         {
-            string path = Path.Combine(Environment.CurrentDirectory, @"ConversionMatrix.dump");
+            string path = System.IO.Path.Combine(Environment.CurrentDirectory, @"ConversionMatrix.dump");
             List<SerializableCvMat> conversions = frameSequence.ToWorldConversions.Select(mat => SerializableCvMat.CreateOrNull(mat)).ToList();
             Utility.SaveToBinary(conversions, path);
         }
@@ -645,7 +646,7 @@ namespace KinectMotionCapture
         {
             for (int recordNo = 0; recordNo < frameSequence.recordNum; recordNo++)
             {
-                string path = Path.Combine(Environment.CurrentDirectory, @"ConversionMatrix_" + recordNo.ToString() + ".csv");
+                string path = System.IO.Path.Combine(Environment.CurrentDirectory, @"ConversionMatrix_" + recordNo.ToString() + ".csv");
                 CvMat mat = frameSequence.ToWorldConversions[recordNo];
                 using (StreamWriter sw = new StreamWriter(path))
                 {                    
@@ -670,7 +671,7 @@ namespace KinectMotionCapture
         /// <param name="e"></param>
         private void ImportConversionMatrix_Click(object sender, RoutedEventArgs e)
         {
-            string path = Path.Combine(Environment.CurrentDirectory, @"ConversionMatrix.dump");
+            string path = System.IO.Path.Combine(Environment.CurrentDirectory, @"ConversionMatrix.dump");
             List<SerializableCvMat> conversions = (List<SerializableCvMat>)Utility.LoadFromBinary(path);
             frameSequence.ToWorldConversions = conversions.Select(mat => mat.CreateCvMat()).ToList();
         }
@@ -767,7 +768,7 @@ namespace KinectMotionCapture
             for (int i = 0; i < frameSequence.recordNum; i++)
             {
                 List<float[]>[] pointsSequence = new List<float[]>[frames.Count()];
-                string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), i.ToString() + "_PointsCloud.dump");
+                string path = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), i.ToString() + "_PointsCloud.dump");
                 for (int frameNo = 0; frameNo < frames.Count(); frameNo++)
                 {
                     Frame frame = frames[frameNo];
@@ -792,7 +793,7 @@ namespace KinectMotionCapture
             for (int i = 0; i < frameSequence.recordNum; i++)
             {
                 List<List<float[]>> pointsSequence = new List<List<float[]>>();
-                string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), i.ToString() + "_UserPointsCloud.dump");
+                string path = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), i.ToString() + "_UserPointsCloud.dump");
                 for (int frameNo = 0; frameNo < frames.Count(); frameNo++)
                 {
                     // フレームレート半分
@@ -821,7 +822,7 @@ namespace KinectMotionCapture
             for (int i = 0; i < frameSequence.recordNum; i++)
             {
                 List<List<float[]>> pointsSequence = new List<List<float[]>>();
-                string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), i.ToString() + "_UserPointsCloud.dump");
+                string path = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), i.ToString() + "_UserPointsCloud.dump");
 
                 List<Tuple<CvPoint3D64f, CvColor>> colors = frameSequence.LocalCoordinateMappers[i].GetUserColorPoints(frame.DepthMatList[i], frame.ColorMatList[i], frame.UserMatList[i]);
                 colors = colors.Select(t => Tuple.Create(CvEx.ConvertPoint3D(t.Item1, frameSequence.ToWorldConversions[i]), t.Item2)).ToList();
@@ -843,6 +844,49 @@ namespace KinectMotionCapture
             {
                 frameSequence.CreateNewIds();
                 this.UpdateIntegratedIds();
+            }
+        }
+
+        private Point startPoint;
+        private Rectangle rect;
+
+        private void CanvasMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            Canvas canvas = (Canvas)sender;
+            int index = canvas.Name[canvas.Name.Length - 1] - '0' - 1;
+            startPoint = e.GetPosition(canvas);
+            rect = new Rectangle { Stroke = Brushes.OrangeRed, StrokeThickness = 5 };
+            Canvas.SetLeft(rect, startPoint.X);
+            Canvas.SetTop(rect, 0);
+            canvas.Children.Add(rect);
+        }
+
+        private void CanvasMouseMove(object sender, MouseEventArgs e)
+        {
+            Canvas canvas = (Canvas)sender;
+            int index = canvas.Name[canvas.Name.Length - 1] - '0' - 1;
+            if (e.LeftButton == MouseButtonState.Released || rect == null)
+                return;
+            Point pos = e.GetPosition(canvas);
+            double x = Math.Min(pos.X, startPoint.X);
+            double w = Math.Max(pos.X, startPoint.X) - x;
+            rect.Width = w;
+            rect.Height = 5;
+            Canvas.SetLeft(rect, x);
+            Canvas.SetTop(rect, 0);
+        }
+
+        private void CanvasMouseUp(object sender, MouseButtonEventArgs e)
+        {
+
+        }
+
+        private void RecordSlide_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (!this.isPlaying)
+            {
+                //this.playingIndex = (int)((Slider)sender).Value;
+                //this.UpdateDisplay(this.frameSequence.Frames[this.playingIndex]);
             }
         }
     }

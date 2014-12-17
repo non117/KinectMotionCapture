@@ -57,6 +57,7 @@
                         <Grid Grid.Row="0" Grid.Column="0" Name="Image1Grid">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="50"/>
+                                <RowDefinition Height="40"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
 
@@ -70,11 +71,20 @@
                                 <Label Name="Box1Text" Content="User Selection" Grid.Column="0" Margin="5" Height="25" Width="100"/>
                                 <ComboBox Name="UserIdBox1" Grid.Column="1" Margin="10" Height="25" Width="200" HorizontalAlignment="Left" SelectionChanged="UserIdBox_SelectionChanged"/>
                                 <CheckBox Name="RecordSelect1" Content="Record Selection" Margin="10" Grid.Column="2" VerticalAlignment="Center" Click="RecordSelect_Clicked"/>
-                                <Label Name="Box1Timer" Content="00:000" Grid.Column="3" Margin="5" Height="25" Width="60"/>
-
+                                <Label Name="Box1Timer" Content="00:000" Grid.Column="3" Margin="5" Height="25" Width="60"/>                                
                             </Grid>
-                            <Image Name="Image1" Grid.Row="1" Margin="5"/>
-                            <Image Name="BodyImage1" Grid.Row="1" Margin="5" Source="{Binding BodyImageSource1}"/>
+                            <Grid Grid.Row="1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="40"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Slider Name="RecordSelectSlider1" Grid.Column="0" VerticalAlignment="Center" SmallChange="1" LargeChange="10" TickPlacement="Both"  ValueChanged="RecordSlide_ValueChanged"/>
+                                <Canvas Name="RecordSelectCanvas1" Grid.Column="0" Height="5" Background="Transparent" MouseDown="CanvasMouseDown" MouseMove="CanvasMouseMove" MouseUp="CanvasMouseUp"/>
+                                <Button Name="CheckRecordRange1" Grid.Column="1" Content="❌" Width="30" Height="30" FontSize="12"/>
+                            </Grid>                            
+                            <Image Name="Image1" Grid.Row="2" Margin="5"/>
+                            <Image Name="BodyImage1" Grid.Row="2" Margin="5" Source="{Binding BodyImageSource1}"/>
                         </Grid>
 
                         <Grid Grid.Row="0" Grid.Column="1" Name="Image2Grid">
