@@ -213,6 +213,12 @@ namespace KinectMotionCapture
                 this.motionDataHandler.StopWorker();
             }else
             {
+                // 上書き禁止機能
+                if (this.motionDataHandler.IsFileClosed)
+                {
+                    System.Windows.MessageBox.Show("フォルダが正しく設定されていません。");
+                    return;
+                }
                 RecordButton.Content = "Stop";
                 this.isRecording = true;
                 this.StatusText = Properties.Resources.RecordingStatusText;

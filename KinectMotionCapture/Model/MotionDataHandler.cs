@@ -101,6 +101,11 @@ namespace KinectMotionCapture
             }
         }
 
+        public bool IsFileClosed
+        {
+            get { return !this.fileStream.CanWrite; }
+        }
+
         public int FrameCount
         {
             get { return this.motionDataList.Count(); }
