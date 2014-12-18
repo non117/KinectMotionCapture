@@ -39,6 +39,7 @@ namespace KinectMotionCapture
         private bool[] isUserSelected;
         private bool[] isRecordSelected;
         private Slider[] recordSliders;
+        private Canvas[] canvases;
 
         private DrawingGroup drawingGroup1;
         private DrawingImage bodyImageSource1;
@@ -188,6 +189,8 @@ namespace KinectMotionCapture
                 slider.Minimum = 0;
                 slider.Maximum = this.frameSequence.Frames.Count - 1;
             }
+            // キャンバス
+            this.canvases = new Canvas[] { RecordSelectCanvas1, RecordSelectCanvas2, RecordSelectCanvas3, RecordSelectCanvas4 };
 
             // UserIdを選択するUI
             ComboBox[] boxes = { UserIdBox1, UserIdBox2, UserIdBox3, UserIdBox4 };
@@ -878,22 +881,21 @@ namespace KinectMotionCapture
 
         private void CanvasMouseDown(object sender, MouseButtonEventArgs e)
         {
-            Canvas canvas = (Canvas)sender;
-            int index = canvas.Name[canvas.Name.Length - 1] - '0' - 1;
-            startPoint = e.GetPosition(canvas);
-            rect = new Rectangle { Stroke = Brushes.OrangeRed, StrokeThickness = 5 };
+            Slider slider = (Slider)sender;
+            int index = slider.Name[slider.Name.Length - 1] - '0' - 1;
+            startPoint = e.GetPosition(slider);
+            rect = new Rectangle { Stroke = Brushes.OrangeRed, StrokeThickness = 6 };
             Canvas.SetLeft(rect, startPoint.X);
             Canvas.SetTop(rect, 0);
-            canvas.Children.Add(rect);
+            this.canvases[index].Children.Add(rect);
         }
 
         private void CanvasMouseMove(object sender, MouseEventArgs e)
         {
-            Canvas canvas = (Canvas)sender;
-            int index = canvas.Name[canvas.Name.Length - 1] - '0' - 1;
+            Slider slider = (Slider)sender;
             if (e.LeftButton == MouseButtonState.Released || rect == null)
                 return;
-            Point pos = e.GetPosition(canvas);
+            Point pos = e.GetPosition(slider);
             double x = Math.Min(pos.X, startPoint.X);
             double w = Math.Max(pos.X, startPoint.X) - x;
             rect.Width = w;
@@ -904,7 +906,15 @@ namespace KinectMotionCapture
 
         private void CanvasMouseUp(object sender, MouseButtonEventArgs e)
         {
+            rect = null;
+        }
 
+        private void ClearRecordRangeClick(object sender,  RoutedEventArgs e)
+        {
+            Button button = (Button)sender;
+            int index = button.Name[button.Name.Length - 1] - '0' - 1;
+            Canvas canvas = this.canvases[index];
+            canvas.Children.Clear();
         }
 
         private void RecordSlide_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)

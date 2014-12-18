@@ -79,9 +79,10 @@
                                     <ColumnDefinition Width="40"/>
                                 </Grid.ColumnDefinitions>
 
-                                <Slider Name="RecordSelectSlider1" Grid.Column="0" VerticalAlignment="Center" SmallChange="1" LargeChange="10" TickPlacement="Both"  ValueChanged="RecordSlide_ValueChanged"/>
-                                <Canvas Name="RecordSelectCanvas1" Grid.Column="0" Height="5" Background="Transparent" MouseDown="CanvasMouseDown" MouseMove="CanvasMouseMove" MouseUp="CanvasMouseUp"/>
-                                <Button Name="CheckRecordRange1" Grid.Column="1" Content="❌" Width="30" Height="30" FontSize="12"/>
+                                <Canvas Name="RecordSelectCanvas1" Grid.Column="0" Height="12" Background="Transparent"/>
+                                <Slider Name="RecordSelectSlider1" Grid.Column="0" VerticalAlignment="Center" SmallChange="1" LargeChange="10" TickPlacement="Both"
+                                        ValueChanged="RecordSlide_ValueChanged" MouseDown="CanvasMouseDown" MouseMove="CanvasMouseMove" MouseUp="CanvasMouseUp"/>                                
+                                <Button Name="ClearRecordRange1" Grid.Column="1" Content="❌" Width="30" Height="30" FontSize="12" Click="ClearRecordRangeClick"/>
                             </Grid>                            
                             <Image Name="Image1" Grid.Row="2" Margin="5"/>
                             <Image Name="BodyImage1" Grid.Row="2" Margin="5" Source="{Binding BodyImageSource1}"/>
@@ -113,9 +114,10 @@
                                     <ColumnDefinition Width="40"/>
                                 </Grid.ColumnDefinitions>
 
-                                <Slider Name="RecordSelectSlider2" Grid.Column="0" VerticalAlignment="Center" SmallChange="1" LargeChange="10" TickPlacement="Both"  ValueChanged="RecordSlide_ValueChanged"/>
-                                <Canvas Name="RecordSelectCanvas2" Grid.Column="0" Height="5" Background="Transparent" MouseDown="CanvasMouseDown" MouseMove="CanvasMouseMove" MouseUp="CanvasMouseUp"/>
-                                <Button Name="CheckRecordRange2" Grid.Column="1" Content="❌" Width="30" Height="30" FontSize="12"/>
+                                <Canvas Name="RecordSelectCanvas2" Grid.Column="0" Height="12" Background="Transparent"/>
+                                <Slider Name="RecordSelectSlider2" Grid.Column="0" VerticalAlignment="Center" SmallChange="1" LargeChange="10" TickPlacement="Both"
+                                        ValueChanged="RecordSlide_ValueChanged" MouseDown="CanvasMouseDown" MouseMove="CanvasMouseMove" MouseUp="CanvasMouseUp"/>
+                                <Button Name="ClearRecordRange2" Grid.Column="1" Content="❌" Width="30" Height="30" FontSize="12" Click="ClearRecordRangeClick"/>
                             </Grid>
                             <Image Name="Image2" Grid.Row="2" Margin="5"/>
                             <Image Name="BodyImage2" Grid.Row="2" Margin="5" Source="{Binding BodyImageSource2}"/>
@@ -146,9 +148,10 @@
                                     <ColumnDefinition Width="40"/>
                                 </Grid.ColumnDefinitions>
 
-                                <Slider Name="RecordSelectSlider3" Grid.Column="0" VerticalAlignment="Center" SmallChange="1" LargeChange="10" TickPlacement="Both"  ValueChanged="RecordSlide_ValueChanged"/>
-                                <Canvas Name="RecordSelectCanvas3" Grid.Column="0" Height="5" Background="Transparent" MouseDown="CanvasMouseDown" MouseMove="CanvasMouseMove" MouseUp="CanvasMouseUp"/>
-                                <Button Name="CheckRecordRange3" Grid.Column="1" Content="❌" Width="30" Height="30" FontSize="12"/>
+                                <Canvas Name="RecordSelectCanvas3" Grid.Column="0" Height="12" Background="Transparent"/>
+                                <Slider Name="RecordSelectSlider3" Grid.Column="0" VerticalAlignment="Center" SmallChange="1" LargeChange="10" TickPlacement="Both"
+                                        ValueChanged="RecordSlide_ValueChanged" MouseDown="CanvasMouseDown" MouseMove="CanvasMouseMove" MouseUp="CanvasMouseUp"/>
+                                <Button Name="ClearRecordRange3" Grid.Column="1" Content="❌" Width="30" Height="30" FontSize="12" Click="ClearRecordRangeClick"/>
                             </Grid>
                             <Image Name="Image3" Grid.Row="2" Margin="5"/>
                             <Image Name="BodyImage3" Grid.Row="2" Margin="5" Source="{Binding BodyImageSource3}"/>
@@ -179,9 +182,10 @@
                                     <ColumnDefinition Width="40"/>
                                 </Grid.ColumnDefinitions>
 
-                                <Slider Name="RecordSelectSlider4" Grid.Column="0" VerticalAlignment="Center" SmallChange="1" LargeChange="10" TickPlacement="Both"  ValueChanged="RecordSlide_ValueChanged"/>
-                                <Canvas Name="RecordSelectCanvas4" Grid.Column="0" Height="5" Background="Transparent" MouseDown="CanvasMouseDown" MouseMove="CanvasMouseMove" MouseUp="CanvasMouseUp"/>
-                                <Button Name="CheckRecordRange4" Grid.Column="1" Content="❌" Width="30" Height="30" FontSize="12"/>
+                                <Canvas Name="RecordSelectCanvas4" Grid.Column="0" Height="12" Background="Transparent"/>
+                                <Slider Name="RecordSelectSlider4" Grid.Column="0" VerticalAlignment="Center" SmallChange="1" LargeChange="10" TickPlacement="Both"
+                                        ValueChanged="RecordSlide_ValueChanged" MouseDown="CanvasMouseDown" MouseMove="CanvasMouseMove" MouseUp="CanvasMouseUp"/>
+                                <Button Name="ClearRecordRange4" Grid.Column="1" Content="❌" Width="30" Height="30" FontSize="12" Click="ClearRecordRangeClick"/>
                             </Grid>
                             <Image Name="Image4" Grid.Row="2" Margin="5"/>
                             <Image Name="BodyImage4" Grid.Row="2" Margin="5" Source="{Binding BodyImageSource4}"/>
