@@ -433,6 +433,38 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
+        /// スライダーのマウスが押されたとき
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void PlaySlider_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            this.startIndex = (int)this.PlaySlider.Value;
+            this.PlaySlider.SelectionStart = this.startIndex;
+
+            foreach (Slider slider in this.recordSliders)
+            {
+                slider.Minimum = this.startIndex;
+            }
+        }
+
+        /// <summary>
+        /// スライダーのマウスが話されたとき
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void PlaySlider_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            this.endIndex = (int)this.PlaySlider.Value;
+            this.PlaySlider.SelectionEnd = this.endIndex;
+
+            foreach (Slider slider in this.recordSliders)
+            {
+                slider.Maximum = this.endIndex;
+            }
+        }
+
+        /// <summary>
         /// 人間が再生スライダーを動かした時の処理
         /// </summary>
         /// <param name="sender"></param>
@@ -847,6 +879,11 @@ namespace KinectMotionCapture
         private Point startPoint;
         private Rectangle rect;
 
+        /// <summary>
+        /// レコードのスライダーでのマウスダウン
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void CanvasMouseDown(object sender, MouseButtonEventArgs e)
         {
             Slider slider = (Slider)sender;
@@ -858,6 +895,11 @@ namespace KinectMotionCapture
             this.canvases[index].Children.Add(rect);
         }
 
+        /// <summary>
+        /// レコードのスライダーでのマウス操作
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void CanvasMouseMove(object sender, MouseEventArgs e)
         {
             Slider slider = (Slider)sender;
@@ -872,11 +914,21 @@ namespace KinectMotionCapture
             Canvas.SetTop(rect, 0);
         }
 
+        /// <summary>
+        /// レコードのスライダーでのマウスアップ
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void CanvasMouseUp(object sender, MouseButtonEventArgs e)
         {
             rect = null;
         }
 
+        /// <summary>
+        /// レコードの選択範囲をクリア
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ClearRecordRangeClick(object sender,  RoutedEventArgs e)
         {
             Button button = (Button)sender;
@@ -885,6 +937,11 @@ namespace KinectMotionCapture
             canvas.Children.Clear();
         }
 
+        /// <summary>
+        /// レコードのスライダーが変わったとき
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void RecordSlide_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             if (!this.isPlaying)
@@ -907,28 +964,6 @@ namespace KinectMotionCapture
                         slider.Value = this.playingIndex;
                     }
                 }
-            }
-        }
-
-        private void PlaySlider_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            this.startIndex = (int)this.PlaySlider.Value;
-            this.PlaySlider.SelectionStart = this.startIndex;
-
-            foreach (Slider slider in this.recordSliders)
-            {
-                slider.Minimum = this.startIndex;
-            }
-        }
-
-        private void PlaySlider_MouseUp(object sender, MouseButtonEventArgs e)
-        {
-            this.endIndex = (int)this.PlaySlider.Value;
-            this.PlaySlider.SelectionEnd = this.endIndex;
-
-            foreach (Slider slider in this.recordSliders)
-            {
-                slider.Maximum = this.endIndex;
             }
         }
     }
