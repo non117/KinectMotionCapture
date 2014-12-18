@@ -455,38 +455,6 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
-        /// フレーム範囲最小値を選択するUI
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void SetMinTime_Click(object sender, RoutedEventArgs e)
-        {
-            this.startIndex = (int)this.PlaySlider.Value;
-            this.PlaySlider.SelectionStart = this.startIndex;
-
-            foreach (Slider slider in this.recordSliders)
-            {
-                slider.Minimum = this.startIndex;
-            }
-        }
-
-        /// <summary>
-        /// フレーム範囲最大値を選択するUI
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void SetMaxTime_Click(object sender, RoutedEventArgs e)
-        {           
-            this.endIndex = (int)this.PlaySlider.Value;
-            this.PlaySlider.SelectionEnd = this.endIndex;
-
-            foreach (Slider slider in this.recordSliders)
-            {
-                slider.Maximum = this.endIndex;
-            }
-        }
-
-        /// <summary>
         /// 現在のフレームでBoneから統合行列計算
         /// </summary>
         /// <param name="sender"></param>
@@ -939,6 +907,28 @@ namespace KinectMotionCapture
                         slider.Value = this.playingIndex;
                     }
                 }
+            }
+        }
+
+        private void PlaySlider_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            this.startIndex = (int)this.PlaySlider.Value;
+            this.PlaySlider.SelectionStart = this.startIndex;
+
+            foreach (Slider slider in this.recordSliders)
+            {
+                slider.Minimum = this.startIndex;
+            }
+        }
+
+        private void PlaySlider_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            this.endIndex = (int)this.PlaySlider.Value;
+            this.PlaySlider.SelectionEnd = this.endIndex;
+
+            foreach (Slider slider in this.recordSliders)
+            {
+                slider.Maximum = this.endIndex;
             }
         }
     }
