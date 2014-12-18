@@ -38,6 +38,7 @@ namespace KinectMotionCapture
 
         private bool[] isUserSelected;
         private bool[] isRecordSelected;
+        private Slider[] recordSliders;
 
         private DrawingGroup drawingGroup1;
         private DrawingImage bodyImageSource1;
@@ -174,11 +175,19 @@ namespace KinectMotionCapture
             // player関係
             this.playingIndex = 0;
             this.PlaySlider.Minimum = 0;
-            this.PlaySlider.Maximum = this.frameSequence.Frames.Count() - 1;
+            this.PlaySlider.Maximum = this.frameSequence.Frames.Count - 1;
             this.startIndex = 0;
-            this.endIndex = this.frameSequence.Frames.Count() - 1;
+            this.endIndex = this.frameSequence.Frames.Count - 1;
             this.PlaySlider.SelectionStart = this.startIndex;
             this.PlaySlider.SelectionEnd = this.endIndex;
+
+            // 各レコードのスライダー
+            this.recordSliders = new Slider[] { RecordSelectSlider1, RecordSelectSlider2, RecordSelectSlider3, RecordSelectSlider4 };
+            foreach (Slider slider in this.recordSliders)
+            {
+                slider.Minimum = 0;
+                slider.Maximum = this.frameSequence.Frames.Count - 1;
+            }
 
             // UserIdを選択するUI
             ComboBox[] boxes = { UserIdBox1, UserIdBox2, UserIdBox3, UserIdBox4 };
@@ -428,10 +437,17 @@ namespace KinectMotionCapture
         private void PlaySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             // このイベントは全ての変更にフックされるっぽいので、人間が弄った時に再生止めて動かす、みたいな。
-            if (!this.isPlaying)
+            // playingIndexの値をチェックして、PlaySliderが直接動かされた条件のみ拾う
+            if (!this.isPlaying && (int)((Slider)sender).Value != this.playingIndex)
             {
                 this.playingIndex = (int)((Slider)sender).Value;
                 this.UpdateDisplay(this.frameSequence.Frames[this.playingIndex]);
+
+                // 各スライダーを動かす
+                foreach (Slider slider in this.recordSliders)
+                {
+                    slider.Value = this.playingIndex;
+                }
             }
         }
 
@@ -444,6 +460,11 @@ namespace KinectMotionCapture
         {
             this.startIndex = (int)this.PlaySlider.Value;
             this.PlaySlider.SelectionStart = this.startIndex;
+
+            foreach (Slider slider in this.recordSliders)
+            {
+                slider.Minimum = this.startIndex;
+            }
         }
 
         /// <summary>
@@ -455,6 +476,11 @@ namespace KinectMotionCapture
         {           
             this.endIndex = (int)this.PlaySlider.Value;
             this.PlaySlider.SelectionEnd = this.endIndex;
+
+            foreach (Slider slider in this.recordSliders)
+            {
+                slider.Maximum = this.endIndex;
+            }
         }
 
         /// <summary>
@@ -885,8 +911,24 @@ namespace KinectMotionCapture
         {
             if (!this.isPlaying)
             {
-                //this.playingIndex = (int)((Slider)sender).Value;
-                //this.UpdateDisplay(this.frameSequence.Frames[this.playingIndex]);
+                Slider calledSlider = (Slider)sender;
+
+                // すでにplayingIndexがセットされてる、つまり動かされたのはPlaySliderを除外
+                if (this.playingIndex != (int)calledSlider.Value)
+                {
+                    this.playingIndex = (int)calledSlider.Value;
+                    this.PlaySlider.Value = this.playingIndex;
+                    this.UpdateDisplay(this.frameSequence.Frames[this.playingIndex]);
+                }
+
+                // 他のレコードスライダーに反映、すでにplayingIndexは変更済
+                foreach (Slider slider in this.recordSliders)
+                {
+                    if (slider != calledSlider)
+                    {
+                        slider.Value = this.playingIndex;
+                    }
+                }
             }
         }
     }

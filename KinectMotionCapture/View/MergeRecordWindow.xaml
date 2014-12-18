@@ -90,6 +90,7 @@
                         <Grid Grid.Row="0" Grid.Column="1" Name="Image2Grid">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="50"/>
+                                <RowDefinition Height="40"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
 
@@ -106,13 +107,24 @@
                                 <Label Name="Box2Timer" Content="00:000" Grid.Column="3" Margin="5" Height="25" Width="60"/>
 
                             </Grid>
-                            <Image Name="Image2" Grid.Row="1" Margin="5"/>
-                            <Image Name="BodyImage2" Grid.Row="1" Margin="5" Source="{Binding BodyImageSource2}"/>
+                            <Grid Grid.Row="1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="40"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Slider Name="RecordSelectSlider2" Grid.Column="0" VerticalAlignment="Center" SmallChange="1" LargeChange="10" TickPlacement="Both"  ValueChanged="RecordSlide_ValueChanged"/>
+                                <Canvas Name="RecordSelectCanvas2" Grid.Column="0" Height="5" Background="Transparent" MouseDown="CanvasMouseDown" MouseMove="CanvasMouseMove" MouseUp="CanvasMouseUp"/>
+                                <Button Name="CheckRecordRange2" Grid.Column="1" Content="❌" Width="30" Height="30" FontSize="12"/>
+                            </Grid>
+                            <Image Name="Image2" Grid.Row="2" Margin="5"/>
+                            <Image Name="BodyImage2" Grid.Row="2" Margin="5" Source="{Binding BodyImageSource2}"/>
                         </Grid>
 
                         <Grid Grid.Row="1" Grid.Column="0" Name="Image3Grid">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="50"/>
+                                <RowDefinition Height="40"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
 
@@ -128,13 +140,24 @@
                                 <CheckBox Name="RecordSelect3" Content="Record Selection" Margin="10" Grid.Column="2" VerticalAlignment="Center" Click="RecordSelect_Clicked"/>
                                 <Label Name="Box3Timer" Content="00:000" Grid.Column="3" Margin="5" Height="25" Width="60"/>
                             </Grid>
-                            <Image Name="Image3" Grid.Row="1" Margin="5"/>
-                            <Image Name="BodyImage3" Grid.Row="1" Margin="5" Source="{Binding BodyImageSource3}"/>
+                            <Grid Grid.Row="1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="40"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Slider Name="RecordSelectSlider3" Grid.Column="0" VerticalAlignment="Center" SmallChange="1" LargeChange="10" TickPlacement="Both"  ValueChanged="RecordSlide_ValueChanged"/>
+                                <Canvas Name="RecordSelectCanvas3" Grid.Column="0" Height="5" Background="Transparent" MouseDown="CanvasMouseDown" MouseMove="CanvasMouseMove" MouseUp="CanvasMouseUp"/>
+                                <Button Name="CheckRecordRange3" Grid.Column="1" Content="❌" Width="30" Height="30" FontSize="12"/>
+                            </Grid>
+                            <Image Name="Image3" Grid.Row="2" Margin="5"/>
+                            <Image Name="BodyImage3" Grid.Row="2" Margin="5" Source="{Binding BodyImageSource3}"/>
                         </Grid>
 
                         <Grid Grid.Row="1" Grid.Column="1" Name="Image4Grid">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="50"/>
+                                <RowDefinition Height="40"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
 
@@ -150,8 +173,18 @@
                                 <CheckBox Name="RecordSelect4" Content="Record Selection" Margin="10" Grid.Column="2" VerticalAlignment="Center" Click="RecordSelect_Clicked"/>
                                 <Label Name="Box4Timer" Content="00:000" Grid.Column="3" Margin="5" Height="25" Width="60"/>
                             </Grid>
-                            <Image Name="Image4" Grid.Row="1" Margin="5"/>
-                            <Image Name="BodyImage4" Grid.Row="1" Margin="5" Source="{Binding BodyImageSource4}"/>
+                            <Grid Grid.Row="1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="40"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Slider Name="RecordSelectSlider4" Grid.Column="0" VerticalAlignment="Center" SmallChange="1" LargeChange="10" TickPlacement="Both"  ValueChanged="RecordSlide_ValueChanged"/>
+                                <Canvas Name="RecordSelectCanvas4" Grid.Column="0" Height="5" Background="Transparent" MouseDown="CanvasMouseDown" MouseMove="CanvasMouseMove" MouseUp="CanvasMouseUp"/>
+                                <Button Name="CheckRecordRange4" Grid.Column="1" Content="❌" Width="30" Height="30" FontSize="12"/>
+                            </Grid>
+                            <Image Name="Image4" Grid.Row="2" Margin="5"/>
+                            <Image Name="BodyImage4" Grid.Row="2" Margin="5" Source="{Binding BodyImageSource4}"/>
                         </Grid>
 
 
