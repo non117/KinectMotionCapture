@@ -878,6 +878,7 @@ namespace KinectMotionCapture
 
         private Point startPoint;
         private Rectangle rect;
+        private int recordInvalidStart;
 
         /// <summary>
         /// レコードのスライダーでのマウスダウン
@@ -893,6 +894,7 @@ namespace KinectMotionCapture
             Canvas.SetLeft(rect, startPoint.X);
             Canvas.SetTop(rect, 0);
             this.canvases[index].Children.Add(rect);
+            this.recordInvalidStart = (int)slider.Value;
         }
 
         /// <summary>
@@ -902,9 +904,9 @@ namespace KinectMotionCapture
         /// <param name="e"></param>
         private void CanvasMouseMove(object sender, MouseEventArgs e)
         {
-            Slider slider = (Slider)sender;
             if (e.LeftButton == MouseButtonState.Released || rect == null)
                 return;
+            Slider slider = (Slider)sender;
             Point pos = e.GetPosition(slider);
             double x = Math.Min(pos.X, startPoint.X);
             double w = Math.Max(pos.X, startPoint.X) - x;
@@ -922,6 +924,16 @@ namespace KinectMotionCapture
         private void CanvasMouseUp(object sender, MouseButtonEventArgs e)
         {
             rect = null;
+            Slider slider = (Slider)sender;
+            int index = slider.Name[slider.Name.Length - 1] - '0' - 1;
+            // フレーム範囲を無効に
+            IEnumerable<Frame> frames = frameSequence.Slice(this.recordInvalidStart, (int)slider.Value);
+            foreach (Frame frame in frames)
+            {
+                frame.SetDataNotValid(index);
+            }
+            // 初期化
+            this.recordInvalidStart = this.frameSequence.Frames.Count;
         }
 
         /// <summary>
@@ -935,6 +947,13 @@ namespace KinectMotionCapture
             int index = button.Name[button.Name.Length - 1] - '0' - 1;
             Canvas canvas = this.canvases[index];
             canvas.Children.Clear();
+            // フレーム範囲を有効に
+            IEnumerable<Frame> frames = frameSequence.Slice(this.startIndex, this.endIndex);
+            foreach (Frame frame in frames)
+            {
+                frame.ResetAllValidFlags();
+            }
+
         }
 
         /// <summary>

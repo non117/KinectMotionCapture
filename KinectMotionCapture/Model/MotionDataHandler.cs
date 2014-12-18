@@ -319,6 +319,10 @@ namespace KinectMotionCapture
         public int DepthUserHeight { get; set; }
         public PointF[] depthLUT { get; set; }
 
+        // このデータを使うかどうか
+        [NonSerialized]
+        public bool isValid = true;
+
         // 互換性のためのメンバ。シリアライズ不可能なので下記のメソッドでロードする。
         [NonSerialized]
         public CvMat depthMat = null;

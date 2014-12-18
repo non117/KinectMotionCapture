@@ -653,6 +653,27 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
+        /// recordNoのデータを使わないように設定する
+        /// </summary>
+        /// <param name="recordNo"></param>
+        public void SetDataNotValid(int recordNo)
+        {
+            MotionData md = this.records[recordNo];
+            md.isValid = false;
+        }
+
+        /// <summary>
+        /// validフラグをリセットする
+        /// </summary>
+        public void ResetAllValidFlags()
+        {
+            foreach (MotionData md in this.records)
+            {
+                md.isValid = true;
+            }
+        }
+
+        /// <summary>
         /// こんすとらくたん
         /// </summary>
         /// <param name="records"></param>
@@ -804,12 +825,11 @@ namespace KinectMotionCapture
                         }
                     }
                 }
-            }//))
-            //{
+            }
+
             // 依存関係のツリーを作る
             int baseRecordIndex;
             Dictionary<int, int> dependencies;
-            //if (!CalcEx.GetDependencyTree(_project.RecordList.Count, cooccurenceCount, list => list.Sum(), out  baseRecordIndex, out dependencies))
             // とりあえず先頭フレームのレコード数にしてるけど、プロジェクトとかが持つべき値
             if (!CalcEx.GetDependencyTree(frameSeq.recordNum, cooccurenceCount, list => list.Sum(), out  baseRecordIndex, out dependencies))
             {
@@ -832,16 +852,10 @@ namespace KinectMotionCapture
                     if (bodies.Count() != frame.recordNum)
                         continue;
 
-                    //List<KinectUndistortion> undistortions = frameSeq.UndistortionDataList;
                     List<CvSize> depthUsersizeList = frame.DepthUserSize;
 
                     foreach (KeyValuePair<int, int> dependencyPair in CalcEx.EnumerateDependencyPairs(baseRecordIndex, dependencies))
                     {
-                        //CvSize imageSize1 = depthUsersizeList[dependencyPair.Key];
-                        //CvSize imageSize2 = depthUsersizeList[dependencyPair.Value];
-                        //KinectUndistortion undist1 = undistortions[dependencyPair.Key];
-                        //KinectUndistortion undist2 = undistortions[dependencyPair.Value];
-
                         // 変換計算用オブジェクトを拾ってくる
                         ICoordConversion3D conv;
                         if (!conversionsPerDependencyKey.TryGetValue(dependencyPair.Key, out conv))
@@ -854,8 +868,6 @@ namespace KinectMotionCapture
 
                         foreach (JointType jointType in joint1.Keys.Intersect(joint2.Keys))
                         {
-                            //CvPoint3D64f camPoint1 = undist1.GetRealFromScreenPos(joint1[jointType].Position.ToCvPoint3D(), imageSize1);
-                            //CvPoint3D64f camPoint2 = undist2.GetRealFromScreenPos(joint2[jointType].Position.ToCvPoint3D(), imageSize2);
                             CvPoint3D64f camPoint1 = joint1[jointType].Position.ToCvPoint3D();
                             CvPoint3D64f camPoint2 = joint2[jointType].Position.ToCvPoint3D();
                             // それぞれのカメラ座標系におけるそれぞれの対応点をセットに入れる

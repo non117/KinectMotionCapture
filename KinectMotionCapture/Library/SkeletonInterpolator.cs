@@ -152,7 +152,7 @@ namespace KinectMotionCapture
                 MotionData prevData = frameSeq.GetPrevData(recordNo, time);
                 MotionData nextData = frameSeq.GetNextData(recordNo, time);
 
-                if (prevData == null || nextData == null || prevData.bodies.Length * nextData.bodies.Length == 0)
+                if (prevData == null || nextData == null || prevData.bodies.Length * nextData.bodies.Length == 0 || !prevData.isValid || !nextData.isValid)
                 {
                     jointsArr[recordNo] = null;
                     reliabilityArr[recordNo] = 0;
