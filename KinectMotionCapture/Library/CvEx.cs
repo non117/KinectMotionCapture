@@ -567,6 +567,7 @@ namespace KinectMotionCapture
         {
             return vector1.X * vector2.X + vector1.Y * vector2.Y + vector1.Z * vector2.Z;
         }
+
         /// <summary>
         /// 2ベクトルの外積を求めます
         /// </summary>
@@ -577,6 +578,18 @@ namespace KinectMotionCapture
         {
             return new CvPoint3D64f(v1.Y * v2.Z - v1.Z * v2.Y, v1.Z * v2.X - v1.X * v2.Z, v1.X * v2.Y - v1.Y * v2.X);
         }
+
+        /// <summary>
+        /// 2ベクトルの角度をcos(theta)として求めます
+        /// </summary>
+        /// <param name="vector1"></param>
+        /// <param name="vector2"></param>
+        /// <returns></returns>
+        public static double Cos(CvPoint3D64f vector1, CvPoint3D64f vector2)
+        {
+            return Dot(vector1, vector2) / (GetLength(vector1) * GetLength(vector2));
+        }
+
         /// <summary>
         /// クォータニオンの値から3x3回転行列を求めます．
         /// </summary>

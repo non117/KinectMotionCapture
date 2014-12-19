@@ -72,5 +72,42 @@ namespace KinectMotionCapture
                 }
             }
         }
+    
+        public static void Correct2(FrameSequence frameSeq)
+        {
+            CvPoint3D64f[] prevVectors = new CvPoint3D64f[frameSeq.recordNum];
+            foreach(Frame frame in frameSeq.Frames)
+            {
+                List<SerializableBody> bodies = frame.GetSelectedBodyList(integratedIds: frameSeq.selecteedIntegretedIdList);
+                if (bodies.Count != frame.recordNum)
+                {
+                    continue;
+                }
+                try
+                {
+                    CvPoint3D64f[] vectors = bodies.Select(b =>
+                        (CvPoint3D64f)(b.Joints[JointType.ShoulderLeft].Position.ToCvPoint3D() - b.Joints[JointType.ShoulderRight].Position.ToCvPoint3D())).ToArray();
+                    if (prevVectors == default(CvPoint3D64f[]))
+                    {
+                        prevVectors = vectors;
+                        continue;
+                    }                    
+                    double[] cosVals = vectors.Zip(prevVectors, (cur, prev) => CvEx.Cos(cur, prev)).ToArray();
+                    bool[] mirrorFlags = cosVals.Select(d => d <= -0.5).ToArray();
+                    for (int no = 0; no < frame.recordNum; no++)
+                    {
+                        if (mirrorFlags[no])
+                        {
+                            frame.InverseBody(no);
+                        }
+                    }
+                    prevVectors = vectors;
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+            }
+        }
     }
 }
