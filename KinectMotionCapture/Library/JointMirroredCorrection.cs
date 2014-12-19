@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -72,11 +73,11 @@ namespace KinectMotionCapture
                 }
             }
         }
-    
+
         public static void Correct2(FrameSequence frameSeq)
         {
             CvPoint3D64f[] prevVectors = new CvPoint3D64f[frameSeq.recordNum];
-            foreach(Frame frame in frameSeq.Frames)
+            foreach (Frame frame in frameSeq.Frames)
             {
                 List<SerializableBody> bodies = frame.GetSelectedBodyList(integratedIds: frameSeq.selecteedIntegretedIdList);
                 if (bodies.Count != frame.recordNum)
@@ -91,11 +92,15 @@ namespace KinectMotionCapture
                     {
                         prevVectors = vectors;
                         continue;
-                    }                    
+                    }
                     double[] cosVals = vectors.Zip(prevVectors, (cur, prev) => CvEx.Cos(cur, prev)).ToArray();
-                    bool[] mirrorFlags = cosVals.Select(d => d <= -0.5).ToArray();
+                    bool[] mirrorFlags = cosVals.Select(d => d <= -0.8).ToArray();
                     for (int no = 0; no < frame.recordNum; no++)
                     {
+                        if (mirrorFlags.Where(b => b).Count() > 2)
+                        {
+                            int x = 0;
+                        }
                         if (mirrorFlags[no])
                         {
                             frame.InverseBody(no);
