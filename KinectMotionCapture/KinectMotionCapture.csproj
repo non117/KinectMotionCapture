@@ -149,6 +149,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Library\BodyStatistics.cs" />
     <Compile Include="Library\CalcEx.cs" />
     <Compile Include="Library\JointMirroredCorrection.cs" />
     <Compile Include="Library\SkeletonInterpolator.cs" />
