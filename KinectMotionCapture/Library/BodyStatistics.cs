@@ -11,7 +11,10 @@ namespace KinectMotionCapture
 {
     using Bone = Tuple<JointType, JointType>;
     public class BodyStatistics
-    {        
+    {
+        /// <summary>
+        /// 骨の統計情報を格納するための構造体
+        /// </summary>
         public struct BoneStatistics
         {
             double minLength;
@@ -61,6 +64,10 @@ namespace KinectMotionCapture
             
         }
 
+        /// <summary>
+        /// 統計情報を計算し格納する
+        /// </summary>
+        /// <param name="ratio"></param>
         public void CalcMedianBoneRange(double ratio = 0.75)
         {
             foreach (Bone bone in this.bones)
@@ -85,6 +92,9 @@ namespace KinectMotionCapture
             }
         }
 
+        /// <summary>
+        /// こんすとらくたん
+        /// </summary>
         public BodyStatistics()
         {
             this.bones = Utility.GetBones();
