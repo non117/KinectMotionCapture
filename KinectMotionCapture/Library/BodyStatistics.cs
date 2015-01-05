@@ -9,11 +9,26 @@ using OpenCvSharp;
 
 namespace KinectMotionCapture
 {
+    using Bone = Tuple<JointType, JointType>;
     public class BodyStatistics
-    {
+    {        
+        public struct BoneStatistics
+        {
+            double minLength;
+            double maxLength;
+            double medianLength;
+            public BoneStatistics(double minLength, double maxLength, double medianLength)
+            {
+                this.minLength = minLength;
+                this.maxLength = maxLength;
+                this.medianLength = medianLength;
+            }
+        }
+
         // 骨一覧
-        private List<Tuple<JointType, JointType>> bones;
-        private Dictionary<Tuple<JointType, JointType>, List<double>> boneLengthSqLog;
+        private List<Bone> bones;
+        private Dictionary<Bone, List<double>> boneLengthSqLog;
+        private Dictionary<Bone, BoneStatistics> boneLengthStatistics;
 
         /// <summary>
         /// 骨のデータを蓄積する
@@ -23,7 +38,7 @@ namespace KinectMotionCapture
         {
             Dictionary<JointType, Joint> validJoints = Utility.GetValidJoints(joints);
             Joint firstJoint, secondJoint;
-            Tuple<JointType, JointType> boneKey;
+            Bone boneKey;
             List<double> lengthVal;
             foreach (var bone in bones)
             {
@@ -48,7 +63,7 @@ namespace KinectMotionCapture
 
         public void CalcMedianBoneRange(double ratio = 0.75)
         {
-            foreach (var bone in this.bones)
+            foreach (Bone bone in this.bones)
             {
                 List<double> data = this.boneLengthSqLog[bone].OrderBy(num => num).ToList();
                 double median = CalcEx.GetMedian(data);
@@ -65,13 +80,16 @@ namespace KinectMotionCapture
                 }
                 double minLength = data[indexes.Min()];
                 double maxLength = data[indexes.Max()];
+                BoneStatistics bs = new BoneStatistics(maxLength, minLength, median);
+                this.boneLengthStatistics.Add(bone, bs);
             }
         }
 
         public BodyStatistics()
         {
             this.bones = Utility.GetBones();
-            this.boneLengthSqLog = new Dictionary<Tuple<JointType, JointType>, List<double>>();
+            this.boneLengthSqLog = new Dictionary<Bone, List<double>>();
+            this.boneLengthStatistics = new Dictionary<Bone, BoneStatistics>();
         }
     }
 }
