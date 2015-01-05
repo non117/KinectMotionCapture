@@ -28,6 +28,7 @@ namespace KinectMotionCapture
     public partial class MergeRecordWindow : Window
     {
         private FrameSequence frameSequence;
+        private BodyStatistics bodyStat;
         
         private BackgroundWorker worker;
 
@@ -103,6 +104,7 @@ namespace KinectMotionCapture
 
             // a bone defined as a line between two joints
             this.bones = Utility.GetBones();
+            this.bodyStat = new BodyStatistics();
 
             this.DataContext = this;
             InitializeComponent();
@@ -570,20 +572,7 @@ namespace KinectMotionCapture
             // UserIdを選択するUIのリフレッシュ
             this.UpdateIntegratedIds();
             //debug
-            JointMirroredCorrection.Correct(frameSequence);
-
-            // debug
-            BodyStatistics bodyStat = new BodyStatistics();
-            foreach (Frame frame in this.frameSequence.Frames)
-            {
-                List<SerializableBody> bodies = frame.GetSelectedBodyList(this.frameSequence.selecteedIntegretedIdList);
-                foreach (var body in bodies)
-                {
-                    bodyStat.StoreBoneLength(body.Joints);
-                }
-            }
-            bodyStat.CalcMedianBoneRange();
-            
+            JointMirroredCorrection.Correct(frameSequence);            
         }
 
         /// <summary>
@@ -962,6 +951,24 @@ namespace KinectMotionCapture
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// 骨の統計情報を記録しておく
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void StoreBonesStatistics_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (Frame frame in this.frameSequence.Frames)
+            {
+                List<SerializableBody> bodies = frame.GetSelectedBodyList(this.frameSequence.selecteedIntegretedIdList);
+                foreach (var body in bodies)
+                {
+                    this.bodyStat.StoreBoneLength(body.Joints);
+                }
+            }
+            bodyStat.CalcMedianBoneRange();
         }
     }
 }
