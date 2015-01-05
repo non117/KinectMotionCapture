@@ -209,6 +209,33 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
+        /// csvファイルとして出力する
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="header"></param>
+        /// <param name="data"></param>
+        public static void SaveToCsv<T>(string path, List<string> header, List<List<T>> data)
+        {
+            using (StreamWriter sw = new StreamWriter(path))
+            {
+                foreach (string str in header)
+                {
+                    sw.Write(str + ",");
+                }
+                sw.WriteLine();
+                foreach(List<T> line in data)
+                {
+                    foreach(T cell in line)
+                    {                        
+                        sw.Write(cell.ToString() + ",");
+                    }
+                    sw.WriteLine();
+                }
+                sw.WriteLine();
+            }
+        }
+
+        /// <summary>
         /// Unityに吐くためのデータ変換
         /// </summary>
         /// <param name="originalJoints"></param>
