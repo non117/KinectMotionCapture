@@ -582,7 +582,7 @@ namespace KinectMotionCapture
                     bodyStat.StoreBoneLength(body.Joints);
                 }
             }
-            bodyStat.GetMedianBoneLengths();
+            bodyStat.CalcMedianBoneRange();
             
         }
 

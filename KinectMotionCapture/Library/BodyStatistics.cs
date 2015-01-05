@@ -46,13 +46,26 @@ namespace KinectMotionCapture
             
         }
 
-        public void GetMedianBoneLengths()
+        public void CalcMedianBoneRange(double ratio = 0.75)
         {
-            // TODO
-            // 引数に範囲とか
-            //List<double> data = this.boneLengthSqLog[this.bones[4]];
-            //List<List<double>> hoge = data.Select(d => new List<double>() { d }).ToList();
-            //Utility.SaveToCsv(@"stat.csv", new List<string>() { bones[4].ToString() + "length" }, hoge);
+            foreach (var bone in this.bones)
+            {
+                List<double> data = this.boneLengthSqLog[bone].OrderBy(num => num).ToList();
+                double median = CalcEx.GetMedian(data);
+                IEnumerable<Tuple<double, int>> cleanedData = data.Select((num, index) => Tuple.Create(Math.Abs(num - median), index)).OrderBy(tup => tup.Item1);
+                int cutNum = (int)(data.Count() * ratio);
+                List<int> indexes = new List<int>();
+                foreach(Tuple<double, int> pair in cleanedData)
+                {
+                    if (indexes.Count > cutNum)
+                    {
+                        break;
+                    }
+                    indexes.Add(pair.Item2);
+                }
+                double minLength = data[indexes.Min()];
+                double maxLength = data[indexes.Max()];
+            }
         }
 
         public BodyStatistics()
