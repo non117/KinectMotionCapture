@@ -15,6 +15,10 @@ namespace KinectMotionCapture
         private List<Tuple<JointType, JointType>> bones;
         private Dictionary<Tuple<JointType, JointType>, List<double>> boneLengthSqLog;
 
+        /// <summary>
+        /// 骨のデータを蓄積する
+        /// </summary>
+        /// <param name="joints"></param>
         public void StoreBoneLength(Dictionary<JointType, Joint> joints)
         {
             Dictionary<JointType, Joint> validJoints = Utility.GetValidJoints(joints);
@@ -39,12 +43,16 @@ namespace KinectMotionCapture
                     
                 }
             }
+            
         }
 
         public void GetMedianBoneLengths()
         {
             // TODO
             // 引数に範囲とか
+            //List<double> data = this.boneLengthSqLog[this.bones[4]];
+            //List<List<double>> hoge = data.Select(d => new List<double>() { d }).ToList();
+            //Utility.SaveToCsv(@"stat.csv", new List<string>() { bones[4].ToString() + "length" }, hoge);
         }
 
         public BodyStatistics()

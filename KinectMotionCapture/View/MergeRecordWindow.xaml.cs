@@ -78,7 +78,7 @@ namespace KinectMotionCapture
             string cameradir = @"E:\CameraInfo.dump";
             this.frameSequence = new FrameSequence(datadir);
             this.frameSequence.LocalCoordinateMappers = mapdir.Select(s => (LocalCoordinateMapper)Utility.LoadFromBinary(s)).ToList();
-            this.frameSequence.CameraInfo = (CameraIntrinsics)Utility.LoadFromBinary(cameradir);
+            this.frameSequence.CameraInfo = (CameraIntrinsics)Utility.LoadFromBinary(cameradir);            
         }
 
         /// <summary>
@@ -571,8 +571,18 @@ namespace KinectMotionCapture
             this.UpdateIntegratedIds();
             //debug
             JointMirroredCorrection.Correct(frameSequence);
-            //JointMirroredCorrection.Correct2(frameSequence);
-            
+
+            // debug
+            BodyStatistics bodyStat = new BodyStatistics();
+            foreach (Frame frame in this.frameSequence.Frames)
+            {
+                List<SerializableBody> bodies = frame.GetSelectedBodyList(this.frameSequence.selecteedIntegretedIdList);
+                foreach (var body in bodies)
+                {
+                    bodyStat.StoreBoneLength(body.Joints);
+                }
+            }
+            bodyStat.GetMedianBoneLengths();
             
         }
 
