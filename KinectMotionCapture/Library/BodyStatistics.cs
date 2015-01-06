@@ -79,27 +79,25 @@ namespace KinectMotionCapture
 
         /// <summary>
         /// 統計情報を計算し格納する
+        /// z = 0.904をデフォルトとする、このとき中央値から65%を網羅できる
         /// </summary>
-        /// <param name="ratio"></param>
-        public void CalcMedianBoneRange(double ratio = 0.75)
+        /// <param name="z">標準正規分布表のZ</param>
+        public void CalcMedianBoneRange(double z = 0.904)
         {
             foreach (Bone bone in this.bones)
             {
-                List<double> data = this.boneLengthSqLog[bone].OrderBy(num => num).ToList();
+                List<double> data = this.boneLengthSqLog[bone];
                 double median = CalcEx.GetMedian(data);
-                IEnumerable<Tuple<double, int>> cleanedData = data.Select((num, index) => Tuple.Create(Math.Abs(num - median), index)).OrderBy(tup => tup.Item1);
-                int cutNum = (int)(data.Count() * ratio);
-                List<int> indexes = new List<int>();
-                foreach(Tuple<double, int> pair in cleanedData)
-                {
-                    if (indexes.Count > cutNum)
-                    {
-                        break;
-                    }
-                    indexes.Add(pair.Item2);
-                }
-                double minLength = data[indexes.Min()];
-                double maxLength = data[indexes.Max()];
+                double average = data.Average();
+                double threshold = Math.Max(median, average);
+                // 中央値あるいは平均値の大きい方の2倍未満の区間に限定する
+                data = data.Where(d => d <= average * 2.1).ToList();
+                // 計算し直す
+                median = CalcEx.GetMedian(data);
+                average = data.Average();
+                double std = Math.Abs(Math.Sqrt(data.Select(d => Math.Pow(d - average, 2)).Sum() / (data.Count() - 1)));
+                double minLength = median - std * z;
+                double maxLength = median + std * z;
                 BoneStatistics bs = new BoneStatistics(maxLength, minLength, median);
                 this.boneLengthSqStatistics.Add(bone, bs);
             }
