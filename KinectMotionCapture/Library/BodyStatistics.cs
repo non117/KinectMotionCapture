@@ -107,6 +107,30 @@ namespace KinectMotionCapture
             }
         }
 
+        public bool CheckArmDuplication(Dictionary<JointType, Joint> joints)
+        {
+            JointType[] arms = new JointType[]{JointType.ElbowLeft, JointType.ElbowRight,
+                JointType.HandLeft, JointType.HandRight, JointType.HandTipLeft, JointType.HandTipRight,
+                JointType.ThumbLeft, JointType.ThumbRight, JointType.WristLeft, JointType.WristRight
+            };
+            List<float> zs = new List<float>();
+            Joint joint;
+            foreach (JointType jointType in arms)
+            {
+                if (joints.TryGetValue(jointType, out joint))
+                {
+                    zs.Add(joint.Position.Z);
+                }
+            }
+            float avg = zs.Average();
+            double variance = zs.Select(f => Math.Pow(f - avg, 2)).Sum() / (zs.Count() - 1);
+            if (variance < 0.2 * 0.2 && zs.Count > 5)
+            {
+                return true;
+            }
+            return false;
+        }
+
         /// <summary>
         /// 統計値から有用な範囲の骨のみを残す
         /// </summary>
@@ -132,6 +156,12 @@ namespace KinectMotionCapture
                     }
                 }
             }
+            bool armDup = this.CheckArmDuplication(validJoints);
+            if (armDup)
+            {
+                // TODO, 遠い方の腕を消す
+            }
+
             foreach (JointType jointType in validJoints.Keys)
             {
                 if (!adaptJoints.ContainsKey(jointType))
