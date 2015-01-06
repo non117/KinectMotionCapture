@@ -20,11 +20,15 @@ namespace KinectMotionCapture
             double minLengthSq;
             double maxLengthSq;
             double medianLengthSq;
-            public BoneStatistics(double minLength, double maxLength, double medianLength)
+            double averageLengthSq;
+            double stdLengthSq;
+            public BoneStatistics(double minLength, double maxLength, double medianLength, double averageLength, double stdLength)
             {
                 this.minLengthSq = minLength;
                 this.maxLengthSq = maxLength;
                 this.medianLengthSq = medianLength;
+                this.averageLengthSq = averageLength;
+                this.stdLengthSq = stdLength;
             }
             /// <summary>
             /// 統計情報の許容範囲かどうか
@@ -98,7 +102,7 @@ namespace KinectMotionCapture
                 double std = Math.Abs(Math.Sqrt(data.Select(d => Math.Pow(d - average, 2)).Sum() / (data.Count() - 1)));
                 double minLength = median - std * z;
                 double maxLength = median + std * z;
-                BoneStatistics bs = new BoneStatistics(maxLength, minLength, median);
+                BoneStatistics bs = new BoneStatistics(maxLength, minLength, median, average, std);
                 this.boneLengthSqStatistics.Add(bone, bs);
             }
         }
