@@ -115,6 +115,7 @@ namespace KinectMotionCapture
         public Dictionary<JointType, Joint> FilterBonesByStatistics(Dictionary<JointType, Joint> joints)
         {
             Dictionary<JointType, Joint> validJoints = Utility.GetValidJoints(joints);
+            Dictionary<JointType, Joint> result = validJoints.CloneDeep();
             Dictionary<JointType, bool> adaptJoints = new Dictionary<JointType, bool>();
             Joint firstJoint, secondJoint;
             Bone boneKey;
@@ -133,12 +134,12 @@ namespace KinectMotionCapture
             }
             foreach (JointType jointType in validJoints.Keys)
             {
-                if (!adaptJoints[jointType])
+                if (!adaptJoints.ContainsKey(jointType))
                 {
-                    validJoints.Remove(jointType);
+                    result.Remove(jointType);
                 }
             }
-            return validJoints;
+            return result;
         }
 
         /// <summary>

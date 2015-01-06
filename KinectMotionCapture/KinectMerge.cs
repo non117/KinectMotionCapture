@@ -812,19 +812,8 @@ namespace KinectMotionCapture
                     for (int j = i + 1; j < frame.recordNum; j++)
                     {
 
-                        Dictionary<JointType, Joint> joint1;
-                        Dictionary<JointType, Joint> joint2;
-
-                        if (frameSeq.BodyStat != null)
-                        {
-                            joint1 = frameSeq.BodyStat.FilterBonesByStatistics(bodies[i].Joints);
-                            joint2 = frameSeq.BodyStat.FilterBonesByStatistics(bodies[j].Joints);
-                        }
-                        else
-                        {
-                            joint1 = Utility.GetValidJoints(bodies[i].Joints);
-                            joint2 = Utility.GetValidJoints(bodies[j].Joints);
-                        }
+                        Dictionary<JointType, Joint> joint1 = Utility.GetValidJoints(bodies[i].Joints);
+                        Dictionary<JointType, Joint> joint2 = Utility.GetValidJoints(bodies[j].Joints);
 
                         foreach (JointType jointType in joint1.Keys.Intersect(joint2.Keys))
                         {
@@ -876,18 +865,8 @@ namespace KinectMotionCapture
                             conversionsPerDependencyKey[dependencyPair.Key] = conv = new CoordRotTransConversion();
                         }
 
-                        Dictionary<JointType, Joint> joint1;
-                        Dictionary<JointType, Joint> joint2;
-                        if (frameSeq.BodyStat != null)
-                        {
-                            joint1 = frameSeq.BodyStat.FilterBonesByStatistics(bodies[dependencyPair.Key].Joints);
-                            joint2 = frameSeq.BodyStat.FilterBonesByStatistics(bodies[dependencyPair.Value].Joints);
-                        }
-                        else
-                        {
-                            joint1 = Utility.GetValidJoints(bodies[dependencyPair.Key].Joints);
-                            joint2 = Utility.GetValidJoints(bodies[dependencyPair.Value].Joints);
-                        }
+                        Dictionary<JointType, Joint> joint1 = Utility.GetValidJoints(bodies[dependencyPair.Key].Joints);
+                        Dictionary<JointType, Joint> joint2 = Utility.GetValidJoints(bodies[dependencyPair.Value].Joints);
 
                         foreach (JointType jointType in joint1.Keys.Intersect(joint2.Keys))
                         {

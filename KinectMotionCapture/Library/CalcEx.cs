@@ -1389,7 +1389,7 @@ namespace KinectMotionCapture
                         }
                     }
                 }
-                if (maxCount == -1)
+                if (maxCount == -1 || maxCount == double.MinValue)
                 {
                     return false;
                 }

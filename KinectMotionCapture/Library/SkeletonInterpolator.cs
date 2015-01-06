@@ -164,8 +164,18 @@ namespace KinectMotionCapture
                     continue;
                 }
                 // 統計情報によるフィルタリング
-                Dictionary<JointType, Joint> prevJoints = frameSeq.BodyStat.FilterBonesByStatistics(prevBody.Joints);
-                Dictionary<JointType, Joint> nextJoints = frameSeq.BodyStat.FilterBonesByStatistics(nextBody.Joints);
+                Dictionary<JointType, Joint> prevJoints;
+                Dictionary<JointType, Joint> nextJoints;
+                if (frameSeq.BodyStat != null)
+                {
+                    prevJoints = frameSeq.BodyStat.FilterBonesByStatistics(prevBody.Joints);
+                    nextJoints = frameSeq.BodyStat.FilterBonesByStatistics(nextBody.Joints);
+                }
+                else
+                {
+                    prevJoints = Utility.GetValidJoints(prevBody.Joints);
+                    nextJoints = Utility.GetValidJoints(nextBody.Joints);
+                }
 
                 jointsArr[recordNo] = this.InterpolateSkeleton(prevData, nextData, prevJoints, nextJoints, time, ToWorldConversions[recordNo]);
                 reliabilityArr[recordNo] = this.GetSkeletonReliability(prevData, nextData, prevJoints, nextJoints, time, cameraInfo);
