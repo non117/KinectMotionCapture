@@ -102,7 +102,7 @@ namespace KinectMotionCapture
                 double std = Math.Abs(Math.Sqrt(data.Select(d => Math.Pow(d - average, 2)).Sum() / (data.Count() - 1)));
                 double minLength = median - std * z;
                 double maxLength = median + std * z;
-                BoneStatistics bs = new BoneStatistics(maxLength, minLength, median, average, std);
+                BoneStatistics bs = new BoneStatistics(minLength, maxLength, median, average, std);
                 this.boneLengthSqStatistics.Add(bone, bs);
             }
         }

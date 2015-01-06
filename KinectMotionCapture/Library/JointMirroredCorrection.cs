@@ -74,7 +74,7 @@ namespace KinectMotionCapture
             }
         }
 
-        public static void Correct2(FrameSequence frameSeq)
+        public static void Correct3(FrameSequence frameSeq)
         {
             CvPoint3D64f[] prevVectors = new CvPoint3D64f[frameSeq.recordNum];
             foreach (Frame frame in frameSeq.Frames)
