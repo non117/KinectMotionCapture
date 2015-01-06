@@ -28,7 +28,6 @@ namespace KinectMotionCapture
     public partial class MergeRecordWindow : Window
     {
         private FrameSequence frameSequence;
-        private BodyStatistics bodyStat;
         
         private BackgroundWorker worker;
 
@@ -104,7 +103,6 @@ namespace KinectMotionCapture
 
             // a bone defined as a line between two joints
             this.bones = Utility.GetBones();
-            this.bodyStat = new BodyStatistics();
 
             this.DataContext = this;
             InitializeComponent();
@@ -960,15 +958,17 @@ namespace KinectMotionCapture
         /// <param name="e"></param>
         private void StoreBonesStatistics_Click(object sender, RoutedEventArgs e)
         {
+            BodyStatistics bodyStat = new BodyStatistics();
             foreach (Frame frame in this.frameSequence.Frames)
             {
                 List<SerializableBody> bodies = frame.GetSelectedBodyList(this.frameSequence.selecteedIntegretedIdList);
                 foreach (var body in bodies)
                 {
-                    this.bodyStat.StoreBoneLength(body.Joints);
+                    bodyStat.StoreBoneLength(body.Joints);
                 }
             }
             bodyStat.CalcMedianBoneRange();
+            this.frameSequence.BodyStat = bodyStat;
         }
     }
 }
