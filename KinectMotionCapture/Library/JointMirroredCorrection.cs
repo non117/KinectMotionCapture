@@ -116,7 +116,7 @@ namespace KinectMotionCapture
         }
 
 
-        class Range
+        public class Range
         {
             public int RecordIndex;
             public int User;
@@ -131,7 +131,7 @@ namespace KinectMotionCapture
             }
         }
 
-        IList<Range> GetSegmentations(TimeSpan segmentTimeSpan, FrameSequence frameSeq)
+        public static IList<Range> GetSegmentations(TimeSpan segmentTimeSpan, FrameSequence frameSeq)
         {
             List<Range> ret = new List<Range>();
             for (int no = 0; no < frameSeq.recordNum; no++)
@@ -177,15 +177,19 @@ namespace KinectMotionCapture
                 {
                     Frame frame = frameSeq.Frames[frameIndex];
                     var dict = interp.IntegrateSkeleton(frame.Time, range.User, frameSeq);
-                    var joints = Utility.GetValidJoints(frame.GetSelectedBody(range.RecordIndex, integratedId: range.User).Joints);
-                    if (joints != null && dict != null)
+                    var body = frame.GetSelectedBody(range.RecordIndex, integratedId: range.User);
+                    if (body != null)
                     {
-                        var absJoints = joints.ToDictionary(p => p.Key, p => CvEx.ConvertPoint3D(p.Value.Position.ToCvPoint3D(), frameSeq.ToWorldConversions[range.RecordIndex]));
-                        var keys = dict.Keys.Intersect(absJoints.Keys).ToList();
-
-                        if (keys.Count > 0)
+                        var joints = Utility.GetValidJoints(body.Joints);
+                        if (joints != null && dict != null)
                         {
-                            avgDistances.Add(keys.Select(j => CvEx.GetDistanceSq(dict[j], absJoints[j])).Average());
+                            var absJoints = joints.ToDictionary(p => p.Key, p => CvEx.ConvertPoint3D(p.Value.Position.ToCvPoint3D(), frameSeq.ToWorldConversions[range.RecordIndex]));
+                            var keys = dict.Keys.Intersect(absJoints.Keys).ToList();
+
+                            if (keys.Count > 0)
+                            {
+                                avgDistances.Add(keys.Select(j => CvEx.GetDistanceSq(dict[j], absJoints[j])).Average());
+                            }
                         }
                     }
                 }
@@ -201,7 +205,7 @@ namespace KinectMotionCapture
             return ret;
         }
 
-        public void Correct2(FrameSequence frameSeq)
+        public static void Correct2(FrameSequence frameSeq)
         {
             IList<Range> ranges = GetSegmentations(new TimeSpan(0, 0, 0, 500), frameSeq);
             ranges = ranges.OrderBy(p => p.Reliability).ToList();
@@ -213,26 +217,30 @@ namespace KinectMotionCapture
                     Frame frame = frameSeq.Frames[frameIndex];
 
                     var dict = interp.IntegrateSkeleton(frame.Time, range.User, frameSeq);
-                    var joints = Utility.GetValidJoints(frame.GetSelectedBody(range.RecordIndex, integratedId: range.User).Joints);
-                    HashSet<JointType> mirrored = new HashSet<JointType>(joints.Keys.Select(j => CalcEx.GetMirroredJoint(j)));
-                    if (joints != null && dict != null)
+                    var body = frame.GetSelectedBody(range.RecordIndex, integratedId: range.User);
+                    if (body != null)
                     {
-                        var absJoints = joints.ToDictionary(p => p.Key, p => CvEx.ConvertPoint3D(p.Value.Position.ToCvPoint3D(), frameSeq.ToWorldConversions[range.RecordIndex]));
-                        var absMirroredJoints = absJoints.ToDictionary(p => CalcEx.GetMirroredJoint(p.Key), p => p.Value);
-                        var keysJ = joints.Keys.Where(j => mirrored.Contains(j)).ToList();
-                        var keys1 = keysJ.Intersect(absJoints.Keys).ToList();
-                        var keys2 = keysJ.Intersect(absMirroredJoints.Keys).ToList();
-
-                        if (keys1.Count > 0 && keys2.Count > 0)
+                        var joints = Utility.GetValidJoints(body.Joints);
+                        HashSet<JointType> mirrored = new HashSet<JointType>(joints.Keys.Select(j => CalcEx.GetMirroredJoint(j)));
+                        if (joints != null && dict != null)
                         {
-                            double avg1 = keys1.Select(j => CvEx.GetDistanceSq(dict[j], absJoints[j])).Average();
-                            double avg2 = keys2.Select(j => CvEx.GetDistanceSq(dict[j], absMirroredJoints[j])).Average();
-                            if (avg2 < avg1)
-                            {
-                                frame.InverseBody(range.RecordIndex, integratedId: range.User);
-                            }
-                        }
+                            var absJoints = joints.ToDictionary(p => p.Key, p => CvEx.ConvertPoint3D(p.Value.Position.ToCvPoint3D(), frameSeq.ToWorldConversions[range.RecordIndex]));
+                            var absMirroredJoints = absJoints.ToDictionary(p => CalcEx.GetMirroredJoint(p.Key), p => p.Value);
+                            var keysJ = joints.Keys.Intersect(dict.Keys).Where(j => mirrored.Contains(j)).ToList();
+                            var keys1 = keysJ.Intersect(absJoints.Keys).ToList();
+                            var keys2 = keysJ.Intersect(absMirroredJoints.Keys).ToList();
 
+                            if (keys1.Count > 0 && keys2.Count > 0)
+                            {
+                                double avg1 = keys1.Select(j => CvEx.GetDistanceSq(dict[j], absJoints[j])).Average();
+                                double avg2 = keys2.Select(j => CvEx.GetDistanceSq(dict[j], absMirroredJoints[j])).Average();
+                                if (avg2 < avg1)
+                                {
+                                    frame.InverseBody(range.RecordIndex, integratedId: range.User);
+                                }
+                            }
+
+                        }
                     }
                 }
             }
