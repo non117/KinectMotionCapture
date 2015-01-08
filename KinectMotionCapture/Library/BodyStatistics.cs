@@ -124,6 +124,10 @@ namespace KinectMotionCapture
                     zs.Add(joint.Position.Z);
                 }
             }
+            if (zs.Count == 0)
+            {
+                return false;
+            }
             float avg = zs.Average();
             double variance = zs.Select(f => Math.Pow(f - avg, 2)).Sum() / (zs.Count() - 1);
             if (variance < 0.2 * 0.2 && zs.Count > 5)
@@ -167,9 +171,9 @@ namespace KinectMotionCapture
                 }
             }
 
-            foreach (JointType jointType in validJoints.Keys)
+            foreach (JointType jointType in adaptJoints.Keys)
             {
-                if (!adaptJoints.ContainsKey(jointType) && adaptJoints[jointType])
+                if (adaptJoints[jointType] == false)
                 {
                     result.Remove(jointType);
                 }
