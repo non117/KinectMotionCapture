@@ -95,18 +95,16 @@ namespace KinectMotionCapture
                     }
                     double[] cosVals = vectors.Zip(prevVectors, (cur, prev) => CvEx.Cos(cur, prev)).ToArray();
                     bool[] mirrorFlags = cosVals.Select(d => d <= -0.8).ToArray();
-                    for (int no = 0; no < frame.recordNum; no++)
+                    if (mirrorFlags.Where(b => b).Count() > 2)
                     {
-                        if (mirrorFlags.Where(b => b).Count() > 2)
+                        // ひっくり返ってたやつだけ反転する処理にかえる。前のifはいらない
+                        for (int no = 0; no < frame.recordNum; no++)
                         {
-                            int x = 0;
-                        }
-                        if (mirrorFlags[no])
-                        {
-                            frame.InverseBody(no);
+                            frame.InverseBody(no, integratedId: frameSeq.selecteedIntegretedIdList[no]);
                         }
                     }
-                    prevVectors = vectors;
+                    prevVectors = bodies.Select(b =>
+                        (CvPoint3D64f)(b.Joints[JointType.ShoulderLeft].Position.ToCvPoint3D() - b.Joints[JointType.ShoulderRight].Position.ToCvPoint3D())).ToArray();
                 }
                 catch (Exception)
                 {

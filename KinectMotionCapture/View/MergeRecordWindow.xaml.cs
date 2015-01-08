@@ -570,7 +570,8 @@ namespace KinectMotionCapture
             // UserIdを選択するUIのリフレッシュ
             this.UpdateIntegratedIds();
             //debug
-            JointMirroredCorrection.Correct(frameSequence);            
+            JointMirroredCorrection.Correct(frameSequence);
+            JointMirroredCorrection.Correct3(frameSequence);
         }
 
         /// <summary>
