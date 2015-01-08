@@ -48,6 +48,7 @@ namespace KinectMotionCapture
 
         // 骨一覧
         private List<Bone> bones;
+        private JointType[] arms;
         private Dictionary<Bone, List<double>> boneLengthSqLog;
         private Dictionary<Bone, BoneStatistics> boneLengthSqStatistics;
 
@@ -107,15 +108,16 @@ namespace KinectMotionCapture
             }
         }
 
+        /// <summary>
+        /// 両腕の位置がかぶっているかどうか
+        /// </summary>
+        /// <param name="joints"></param>
+        /// <returns></returns>
         public bool CheckArmDuplication(Dictionary<JointType, Joint> joints)
         {
-            JointType[] arms = new JointType[]{JointType.ElbowLeft, JointType.ElbowRight,
-                JointType.HandLeft, JointType.HandRight, JointType.HandTipLeft, JointType.HandTipRight,
-                JointType.ThumbLeft, JointType.ThumbRight, JointType.WristLeft, JointType.WristRight
-            };
             List<float> zs = new List<float>();
             Joint joint;
-            foreach (JointType jointType in arms)
+            foreach (JointType jointType in this.arms)
             {
                 if (joints.TryGetValue(jointType, out joint))
                 {
@@ -159,12 +161,15 @@ namespace KinectMotionCapture
             bool armDup = this.CheckArmDuplication(validJoints);
             if (armDup)
             {
-                // TODO, 遠い方の腕を消す
+                foreach (JointType jointType in this.arms)
+                {
+                    adaptJoints[jointType] = false;
+                }
             }
 
             foreach (JointType jointType in validJoints.Keys)
             {
-                if (!adaptJoints.ContainsKey(jointType))
+                if (!adaptJoints.ContainsKey(jointType) && adaptJoints[jointType])
                 {
                     result.Remove(jointType);
                 }
@@ -178,6 +183,10 @@ namespace KinectMotionCapture
         public BodyStatistics()
         {
             this.bones = Utility.GetBones();
+            this.arms = new JointType[]{JointType.ElbowLeft, JointType.ElbowRight,
+                JointType.HandLeft, JointType.HandRight, JointType.HandTipLeft, JointType.HandTipRight,
+                JointType.ThumbLeft, JointType.ThumbRight, JointType.WristLeft, JointType.WristRight
+            };
             this.boneLengthSqLog = new Dictionary<Bone, List<double>>();
             this.boneLengthSqStatistics = new Dictionary<Bone, BoneStatistics>();
         }
