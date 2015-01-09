@@ -25,8 +25,27 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
+        /// 2つのJointsの距離を計算する
+        /// </summary>
+        /// <param name="jointsOne"></param>
+        /// <param name="jointsTwo"></param>
+        /// <returns></returns>
+        public static Dictionary<JointType, double> CalcBodyDistanceSq(Dictionary<JointType, Joint> jointsOne, Dictionary<JointType, Joint> jointsTwo)
+        {
+            Dictionary<JointType, double> res = new Dictionary<JointType, double>();
+            IEnumerable<JointType> keys = jointsOne.Keys.Intersect(jointsTwo.Keys);
+            foreach (JointType key in keys)
+            {
+                CvPoint3D64f one = jointsOne[key].Position.ToCvPoint3D();
+                CvPoint3D64f two = jointsTwo[key].Position.ToCvPoint3D();
+                double distanceSq = CvEx.GetDistanceSq(one, two);
+                res[key] = distanceSq;
+            }
+            return res;
+        }
+
+        /// <summary>
         /// 修正してくれるやつ
-        /// TODO : 時系列的なMirror Correctionも必要
         /// </summary>
         /// <param name="frameSeq"></param>
         public static void Correct(FrameSequence frameSeq) {
@@ -38,6 +57,9 @@ namespace KinectMotionCapture
                     orders.Add(new OrderTuple(pair.Item1.Time, recordNo, pair.Item2));
                 }
             }
+            // 前フレームのユーザと対応するBodyを保持する
+            Dictionary<int, SerializableBody> prevUserBodyMap = new Dictionary<int, SerializableBody>();
+            SerializableBody prevUserBody;
 
             orders = orders.OrderBy(x => x.Timestamp.Ticks).ToList();
             SkeletonInterpolator interp = new SkeletonInterpolator(0.5, true);
@@ -48,10 +70,23 @@ namespace KinectMotionCapture
                 IEnumerable<int> users = currFrame.GetBodyList(tuple.RecordIndex).Select(b => b.integratedId);
                 foreach (int user in users)
                 {
+                    SerializableBody currBody = currFrame.GetSelectedBody(tuple.RecordIndex, integratedId: user);
+                    // 前のBodyと比較して同じ場合は処理をスキップする
+                    if (prevUserBodyMap.TryGetValue(user, out prevUserBody))
+                    {
+                        double avgDistanceSq = CalcBodyDistanceSq(prevUserBody.Joints, currBody.Joints).Values.Average();
+                        if (avgDistanceSq == 0.0)
+                        {
+                            // delete body
+                            continue;
+                        }
+                        
+                    }
+                    prevUserBodyMap[user] = currBody;
+
                     Dictionary<JointType, CvPoint3D64f> prevJoints = interp.IntegrateSkeleton(prev, user, frameSeq);
                     if (prevJoints != null)
                     {
-                        SerializableBody currBody = currFrame.GetSelectedBody(tuple.RecordIndex, integratedId: user);
                         Dictionary<JointType, CvPoint3D64f> currJoints = currBody.Joints.ToDictionary(p => p.Key, p => (CvPoint3D64f)p.Value.Position.ToCvPoint3D());
                         HashSet<JointType> mirroredPrevKeys = new HashSet<JointType>(prevJoints.Keys.Select(j => CalcEx.GetMirroredJoint(j)));
                         if (currJoints != null && prevJoints != null) {
