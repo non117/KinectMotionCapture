@@ -571,7 +571,7 @@ namespace KinectMotionCapture
             this.UpdateIntegratedIds();
             //debug
             JointMirroredCorrection.Correct(frameSequence);
-            //JointMirroredCorrection.Correct3(frameSequence);
+            JointMirroredCorrection.SequentialCorrect(frameSequence);
         }
 
         /// <summary>

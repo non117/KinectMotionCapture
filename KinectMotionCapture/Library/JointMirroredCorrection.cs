@@ -58,7 +58,11 @@ namespace KinectMotionCapture
                 }
             }
             // 前フレームのユーザと対応するBodyを保持する
-            Dictionary<int, SerializableBody> prevUserBodyMap = new Dictionary<int, SerializableBody>();
+            Dictionary<int, SerializableBody>[] prevUserBodyMapArray = new Dictionary<int, SerializableBody>[frameSeq.recordNum];
+            for (int i = 0; i < frameSeq.recordNum; i++)
+            {
+                prevUserBodyMapArray[i] = new Dictionary<int, SerializableBody>();
+            }
             SerializableBody prevUserBody;
 
             orders = orders.OrderBy(x => x.Timestamp.Ticks).ToList();
@@ -72,17 +76,16 @@ namespace KinectMotionCapture
                 {
                     SerializableBody currBody = currFrame.GetSelectedBody(tuple.RecordIndex, integratedId: user);
                     // 前のBodyと比較して同じ場合は処理をスキップする
-                    if (prevUserBodyMap.TryGetValue(user, out prevUserBody))
+                    if (prevUserBodyMapArray[tuple.RecordIndex].TryGetValue(user, out prevUserBody))
                     {
                         double avgDistanceSq = CalcBodyDistanceSq(prevUserBody.Joints, currBody.Joints).Values.Average();
                         if (avgDistanceSq == 0.0)
                         {
-                            // delete body
+                            //currFrame.DeleteBody(tuple.RecordIndex, integratedId: user);
                             continue;
                         }
-                        
                     }
-                    prevUserBodyMap[user] = currBody;
+                    prevUserBodyMapArray[tuple.RecordIndex][user] = currBody;
 
                     Dictionary<JointType, CvPoint3D64f> prevJoints = interp.IntegrateSkeleton(prev, user, frameSeq);
                     if (prevJoints != null)
@@ -109,7 +112,7 @@ namespace KinectMotionCapture
             }
         }
 
-        public static void Correct3(FrameSequence frameSeq)
+        public static void SequentialCorrect(FrameSequence frameSeq)
         {
             CvPoint3D64f[] prevShoulderVectors = new CvPoint3D64f[frameSeq.recordNum];
             CvPoint3D64f[] prevHipVectors = new CvPoint3D64f[frameSeq.recordNum];

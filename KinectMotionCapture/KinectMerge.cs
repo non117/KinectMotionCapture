@@ -636,6 +636,24 @@ namespace KinectMotionCapture
             }
         }
 
+        public void DeleteBody(int recordNo, int integratedId = -1, ulong originalId = 0)
+        {
+            MotionData md = this.records[recordNo];
+            for (int i = 0; i < md.bodies.Length; i++)
+            {
+                SerializableBody body = md.bodies[i];
+                if (integratedId != -1 && body.integratedId == integratedId)
+                {
+                    Array.Clear(md.bodies, i, 1);
+                }
+                else if (originalId != 0 && body.TrackingId == originalId)
+                {
+                    Array.Clear(md.bodies, i, 1);
+                }
+            }
+            md.bodies = md.bodies.Where(b => b != null).ToArray();
+        }
+
         /// <summary>
         /// 全てのBodyの反転状態を初期化する
         /// </summary>
