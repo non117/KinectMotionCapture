@@ -76,40 +76,40 @@ namespace KinectMotionCapture
 
         public static void Correct3(FrameSequence frameSeq)
         {
-            CvPoint3D64f[] prevVectors = new CvPoint3D64f[frameSeq.recordNum];
+            CvPoint3D64f[] prevShoulderVectors = new CvPoint3D64f[frameSeq.recordNum];
+            CvPoint3D64f[] prevHipVectors = new CvPoint3D64f[frameSeq.recordNum];
             foreach (Frame frame in frameSeq.Frames)
             {
                 List<SerializableBody> bodies = frame.GetSelectedBodyList(integratedIds: frameSeq.selecteedIntegretedIdList);
-                if (bodies.Count != frame.recordNum)
+                if (bodies.Count == 0)
                 {
                     continue;
                 }
-                try
+                CvPoint3D64f[] shoulderVectors = bodies.Select(b =>
+                    (CvPoint3D64f)(b.Joints[JointType.ShoulderLeft].Position.ToCvPoint3D() - b.Joints[JointType.ShoulderRight].Position.ToCvPoint3D())).ToArray();
+                CvPoint3D64f[] hipVectors = bodies.Select(b =>
+                    (CvPoint3D64f)(b.Joints[JointType.HipLeft].Position.ToCvPoint3D() - b.Joints[JointType.HipRight].Position.ToCvPoint3D())).ToArray();
+                // 0回目の処理
+                if (prevShoulderVectors == default(CvPoint3D64f[]) || prevHipVectors == default(CvPoint3D64f[]))
                 {
-                    CvPoint3D64f[] vectors = bodies.Select(b =>
-                        (CvPoint3D64f)(b.Joints[JointType.ShoulderLeft].Position.ToCvPoint3D() - b.Joints[JointType.ShoulderRight].Position.ToCvPoint3D())).ToArray();
-                    if (prevVectors == default(CvPoint3D64f[]))
-                    {
-                        prevVectors = vectors;
-                        continue;
-                    }
-                    double[] cosVals = vectors.Zip(prevVectors, (cur, prev) => CvEx.Cos(cur, prev)).ToArray();
-                    bool[] mirrorFlags = cosVals.Select(d => d <= -0.8).ToArray();
-                    if (mirrorFlags.Where(b => b).Count() > 2)
-                    {
-                        // ひっくり返ってたやつだけ反転する処理にかえる。前のifはいらない
-                        for (int no = 0; no < frame.recordNum; no++)
-                        {
-                            frame.InverseBody(no, integratedId: frameSeq.selecteedIntegretedIdList[no]);
-                        }
-                    }
-                    prevVectors = bodies.Select(b =>
-                        (CvPoint3D64f)(b.Joints[JointType.ShoulderLeft].Position.ToCvPoint3D() - b.Joints[JointType.ShoulderRight].Position.ToCvPoint3D())).ToArray();
-                }
-                catch (Exception)
-                {
+                    prevShoulderVectors = shoulderVectors;
+                    prevHipVectors = hipVectors;
                     continue;
                 }
+                double[] shoulderCosArray = shoulderVectors.Zip(prevShoulderVectors, (cur, prev) => CvEx.Cos(cur, prev)).ToArray();
+                double[] hipCosArray = hipVectors.Zip(prevHipVectors, (cur, prev) => CvEx.Cos(cur, prev)).ToArray();
+                for (int no = 0; no < frame.recordNum; no++)
+                {
+                    if (shoulderCosArray[no] <= -0.8 || hipCosArray[no] <= -0.8)
+                    {
+                        frame.InverseBody(no, integratedId: frameSeq.selecteedIntegretedIdList[no]);
+                    }
+                }
+                // Inverseされていた場合には骨の位置関係が変わっているため
+                prevShoulderVectors = bodies.Select(b =>
+                    (CvPoint3D64f)(b.Joints[JointType.ShoulderLeft].Position.ToCvPoint3D() - b.Joints[JointType.ShoulderRight].Position.ToCvPoint3D())).ToArray();
+                prevHipVectors = bodies.Select(b =>
+                    (CvPoint3D64f)(b.Joints[JointType.HipLeft].Position.ToCvPoint3D() - b.Joints[JointType.HipRight].Position.ToCvPoint3D())).ToArray();
             }
         }
 
