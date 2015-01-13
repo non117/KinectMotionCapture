@@ -362,6 +362,7 @@ namespace KinectMotionCapture
                     }
                     this.drawingGroup.ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, this.colorWidth, this.colorHeight));
                 }
+                // TODO : ロケールのチェック
                 if (this.isRecording)
                 {
                     Task.Run(() => this.motionDataHandler.AddData(this.counter++, DateTime.Now, this.bodies, ref this.colorPixels, ref this.depthBuffer, ref this.bodyIndexBuffer, pointPairs));
