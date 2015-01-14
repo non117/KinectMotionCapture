@@ -63,10 +63,10 @@ namespace KinectMotionCapture
         private void LoadFrames()
         {
             string[] datadir = new string[] {
-                                                    @"E:\kinect1",  
-                                                    @"E:\kinect2", 
-                                                    @"E:\kinect3", 
-                                                    @"E:\kinect4", 
+                                                    @"C:\Users\non\Desktop\0922\0922_kinect1\renshu1",  
+                                                    @"C:\Users\non\Desktop\0922\0922_kinect2\renshu1", 
+                                                    @"C:\Users\non\Desktop\0922\0922_kinect3\renshu1", 
+                                                    @"C:\Users\non\Desktop\0922\0922_kinect4\renshu1", 
             };
             List<string> mapdir = new List<string>() {
                                                     @"E:\kinect1_coordmap.dump",  
@@ -258,7 +258,7 @@ namespace KinectMotionCapture
                     for (int user = 0; user < pointsList.Count(); user++)
                     {
                         // Bodyの描画
-                        if (pointsList[user] != null)
+                        if (pointsList[user] != null && jointsList[user] != null)
                             this.DrawBody(pointsList[user], jointsList[user], dc);
                         // user id の描画
                         if (idPointList[user] != null)

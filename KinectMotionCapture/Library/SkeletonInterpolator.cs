@@ -166,6 +166,8 @@ namespace KinectMotionCapture
                 // 統計情報によるフィルタリング
                 Dictionary<JointType, Joint> prevJoints;
                 Dictionary<JointType, Joint> nextJoints;
+                if (prevBody.Joints == null || nextBody.Joints == null)
+                    continue;
                 if (frameSeq.BodyStat != null)
                 {
                     prevJoints = frameSeq.BodyStat.FilterBonesByStatistics(prevBody.Joints);

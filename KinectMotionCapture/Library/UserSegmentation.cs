@@ -279,7 +279,8 @@ namespace KinectMotionCapture
                     foreach(SerializableBody body in frame.GetBodyList(recordNo))
                     {
                         Dictionary<JointType, CvPoint3D64f> userPositions = new Dictionary<JointType, CvPoint3D64f>();
-                        //foreach (var jointPair in trackFrame.UserTrackings[user].OriginalJoints)
+                        if (body.Joints == null)
+                            continue;
                         foreach(var jointPair in body.Joints)
                         {
                             CvPoint3D64f posInCamera = jointPair.Value.Position.ToCvPoint3D();

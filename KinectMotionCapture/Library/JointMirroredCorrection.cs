@@ -76,7 +76,7 @@ namespace KinectMotionCapture
                 {
                     SerializableBody currBody = currFrame.GetSelectedBody(tuple.RecordIndex, integratedId: user);
                     // 前のBodyと比較して同じ場合は処理をスキップする
-                    if (prevUserBodyMapArray[tuple.RecordIndex].TryGetValue(user, out prevUserBody))
+                    if (prevUserBodyMapArray[tuple.RecordIndex].TryGetValue(user, out prevUserBody) && prevUserBody.Joints != null && currBody.Joints != null)
                     {
                         double avgDistanceSq = CalcBodyDistanceSq(prevUserBody.Joints, currBody.Joints).Values.Average();
                         if (avgDistanceSq == 0.0)
@@ -88,7 +88,7 @@ namespace KinectMotionCapture
                     prevUserBodyMapArray[tuple.RecordIndex][user] = currBody;
 
                     Dictionary<JointType, CvPoint3D64f> prevJoints = interp.IntegrateSkeleton(prev, user, frameSeq);
-                    if (prevJoints != null)
+                    if (prevJoints != null && currBody.Joints != null)
                     {
                         Dictionary<JointType, CvPoint3D64f> currJoints = currBody.Joints.ToDictionary(p => p.Key, p => (CvPoint3D64f)p.Value.Position.ToCvPoint3D());
                         HashSet<JointType> mirroredPrevKeys = new HashSet<JointType>(prevJoints.Keys.Select(j => CalcEx.GetMirroredJoint(j)));
