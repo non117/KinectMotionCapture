@@ -112,6 +112,10 @@ namespace KinectMotionCapture
             }
         }
 
+        /// <summary>
+        /// 時系列データの前後を比較して左右反転をなおす
+        /// </summary>
+        /// <param name="frameSeq"></param>
         public static void SequentialCorrect(FrameSequence frameSeq)
         {
             CvPoint3D64f[] prevShoulderVectors = new CvPoint3D64f[frameSeq.recordNum];
@@ -148,6 +152,55 @@ namespace KinectMotionCapture
                     (CvPoint3D64f)(b.Joints[JointType.ShoulderLeft].Position.ToCvPoint3D() - b.Joints[JointType.ShoulderRight].Position.ToCvPoint3D())).ToArray();
                 prevHipVectors = bodies.Select(b =>
                     (CvPoint3D64f)(b.Joints[JointType.HipLeft].Position.ToCvPoint3D() - b.Joints[JointType.HipRight].Position.ToCvPoint3D())).ToArray();
+            }
+        }
+
+        /// <summary>
+        /// 統合後のデータに対して瞬間的な左右反転をなおす
+        /// </summary>
+        /// <param name="seqJoints"></param>
+        public static void SequentialCorrect(List<Dictionary<JointType, CvPoint3D64f>> seqJoints)
+        {
+            CvPoint3D64f prevShoulderVector = new CvPoint3D64f();
+            CvPoint3D64f prevHipVector = new CvPoint3D64f();
+            foreach (Dictionary<JointType, CvPoint3D64f> joints in seqJoints)
+            {
+                bool reverse = false;
+                if (joints.ContainsKey(JointType.ShoulderLeft) && joints.ContainsKey(JointType.ShoulderRight))
+                {
+                    CvPoint3D64f shoulderVector = joints[JointType.ShoulderLeft] - joints[JointType.ShoulderRight];
+                    if (prevShoulderVector == default(CvPoint3D64f))
+                    {
+                        prevShoulderVector = shoulderVector;
+                        continue;
+                    }
+                    if (CvEx.Cos(shoulderVector, prevShoulderVector) <= -0.8)
+                    {
+                        reverse = true;
+                    }
+                }
+                if (joints.ContainsKey(JointType.HipLeft) && joints.ContainsKey(JointType.HipRight))
+                {
+                    CvPoint3D64f hipVector = joints[JointType.HipLeft] - joints[JointType.HipRight];
+                    if (prevHipVector == default(CvPoint3D64f))
+                    {
+                        prevHipVector = hipVector;
+                        continue;
+                    }
+                    if (CvEx.Cos(hipVector, prevHipVector) <= -0.8)
+                    {
+                        reverse = true;
+                    }
+                }
+
+                if (reverse)
+                {
+                    // reverse TODO
+
+                    // reverseした後のただしいベクトルを入れなおしておく
+                    prevShoulderVector = joints[JointType.ShoulderLeft] - joints[JointType.ShoulderRight];
+                    prevHipVector = joints[JointType.HipLeft] - joints[JointType.HipRight];
+                }                
             }
         }
     }
