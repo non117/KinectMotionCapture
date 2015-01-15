@@ -607,7 +607,8 @@ namespace KinectMotionCapture
                 int id = this.frameSequence.selecteedIntegretedIdList[0];
                 if (this.frameSequence.selecteedIntegretedIdList.All(i => i == id))
                 {
-                    Utility.SaveBodySequence(mergedBodies[id], path);
+                    //Utility.SaveBodySequence(mergedBodies[id], path);
+                    Utility.SaveBodySequence(JointMirroredCorrection.SequentialCorrect(mergedBodies[id]), path);
                 }
                 Utility.SaveTimeMetaData(frameSequence.Frames, System.IO.Path.Combine(Environment.CurrentDirectory, @"TimeData.dump"));
 

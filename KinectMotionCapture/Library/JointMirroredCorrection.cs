@@ -159,10 +159,14 @@ namespace KinectMotionCapture
         /// 統合後のデータに対して瞬間的な左右反転をなおす
         /// </summary>
         /// <param name="seqJoints"></param>
-        public static void SequentialCorrect(List<Dictionary<JointType, CvPoint3D64f>> seqJoints)
+        public static List<Dictionary<JointType, CvPoint3D64f>> SequentialCorrect(List<Dictionary<JointType, CvPoint3D64f>> seqJoints)
         {
             CvPoint3D64f prevShoulderVector = new CvPoint3D64f();
             CvPoint3D64f prevHipVector = new CvPoint3D64f();
+            List<Dictionary<JointType, CvPoint3D64f>> res = new List<Dictionary<JointType, CvPoint3D64f>>();
+
+            //List<List<double>> hoge = new List<List<double>>();
+            //List<List<double>> fuga = new List<List<double>>();
             foreach (Dictionary<JointType, CvPoint3D64f> joints in seqJoints)
             {
                 bool reverse = false;
@@ -172,12 +176,21 @@ namespace KinectMotionCapture
                     if (prevShoulderVector == default(CvPoint3D64f))
                     {
                         prevShoulderVector = shoulderVector;
-                        continue;
                     }
                     if (CvEx.Cos(shoulderVector, prevShoulderVector) <= -0.8)
                     {
                         reverse = true;
                     }
+
+                    //var shor = joints[JointType.ShoulderLeft];
+                    //var shorr = joints[JointType.ShoulderRight];
+                    //hoge.Add(new List<double>() { shor.X, shor.Y, shor.Z });
+                    //fuga.Add(new List<double>() { shorr.X, shorr.Y, shorr.Z });
+                }
+                else
+                {
+                    //hoge.Add(new List<double>() { 0, 0, 0 });
+                    //fuga.Add(new List<double>() { 0, 0, 0 });
                 }
                 if (joints.ContainsKey(JointType.HipLeft) && joints.ContainsKey(JointType.HipRight))
                 {
@@ -185,7 +198,6 @@ namespace KinectMotionCapture
                     if (prevHipVector == default(CvPoint3D64f))
                     {
                         prevHipVector = hipVector;
-                        continue;
                     }
                     if (CvEx.Cos(hipVector, prevHipVector) <= -0.8)
                     {
@@ -195,13 +207,22 @@ namespace KinectMotionCapture
 
                 if (reverse)
                 {
-                    // reverse TODO
-
+                    Dictionary<JointType, CvPoint3D64f> newJoints = joints.ToDictionary(p => CalcEx.GetMirroredJoint(p.Key), p => p.Value);
+                    res.Add(newJoints);
                     // reverseした後のただしいベクトルを入れなおしておく
-                    prevShoulderVector = joints[JointType.ShoulderLeft] - joints[JointType.ShoulderRight];
-                    prevHipVector = joints[JointType.HipLeft] - joints[JointType.HipRight];
-                }                
+                    if (joints.ContainsKey(JointType.ShoulderLeft) && joints.ContainsKey(JointType.ShoulderRight))
+                        prevShoulderVector = newJoints[JointType.ShoulderLeft] - newJoints[JointType.ShoulderRight];
+                    if (joints.ContainsKey(JointType.HipLeft) && joints.ContainsKey(JointType.HipRight))
+                        prevHipVector = newJoints[JointType.HipLeft] - newJoints[JointType.HipRight];
+                }
+                else
+                {
+                    res.Add(joints);
+                }
             }
+            //Utility.SaveToCsv(@"kataL.csv", new List<string>() { "x", "y", "z" }, hoge);
+            //Utility.SaveToCsv(@"kataR.csv", new List<string>() { "x", "y", "z" }, fuga);
+            return res;
         }
     }
 }
