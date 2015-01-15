@@ -21,8 +21,8 @@ namespace KinectMotionCapture
     {
         private List<CvMat> convList;
         private string[] dataDirs;
-        private string bodyInfoFilename = @"BodyInfo.mpac";
-        //private string bodyInfoFilename = @"BodyInfo.dump";
+        //private string bodyInfoFilename = @"BodyInfo.mpac";
+        private string bodyInfoFilename = @"BodyInfo.dump";
         private TimeSpan timePeriod;
         private List<UserSegmentation> segms;
         private List<List<MotionData>> originalRecords;
@@ -36,7 +36,7 @@ namespace KinectMotionCapture
         public int[] selecteedIntegretedIdList;
         public List<List<ulong>> userIdList;
 
-        public double[] offsets = new double[] { 0, 0, 0, 0};
+        public double[] offsets = new double[] { 0, 0, 0, 0, 0};
         
         // TODO: IEnumerableにしても良さそう。イテレータブロックとか使うらしい。        
         public List<Frame> Frames { get; set; }

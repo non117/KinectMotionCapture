@@ -49,6 +49,8 @@ namespace KinectMotionCapture
         private DrawingImage bodyImageSource3;
         private DrawingGroup drawingGroup4;
         private DrawingImage bodyImageSource4;
+        private DrawingGroup drawingGroup5;
+        private DrawingImage bodyImageSource5;
 
         private List<Tuple<JointType, JointType>> bones;
 
@@ -63,19 +65,21 @@ namespace KinectMotionCapture
         private void LoadFrames()
         {
             string[] datadir = new string[] {
-                                                    @"C:\Users\non\Desktop\0922\0922_kinect1\renshu1",  
-                                                    @"C:\Users\non\Desktop\0922\0922_kinect2\renshu1", 
-                                                    @"C:\Users\non\Desktop\0922\0922_kinect3\renshu1", 
-                                                    @"C:\Users\non\Desktop\0922\0922_kinect4\renshu1", 
+                                                    @"E:\kinect1\calib",  
+                                                    @"E:\kinect2\calib", 
+                                                    @"E:\kinect3\calib", 
+                                                    @"E:\kinect4\calib", 
+                                                    @"E:\kinect5\calib", 
             };
             List<string> mapdir = new List<string>() {
-                                                    @"E:\kinect1_coordmap.dump",  
-                                                    @"E:\kinect2_coordmap.dump", 
-                                                    @"E:\kinect3_coordmap.dump", 
-                                                    @"E:\kinect4_coordmap.dump", 
+                                                    @"E:\kinect1\coordmap.dump",  
+                                                    @"E:\kinect2\coordmap.dump", 
+                                                    @"E:\kinect3\coordmap.dump", 
+                                                    @"E:\kinect4\coordmap.dump", 
+                                                    @"E:\kinect5\coordmap.dump", 
             };
 
-            string cameradir = @"E:\CameraInfo.dump";
+            string cameradir = @"E:\kinect1\CameraInfo.dump";
             this.frameSequence = new FrameSequence(datadir);
             this.frameSequence.LocalCoordinateMappers = mapdir.Select(s => (LocalCoordinateMapper)Utility.LoadFromBinary(s)).ToList();
             this.frameSequence.CameraInfo = (CameraIntrinsics)Utility.LoadFromBinary(cameradir);            
@@ -94,6 +98,8 @@ namespace KinectMotionCapture
             this.bodyImageSource3 = new DrawingImage(this.drawingGroup3);
             this.drawingGroup4 = new DrawingGroup();
             this.bodyImageSource4 = new DrawingImage(this.drawingGroup4);
+            this.drawingGroup5 = new DrawingGroup();
+            this.bodyImageSource5 = new DrawingImage(this.drawingGroup5);
 
             this.worker = new BackgroundWorker();
             this.worker.WorkerReportsProgress = true;
@@ -149,17 +155,17 @@ namespace KinectMotionCapture
             this.PlaySlider.SelectionEnd = this.endIndex;
 
             // 各レコードのスライダー
-            this.recordSliders = new Slider[] { RecordSelectSlider1, RecordSelectSlider2, RecordSelectSlider3, RecordSelectSlider4 };
+            this.recordSliders = new Slider[] { RecordSelectSlider1, RecordSelectSlider2, RecordSelectSlider3, RecordSelectSlider4, RecordSelectSlider5 };
             foreach (Slider slider in this.recordSliders)
             {
                 slider.Minimum = 0;
                 slider.Maximum = this.frameSequence.Frames.Count - 1;
             }
             // キャンバス
-            this.canvases = new Canvas[] { RecordSelectCanvas1, RecordSelectCanvas2, RecordSelectCanvas3, RecordSelectCanvas4 };
+            this.canvases = new Canvas[] { RecordSelectCanvas1, RecordSelectCanvas2, RecordSelectCanvas3, RecordSelectCanvas4, RecordSelectCanvas5 };
 
             // UserIdを選択するUI
-            ComboBox[] boxes = { UserIdBox1, UserIdBox2, UserIdBox3, UserIdBox4 };
+            ComboBox[] boxes = { UserIdBox1, UserIdBox2, UserIdBox3, UserIdBox4, UserIdBox5 };
             for (int recordNo = 0; recordNo < frameSequence.recordNum; recordNo++)
             {
                 foreach (ulong id in frameSequence.userIdList[recordNo])
@@ -232,9 +238,9 @@ namespace KinectMotionCapture
         /// <param name="frame"></param>
         private void UpdateDisplay(Frame frame)
         {
-            Label[] timeLabels = { Box1Timer, Box2Timer, Box3Timer, Box4Timer };
-            Image[] images = { Image1, Image2, Image3, Image4 };
-            DrawingGroup[] drawings = { drawingGroup1, drawingGroup2, drawingGroup3, drawingGroup4 };
+            Label[] timeLabels = { Box1Timer, Box2Timer, Box3Timer, Box4Timer, Box5Timer };
+            Image[] images = { Image1, Image2, Image3, Image4, Image5 };
+            DrawingGroup[] drawings = { drawingGroup1, drawingGroup2, drawingGroup3, drawingGroup4, drawingGroup5 };
             // 使い回しの変数
             List<Dictionary<JointType, Point>> pointsList;
             List<Dictionary<JointType, Joint>> jointsList;
@@ -350,6 +356,13 @@ namespace KinectMotionCapture
                 return this.bodyImageSource4;
             }
         }
+        public ImageSource BodyImageSource5
+        {
+            get
+            {
+                return this.bodyImageSource5;
+            }
+        }
         #endregion
 
         /// <summary>
@@ -383,6 +396,7 @@ namespace KinectMotionCapture
             int index = box.Name[i] - '0' - 1;
             if (box.SelectedItem != null)
             {
+                // ulongかどうかの判定
                 if (box.SelectedItem.ToString().Length > 5)
                 {
                     ulong bodyId = ulong.Parse(box.SelectedItem.ToString());
@@ -537,7 +551,7 @@ namespace KinectMotionCapture
         /// </summary>
         private void UpdateIntegratedIds()
         {
-            ComboBox[] boxes = { UserIdBox1, UserIdBox2, UserIdBox3, UserIdBox4 };
+            ComboBox[] boxes = { UserIdBox1, UserIdBox2, UserIdBox3, UserIdBox4, UserIdBox5 };
             for (int recordNo = 0; recordNo < frameSequence.recordNum; recordNo++)
             {
                 boxes[recordNo].SelectedItem = null;
