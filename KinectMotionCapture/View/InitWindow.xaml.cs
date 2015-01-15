@@ -31,19 +31,24 @@ namespace KinectMotionCapture
             this.Close();
         }
 
-        private void CalibrateCameraButton_Click(object sender, RoutedEventArgs e)
-        {
-            CameraUndistortWindow wnd = new CameraUndistortWindow();
-            wnd.IsSingleWindowMode = true;
-            wnd.Show();
-            this.Close();
-        }
+        //private void CalibrateCameraButton_Click(object sender, RoutedEventArgs e)
+        //{
+        //    CameraUndistortWindow wnd = new CameraUndistortWindow();
+        //    wnd.IsSingleWindowMode = true;
+        //    wnd.Show();
+        //    this.Close();
+        //}
 
         private void MergeRecordButton_Click(object sender, RoutedEventArgs e)
         {
             MergeRecordWindow wnd = new MergeRecordWindow();
             wnd.Show();
             this.Close();
+        }
+
+        private void UtilityButton_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }
