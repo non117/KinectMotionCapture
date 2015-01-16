@@ -504,15 +504,6 @@ namespace KinectMotionCapture
                 List<CvMat> convs = KinectMerge.GetConvMatrixFromBoneFrameSequence(frameSequence, startIndex, endIndex);
                 frameSequence.ToWorldConversions = convs;
             }
-
-            // DEBUG
-            IEnumerable<Frame> frames = frameSequence.Slice(this.startIndex, this.endIndex).Where(f => f.IsAllBodyAvailable());
-            for (int i = 0; i < frameSequence.recordNum; i++)
-            {
-                Dictionary<JointType, Joint> joints = Utility.ApplyConversions(frames.First().GetMotionData(i).bodies[0].Joints, frameSequence.ToWorldConversions[i]);
-                CameraSpacePoint p = joints[JointType.SpineBase].Position;
-                Debug.WriteLine(string.Format("{0},{1},{2}", p.X, p.Y, p.Z));
-            }
         }
 
         /// <summary>
@@ -536,14 +527,6 @@ namespace KinectMotionCapture
         {
             List<CvMat> convs = KinectMerge.GetConvMatrixFromDepthFrameSequence(frameSequence, startIndex, endIndex);
             frameSequence.ToWorldConversions = convs;
-            // DEBUG
-            IEnumerable<Frame> frames = frameSequence.Slice(this.startIndex, this.endIndex).Where(f => f.IsAllBodyAvailable());
-            for (int i = 0; i < frameSequence.recordNum; i++)
-            {
-                Dictionary<JointType, Joint> joints = Utility.ApplyConversions(frames.First().GetMotionData(i).bodies[0].Joints, frameSequence.ToWorldConversions[i]);
-                CameraSpacePoint p = joints[JointType.SpineBase].Position;
-                Debug.WriteLine(string.Format("{0},{1},{2}", p.X, p.Y, p.Z));
-            }
         }
 
         /// <summary>
