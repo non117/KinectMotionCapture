@@ -215,7 +215,7 @@ namespace KinectMotionCapture
                     prevJoints = prevBody.Joints;
                     nextJoints = nextBody.Joints;
                 }
-                
+
                 // 統計情報があるとき
                 if (frameSeq.BodyStat != null)
                 {
@@ -232,12 +232,12 @@ namespace KinectMotionCapture
                 reliabilityArr[recordNo] = this.GetSkeletonReliability(prevData, nextData, prevJoints, nextJoints, time, cameraInfo);
                 weightArr[recordNo] = this.GetVarianceWeight(prevData, nextData, prevJoints, nextJoints, time);
             }
-            
+
             // pivot更新
             pivot = new Dictionary<JointType, CvPoint3D64f>();
             foreach (var candidate in pivotCandidate)
             {
-                if (pivot.Count <= candidate.Count)
+                if (candidate != null && pivot.Count <= candidate.Count)
                 {
                     pivot = candidate;
                 }
