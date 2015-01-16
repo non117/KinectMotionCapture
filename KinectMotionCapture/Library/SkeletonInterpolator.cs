@@ -131,6 +131,36 @@ namespace KinectMotionCapture
             return ret;
         }
 
+        Dictionary<JointType, CvPoint3D64f> pivot;
+        /// <summary>
+        /// 反転しているJointsをPivot基準に修正する
+        /// </summary>
+        /// <param name="joints"></param>
+        /// <param name="conversion"></param>
+        /// <returns></returns>
+        public Dictionary<JointType, Joint> CorrectMirrorJoint(Dictionary<JointType, Joint> joints, CvMat conversion)
+        {
+            HashSet<JointType> mirroredPivotKeys = new HashSet<JointType>(pivot.Keys.Select(j => CalcEx.GetMirroredJoint(j)));
+            List<JointType> availableKeys = pivot.Keys.Where(j => mirroredPivotKeys.Contains(j)).ToList(); // pivotの左右反転して共通なキー
+            Dictionary<JointType, CvPoint3D64f> absJoints = joints.ToDictionary(p => p.Key, p => CvEx.ConvertPoint3D(p.Value.Position.ToCvPoint3D(), conversion));
+            Dictionary<JointType, CvPoint3D64f> absMirroredJoints = absJoints.ToDictionary(p => CalcEx.GetMirroredJoint(p.Key), p => p.Value);
+            List<JointType> keysNormal = availableKeys.Intersect(absJoints.Keys).ToList();
+            List<JointType> keysMirrored = availableKeys.Intersect(absMirroredJoints.Keys).ToList();
+
+            if (keysNormal.Count > 0 && keysMirrored.Count > 0)
+            {
+                double avg1 = keysNormal.Select(j => CvEx.GetDistanceSq(pivot[j], absJoints[j])).Average();
+                double avg2 = keysMirrored.Select(j => CvEx.GetDistanceSq(pivot[j], absMirroredJoints[j])).Average();
+                // mirroredのほうが似てる場合
+                if (avg2 < avg1)
+                {
+                    return joints.ToDictionary(p => CalcEx.GetMirroredJoint(p.Key), p => p.Value);
+                }
+            }
+            return joints;
+        }
+
+
         public Dictionary<JointType, CvPoint3D64f> IntegrateSkeleton(DateTime time, int userInt, FrameSequence frameSeq)
         {
             List<CvMat> ToWorldConversions = frameSeq.ToWorldConversions;
@@ -168,10 +198,18 @@ namespace KinectMotionCapture
                 Dictionary<JointType, Joint> nextJoints;
                 if (prevBody.Joints == null || nextBody.Joints == null)
                     continue;
+
+                // pivot初回処理
+                // どーしよ
+                // mirror矯正
+                prevJoints = this.CorrectMirrorJoint(prevBody.Joints, ToWorldConversions[recordNo]);
+                nextJoints = this.CorrectMirrorJoint(nextBody.Joints, ToWorldConversions[recordNo]);
+                // pivotの更新
+
                 if (frameSeq.BodyStat != null)
                 {
-                    prevJoints = frameSeq.BodyStat.FilterBonesByStatistics(prevBody.Joints);
-                    nextJoints = frameSeq.BodyStat.FilterBonesByStatistics(nextBody.Joints);
+                    prevJoints = frameSeq.BodyStat.FilterBonesByStatistics(prevJoints);
+                    nextJoints = frameSeq.BodyStat.FilterBonesByStatistics(nextJoints);
                 }
                 else
                 {

@@ -187,7 +187,9 @@ namespace KinectMotionCapture
             {
                 while (fs.Length != fs.Position)
                 {
-                    res.Add(formatter.Deserialize(fs));
+                    MotionData md = (MotionData)formatter.Deserialize(fs);
+                    md.isValid = true;
+                    res.Add(md);
                 }
             }
             return res;
