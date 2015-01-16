@@ -168,6 +168,8 @@ namespace KinectMotionCapture
             List<UserSegmentation> segm = frameSeq.Segmentations;
 
             Dictionary<JointType, CvPoint3D64f>[] jointsArr = new Dictionary<JointType, CvPoint3D64f>[frameSeq.recordNum];
+            Dictionary<JointType, CvPoint3D64f>[] pivotCandidate = new Dictionary<JointType, CvPoint3D64f>[frameSeq.recordNum];
+
             double[] reliabilityArr = new double[frameSeq.recordNum];
             double[] weightArr = new double[frameSeq.recordNum];
 
@@ -199,13 +201,22 @@ namespace KinectMotionCapture
                 if (prevBody.Joints == null || nextBody.Joints == null)
                     continue;
 
-                // pivot初回処理
-                // どーしよ
-                // mirror矯正
-                prevJoints = this.CorrectMirrorJoint(prevBody.Joints, ToWorldConversions[recordNo]);
-                nextJoints = this.CorrectMirrorJoint(nextBody.Joints, ToWorldConversions[recordNo]);
-                // pivotの更新
-
+                // pivotが設定されてるとき、つまり、本番統合のとき
+                if (pivot != null)
+                {
+                    // mirror矯正
+                    prevJoints = this.CorrectMirrorJoint(prevBody.Joints, ToWorldConversions[recordNo]);
+                    nextJoints = this.CorrectMirrorJoint(nextBody.Joints, ToWorldConversions[recordNo]);
+                    // next pivot候補つめつめ
+                    pivotCandidate[recordNo] = Utility.GetValidJoints(nextJoints).ToDictionary(p => p.Key, p => (CvPoint3D64f)p.Value.Position.ToCvPoint3D());
+                }
+                else
+                {
+                    prevJoints = prevBody.Joints;
+                    nextJoints = nextBody.Joints;
+                }
+                
+                // 統計情報があるとき
                 if (frameSeq.BodyStat != null)
                 {
                     prevJoints = frameSeq.BodyStat.FilterBonesByStatistics(prevJoints);
@@ -220,7 +231,17 @@ namespace KinectMotionCapture
                 jointsArr[recordNo] = this.InterpolateSkeleton(prevData, nextData, prevJoints, nextJoints, time, ToWorldConversions[recordNo]);
                 reliabilityArr[recordNo] = this.GetSkeletonReliability(prevData, nextData, prevJoints, nextJoints, time, cameraInfo);
                 weightArr[recordNo] = this.GetVarianceWeight(prevData, nextData, prevJoints, nextJoints, time);
-            }            
+            }
+            
+            // pivot更新
+            pivot = new Dictionary<JointType, CvPoint3D64f>();
+            foreach (var candidate in pivotCandidate)
+            {
+                if (pivot.Count <= candidate.Count)
+                {
+                    pivot = candidate;
+                }
+            }
 
             double maxWeight = weightArr.Max();
             double[] modifiedReliabilityList = weightArr.Select(w => Math.Max(0, (w / maxWeight) - _weightBase)).Zip(reliabilityArr, (a, b) => a * b).ToArray();
@@ -270,6 +291,26 @@ namespace KinectMotionCapture
             SkeletonInterpolator skeletonInterpolator = new SkeletonInterpolator(0.5, true);
             foreach (int user in userJointPairs.Select(p => p.Item1).Distinct())            
             {
+                skeletonInterpolator.pivot = new Dictionary<JointType, CvPoint3D64f>();
+                // pivot初期化処理
+                Dictionary<JointType, Joint>[] firstJoints = new Dictionary<JointType,Joint>[frameseq.recordNum];
+                for (int no = 0; no < frameseq.recordNum; no++)
+                {
+                    var bodies = frameseq.GetNextData(no, timestamps[0]).bodies;
+                    if (bodies.Count() > 0)
+                    {
+                        SerializableBody body = bodies.Where(b => b.integratedId == user).FirstOrDefault();
+                        if (body != null)
+                        {
+                            var validJoints = Utility.GetValidJoints(body.Joints).ToDictionary(p => p.Key, p => (CvPoint3D64f)p.Value.Position.ToCvPoint3D());
+                            if (skeletonInterpolator.pivot.Count < validJoints.Count)
+                            {
+                                skeletonInterpolator.pivot = validJoints;
+                            }
+                        }
+                    }
+                }
+
                 List<Dictionary<JointType, CvPoint3D64f>> jointsSeq = new List<Dictionary<JointType, CvPoint3D64f>>();
                 foreach(DateTime time in timestamps)
                 {
