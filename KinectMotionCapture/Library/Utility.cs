@@ -422,6 +422,10 @@ namespace KinectMotionCapture
             return dx * dx + dy * dy;
         }
 
+        /// <summary>
+        /// 全身の骨を返す
+        /// </summary>
+        /// <returns></returns>
         public static List<Tuple<JointType, JointType>> GetBones()
         {
             List<Tuple<JointType, JointType>> bones = new List<Tuple<JointType, JointType>>();
@@ -448,6 +452,29 @@ namespace KinectMotionCapture
             bones.Add(new Tuple<JointType, JointType>(JointType.WristLeft, JointType.HandLeft));
             bones.Add(new Tuple<JointType, JointType>(JointType.HandLeft, JointType.HandTipLeft));
             bones.Add(new Tuple<JointType, JointType>(JointType.WristLeft, JointType.ThumbLeft));
+
+            // Right Leg
+            bones.Add(new Tuple<JointType, JointType>(JointType.HipRight, JointType.KneeRight));
+            bones.Add(new Tuple<JointType, JointType>(JointType.KneeRight, JointType.AnkleRight));
+            bones.Add(new Tuple<JointType, JointType>(JointType.AnkleRight, JointType.FootRight));
+
+            // Left Leg
+            bones.Add(new Tuple<JointType, JointType>(JointType.HipLeft, JointType.KneeLeft));
+            bones.Add(new Tuple<JointType, JointType>(JointType.KneeLeft, JointType.AnkleLeft));
+            bones.Add(new Tuple<JointType, JointType>(JointType.AnkleLeft, JointType.FootLeft));
+            return bones;
+        }
+
+        /// <summary>
+        /// 足の骨を返す
+        /// </summary>
+        /// <returns></returns>
+        public static List<Tuple<JointType, JointType>> GetLegBones()
+        {
+            List<Tuple<JointType, JointType>> bones = new List<Tuple<JointType, JointType>>();
+            // Torso
+            bones.Add(new Tuple<JointType, JointType>(JointType.SpineBase, JointType.HipRight));
+            bones.Add(new Tuple<JointType, JointType>(JointType.SpineBase, JointType.HipLeft));
 
             // Right Leg
             bones.Add(new Tuple<JointType, JointType>(JointType.HipRight, JointType.KneeRight));
