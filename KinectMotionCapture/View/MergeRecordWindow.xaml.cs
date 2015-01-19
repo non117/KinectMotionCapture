@@ -28,7 +28,9 @@ namespace KinectMotionCapture
     public partial class MergeRecordWindow : Window
     {
         private FrameSequence frameSequence;
-        
+
+        private KinectSensor kinectSensor;
+        private CoordinateMapper coordinateMapper;
         private BackgroundWorker worker;
 
         private int playingIndex;
@@ -139,6 +141,11 @@ namespace KinectMotionCapture
         /// <param name="e"></param>
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+
+            this.kinectSensor = KinectSensor.GetDefault();
+            this.kinectSensor.Open();
+            this.coordinateMapper = kinectSensor.CoordinateMapper;
+
             CompositionTarget.Rendering += this.CompositionTargetRendering;
             this.LoadFrames();
 
@@ -234,6 +241,7 @@ namespace KinectMotionCapture
 
         /// <summary>
         /// 画面を更新する
+        /// TODO : coordinatemapperを使うように変更(3月)
         /// </summary>
         /// <param name="frame"></param>
         private void UpdateDisplay(Frame frame)
