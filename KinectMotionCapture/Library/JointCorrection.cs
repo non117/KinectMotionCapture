@@ -44,7 +44,7 @@ namespace KinectMotionCapture
         /// 足の長さを統計情報をもとに正規化する
         /// </summary>
         /// <param name="body"></param>
-        private void NormalizeLegJoints(Dictionary<JointType, Joint> joints, Dictionary<Bone, BoneStatistics> boneStatistics)
+        private Dictionary<JointType, Joint> NormalizeLegJoints(Dictionary<JointType, Joint> joints, Dictionary<Bone, BoneStatistics> boneStatistics)
         {
             List<Tuple<JointType, JointType>> legBones = Utility.GetLegBones();
             foreach (Bone bone in legBones)
@@ -58,6 +58,7 @@ namespace KinectMotionCapture
                 joint2.Position = (joint1.Position.ToCvPoint3D() + expandedVector).ToCameraSpacePoint();
                 joints[bone.Item2] = joint2;
             }
+            return joints;
         }
 
         /// <summary>
@@ -65,21 +66,23 @@ namespace KinectMotionCapture
         /// </summary>
         /// <param name="joints"></param>
         /// <param name="removeJoints"></param>
-        private void RemoveHalfBody(Dictionary<JointType, Joint> joints, List<JointType> removeJoints)
+        private Dictionary<JointType, Joint> RemoveHalfBody(Dictionary<JointType, Joint> joints, List<JointType> removeJoints)
         {
+            Dictionary<JointType, Joint> newJoints = joints.CloneDeep();
             foreach (JointType jointType in removeJoints)
             {
-                joints.Remove(jointType);
+                newJoints.Remove(jointType);
             }
+            return newJoints;
         }
 
         /// <summary>
         /// 身体の骨を反転する
         /// </summary>
         /// <param name="joints"></param>
-        private void ReverseBody(Dictionary<JointType, Joint> joints)
+        private Dictionary<JointType, Joint> ReverseBody(Dictionary<JointType, Joint> joints)
         {
-            joints = joints.ToDictionary(p => CalcEx.GetMirroredJoint(p.Key), p => p.Value);
+            return joints.ToDictionary(p => CalcEx.GetMirroredJoint(p.Key), p => p.Value);
         }
     }
 }
