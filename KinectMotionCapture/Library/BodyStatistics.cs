@@ -10,47 +10,48 @@ using OpenCvSharp;
 namespace KinectMotionCapture
 {
     using Bone = Tuple<JointType, JointType>;
-    public class BodyStatistics
-    {
-        /// <summary>
-        /// 骨の統計情報を格納するための構造体
-        /// </summary>
-        public struct BoneStatistics
-        {
-            double minLengthSq;
-            double maxLengthSq;
-            double medianLengthSq;
-            double averageLengthSq;
-            double stdLengthSq;
-            public BoneStatistics(double minLength, double maxLength, double medianLength, double averageLength, double stdLength)
-            {
-                this.minLengthSq = minLength;
-                this.maxLengthSq = maxLength;
-                this.medianLengthSq = medianLength;
-                this.averageLengthSq = averageLength;
-                this.stdLengthSq = stdLength;
-            }
-            /// <summary>
-            /// 統計情報の許容範囲かどうか
-            /// </summary>
-            /// <param name="lengthSq"></param>
-            /// <returns></returns>
-            public bool IsValidBone(double lengthSq)
-            {
-                if (lengthSq >= minLengthSq && lengthSq <= maxLengthSq)
-                {
-                    return true;
-                }
-                return false;
-            }
 
+    /// <summary>
+    /// 骨の統計情報を格納するための構造体
+    /// </summary>
+    public struct BoneStatistics
+    {
+        public double minLengthSq;
+        public double maxLengthSq;
+        public double medianLengthSq;
+        public double averageLengthSq;
+        public double stdLengthSq;
+        public BoneStatistics(double minLength, double maxLength, double medianLength, double averageLength, double stdLength)
+        {
+            this.minLengthSq = minLength;
+            this.maxLengthSq = maxLength;
+            this.medianLengthSq = medianLength;
+            this.averageLengthSq = averageLength;
+            this.stdLengthSq = stdLength;
+        }
+        /// <summary>
+        /// 統計情報の許容範囲かどうか
+        /// </summary>
+        /// <param name="lengthSq"></param>
+        /// <returns></returns>
+        public bool IsValidBone(double lengthSq)
+        {
+            if (lengthSq >= minLengthSq && lengthSq <= maxLengthSq)
+            {
+                return true;
+            }
+            return false;
         }
 
+    }
+
+    public class BodyStatistics
+    {
         // 骨一覧
         private List<Bone> bones;
         private JointType[] arms;
         private Dictionary<Bone, List<double>> boneLengthSqLog;
-        private Dictionary<Bone, BoneStatistics> boneLengthSqStatistics;
+        public Dictionary<Bone, BoneStatistics> boneLengthSqStatistics;
 
         /// <summary>
         /// 骨のデータを蓄積する
