@@ -60,9 +60,26 @@ namespace KinectMotionCapture
             }
         }
 
+        /// <summary>
+        /// 骨を取り除く
+        /// </summary>
+        /// <param name="joints"></param>
+        /// <param name="removeJoints"></param>
         private void RemoveHalfBody(Dictionary<JointType, Joint> joints, List<JointType> removeJoints)
         {
+            foreach (JointType jointType in removeJoints)
+            {
+                joints.Remove(jointType);
+            }
+        }
 
+        /// <summary>
+        /// 身体の骨を反転する
+        /// </summary>
+        /// <param name="joints"></param>
+        private void ReverseBody(Dictionary<JointType, Joint> joints)
+        {
+            joints = joints.ToDictionary(p => CalcEx.GetMirroredJoint(p.Key), p => p.Value);
         }
     }
 }
