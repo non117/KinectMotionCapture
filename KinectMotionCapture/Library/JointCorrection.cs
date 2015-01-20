@@ -73,7 +73,7 @@ namespace KinectMotionCapture
         /// </summary>
         /// <param name="joints"></param>
         /// <param name="removeJoints"></param>
-        private Dictionary<JointType, Joint> RemoveHalfBody(Dictionary<JointType, Joint> joints, List<JointType> removeJoints)
+        private Dictionary<JointType, Joint> RemoveJoints(Dictionary<JointType, Joint> joints, List<JointType> removeJoints)
         {
             Dictionary<JointType, Joint> newJoints = joints.CloneDeep();
             foreach (JointType jointType in removeJoints)
@@ -94,5 +94,35 @@ namespace KinectMotionCapture
         {
             return joints.ToDictionary(p => CalcEx.GetMirroredJoint(p.Key), p => p.Value);
         }
+
+        /// <summary>
+        /// 身体の向きを判定し、遮蔽された身体を削除する
+        /// </summary>
+        /// <param name="body"></param>
+        /// <returns></returns>
+        private SerializableBody CalcBodyCrossVectorAndCleanOcculusions(SerializableBody body)
+        {
+            SerializableBody newBody = body.CloneDeep();
+            CvPoint3D64f bodyCrossVector = this.BodyCrossVector(body.Joints);
+            newBody.bodyCrossVector = bodyCrossVector.ToArrayPoints();
+            double bodyAngle = this.BodyAngle(bodyCrossVector);
+            newBody.bodyAngle = bodyAngle;
+            // 閾値はてきとう
+            if (Math.Abs(bodyAngle) < 0.309)
+            {
+                if (bodyCrossVector.X > 0)
+                {
+                    List<JointType> removeJoints = Utility.RightBody.ToList().Concat(Utility.Spines.ToList()).ToList();
+                    newBody.Joints = this.RemoveJoints(body.Joints, removeJoints);
+                }
+                else
+                {
+                    List<JointType> removeJoints = Utility.LeftBody.ToList().Concat(Utility.Spines.ToList()).ToList();
+                    newBody.Joints = this.RemoveJoints(body.Joints, removeJoints);
+                }
+            }
+            return newBody;
+        }
+
     }
 }
