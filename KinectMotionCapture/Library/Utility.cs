@@ -488,6 +488,17 @@ namespace KinectMotionCapture
             return bones;
         }
 
+        // 右半身
+        public static JointType[] RightBody = new JointType[]{JointType.ShoulderRight, JointType.ElbowRight, JointType.WristRight,
+                                                              JointType.HandRight, JointType.ThumbRight, JointType.HandTipRight,
+                                                              JointType.HipRight, JointType.KneeRight, JointType.AnkleRight, JointType.FootRight};
+        // 左半身
+        public static JointType[] LeftBody = new JointType[]{JointType.ShoulderLeft, JointType.ElbowLeft, JointType.WristLeft,
+                                                             JointType.HandLeft, JointType.ThumbLeft, JointType.HandTipLeft,
+                                                             JointType.HipLeft, JointType.KneeLeft, JointType.AnkleLeft, JointType.FootLeft};
+        // 体幹
+        public static JointType[] Spines = new JointType[]{JointType.Head, JointType.Neck, JointType.SpineShoulder, JointType.SpineMid, JointType.SpineBase};
+
         /*
         /// <summary>
         /// DPマッチングのための座標, Point2D使って書き直すべき
