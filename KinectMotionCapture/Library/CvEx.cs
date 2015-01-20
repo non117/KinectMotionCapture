@@ -27,16 +27,7 @@ namespace KinectMotionCapture
         {
             return new CvPoint3D32f(point.X, point.Y, point.Z);
         }
-        /*
-        public static Microsoft.Xna.Framework.Vector3 ToVector3(this CvPoint3D64f point)
-        {
-            return new Microsoft.Xna.Framework.Vector3((float)point.X, (float)point.Y, (float)point.Z);
-        }
-        public static Microsoft.Xna.Framework.Vector3 ToVector3(this CvPoint3D32f point)
-        {
-            return new Microsoft.Xna.Framework.Vector3(point.X, point.Y, point.Z);
-        }
-         */
+
         /// <summary>
         /// CvPoint3D32fをCameraSpacePointに変換します
         /// </summary>
@@ -55,6 +46,25 @@ namespace KinectMotionCapture
         public static CameraSpacePoint ToCameraSpacePoint(this CvPoint3D64f point)
         {
             return new CameraSpacePoint() { X = (float)point.X, Y = (float)point.Y, Z = (float)point.Z };
+        }
+
+        /// <summary>
+        /// CvPoint3D64fをdouble[]に変換する
+        /// </summary>
+        /// <param name="point"></param>
+        /// <returns></returns>
+        public static double[] ToArrayPoints(this CvPoint3D64f point)
+        {
+            return new double[] { point.X, point.Y, point.Z };
+        }
+
+        public static CvPoint3D64f ToCvPoint3D(this double[] point)
+        {
+            if (point.Length != 3)
+            {
+                throw new InvalidOperationException("要素数が3つの配列を渡してください。");
+            }
+            return new CvPoint3D64f(point[0], point[1], point[2]);
         }
 
         /*
