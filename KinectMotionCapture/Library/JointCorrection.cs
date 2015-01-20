@@ -20,12 +20,16 @@ namespace KinectMotionCapture
         /// <returns></returns>
         private CvPoint3D64f BodyCrossVector(SerializableBody body)
         {
-            CvPoint3D64f torsoToRightShoulder = body.Joints[JointType.SpineMid].Position.ToCvPoint3D()
-                - body.Joints[JointType.ShoulderRight].Position.ToCvPoint3D();
-            CvPoint3D64f torsoToLeftShoulder = body.Joints[JointType.SpineMid].Position.ToCvPoint3D()
-                - body.Joints[JointType.ShoulderLeft].Position.ToCvPoint3D();
-            CvPoint3D64f bodyCross = CvEx.Cross(torsoToRightShoulder, torsoToLeftShoulder);
-            return bodyCross;
+            if (body.Joints.ContainsKey(JointType.SpineBase) && body.Joints.ContainsKey(JointType.ShoulderRight) && body.Joints.ContainsKey(JointType.ShoulderLeft))
+            {
+                CvPoint3D64f torsoToRightShoulder = body.Joints[JointType.SpineMid].Position.ToCvPoint3D()
+                    - body.Joints[JointType.ShoulderRight].Position.ToCvPoint3D();
+                CvPoint3D64f torsoToLeftShoulder = body.Joints[JointType.SpineMid].Position.ToCvPoint3D()
+                    - body.Joints[JointType.ShoulderLeft].Position.ToCvPoint3D();
+                CvPoint3D64f bodyCross = CvEx.Cross(torsoToRightShoulder, torsoToLeftShoulder);
+                return bodyCross;
+            }
+            return default(CvPoint3D64f);
         }
 
         /// <summary>
@@ -49,14 +53,17 @@ namespace KinectMotionCapture
             List<Tuple<JointType, JointType>> legBones = Utility.GetLegBones();
             foreach (Bone bone in legBones)
             {
-                Joint joint1 = joints[bone.Item1];
-                Joint joint2 = joints[bone.Item2];
-                // 1の骨は動かさない. SpineBaseから順番に修正されることは保証されている.
-                double medianLength = Math.Sqrt(boneStatistics[bone].medianLengthSq);
-                CvPoint3D64f normalizedVector = CvEx.Normalize(joint1.Position.ToCvPoint3D() - joint2.Position.ToCvPoint3D());
-                CvPoint3D32f expandedVector = (CvPoint3D32f)(normalizedVector * medianLength);
-                joint2.Position = (joint1.Position.ToCvPoint3D() + expandedVector).ToCameraSpacePoint();
-                joints[bone.Item2] = joint2;
+                if (joints.ContainsKey(bone.Item1) && joints.ContainsKey(bone.Item2))
+                {
+                    Joint joint1 = joints[bone.Item1];
+                    Joint joint2 = joints[bone.Item2];
+                    // 1の骨は動かさない. SpineBaseから順番に修正されることは保証されている.
+                    double medianLength = Math.Sqrt(boneStatistics[bone].medianLengthSq);
+                    CvPoint3D64f normalizedVector = CvEx.Normalize(joint1.Position.ToCvPoint3D() - joint2.Position.ToCvPoint3D());
+                    CvPoint3D32f expandedVector = (CvPoint3D32f)(normalizedVector * medianLength);
+                    joint2.Position = (joint1.Position.ToCvPoint3D() + expandedVector).ToCameraSpacePoint();
+                    joints[bone.Item2] = joint2;
+                }
             }
             return joints;
         }
@@ -71,7 +78,10 @@ namespace KinectMotionCapture
             Dictionary<JointType, Joint> newJoints = joints.CloneDeep();
             foreach (JointType jointType in removeJoints)
             {
-                newJoints.Remove(jointType);
+                if (newJoints.ContainsKey(jointType))
+                {
+                    newJoints.Remove(jointType);
+                }
             }
             return newJoints;
         }
