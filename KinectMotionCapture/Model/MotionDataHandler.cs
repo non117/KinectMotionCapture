@@ -468,5 +468,7 @@ namespace KinectMotionCapture
         public bool mirrored = false;
         [NonSerialized]
         public int integratedId = -1;
+        [NonSerialized]
+        public double[] bodyCrossVector;
     }
 }
