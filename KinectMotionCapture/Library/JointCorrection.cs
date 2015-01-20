@@ -18,14 +18,14 @@ namespace KinectMotionCapture
         /// </summary>
         /// <param name="body"></param>
         /// <returns></returns>
-        private CvPoint3D64f BodyCrossVector(SerializableBody body)
+        private CvPoint3D64f BodyCrossVector(Dictionary<JointType, Joint> joints)
         {
-            if (body.Joints.ContainsKey(JointType.SpineBase) && body.Joints.ContainsKey(JointType.ShoulderRight) && body.Joints.ContainsKey(JointType.ShoulderLeft))
+            if (joints.ContainsKey(JointType.SpineBase) && joints.ContainsKey(JointType.ShoulderRight) && joints.ContainsKey(JointType.ShoulderLeft))
             {
-                CvPoint3D64f torsoToRightShoulder = body.Joints[JointType.SpineMid].Position.ToCvPoint3D()
-                    - body.Joints[JointType.ShoulderRight].Position.ToCvPoint3D();
-                CvPoint3D64f torsoToLeftShoulder = body.Joints[JointType.SpineMid].Position.ToCvPoint3D()
-                    - body.Joints[JointType.ShoulderLeft].Position.ToCvPoint3D();
+                CvPoint3D64f torsoToRightShoulder = joints[JointType.SpineMid].Position.ToCvPoint3D()
+                    - joints[JointType.ShoulderRight].Position.ToCvPoint3D();
+                CvPoint3D64f torsoToLeftShoulder = joints[JointType.SpineMid].Position.ToCvPoint3D()
+                    - joints[JointType.ShoulderLeft].Position.ToCvPoint3D();
                 CvPoint3D64f bodyCross = CvEx.Cross(torsoToRightShoulder, torsoToLeftShoulder);
                 return bodyCross;
             }
