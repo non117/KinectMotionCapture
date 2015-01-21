@@ -977,5 +977,31 @@ namespace KinectMotionCapture
             bodyStat.CalcMedianBoneRange();
             this.frameSequence.BodyStat = bodyStat;
         }
+
+        /// <summary>
+        /// 現在のフレームのレコード・ユーザを信頼できるデータとしてタグ付けする
+        /// TODO : UI上で特別なデータは色とかで反映する
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CheckTrustDataFrame_Click(object sender, RoutedEventArgs e)
+        {
+            // record, userを選択中のやつ
+            for (int recordNo = 0; recordNo < frameSequence.recordNum; recordNo++)
+            {
+                if (this.isRecordSelected[recordNo])
+                {
+                    int record = recordNo;
+                    int user = this.frameSequence.selecteedIntegretedIdList[recordNo];
+                    int frame = this.playingIndex;
+                    TrustData td = new TrustData(frame, record, user);
+                    // こいつをUI上で反映する手がかりにする
+                    SerializableBody body = td.GetBody(this.frameSequence.Frames);
+                    body.trustData = true;
+                    this.frameSequence.trustData.Add(td);
+                }
+            }
+
+        }
     }
 }

@@ -244,6 +244,8 @@
                 <Separator/>
                 <MenuItem Name="MenuCalibDepthFrame" Header="現在のフレームの深度画像で座標統合行列を計算" Click="MenuCalibDepthFrame_Click" />
                 <MenuItem Name="MenuCalibDepthFrameRange" Header="フレーム範囲の深度画像で座標統合行列を計算" Click="MenuCalibDepthFrameRange_Click" />
+                <Separator/>
+                <MenuItem Name="CheckTrustDataFrame" Header="選択中のレコード・ユーザを基準骨格にする" Click="CheckTrustDataFrame_Click" />
             </MenuItem>
         </Menu>
     </Grid>

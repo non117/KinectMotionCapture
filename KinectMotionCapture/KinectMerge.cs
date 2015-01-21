@@ -46,7 +46,6 @@ namespace KinectMotionCapture
     public class FrameSequence
     {
         private List<CvMat> convList;
-        private List<TrustData> trustData;
         private string[] dataDirs;
         //private string bodyInfoFilename = @"BodyInfo.mpac";
         private string bodyInfoFilename = @"BodyInfo.dump";
@@ -62,6 +61,7 @@ namespace KinectMotionCapture
         public ulong[] selectedOriginalIdList;
         public int[] selecteedIntegretedIdList;
         public List<List<ulong>> userIdList;
+        public List<TrustData> trustData;
 
         public double[] offsets = new double[] { 0, 0, 0, 0, 0};
         
