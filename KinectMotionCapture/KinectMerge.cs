@@ -18,9 +18,9 @@ namespace KinectMotionCapture
     /// </summary>
     public struct TrustData
     {
-        int frameIndex;
-        int recordIndex;
-        int integratedBodyId;
+        public int frameIndex;
+        public int recordIndex;
+        public int integratedBodyId;
         public TrustData(int fIndex, int rIndex, int bodyId)
         {
             this.frameIndex = fIndex;

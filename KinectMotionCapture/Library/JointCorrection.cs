@@ -96,21 +96,22 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
-        /// 身体の向きを判定し、遮蔽された身体を削除する
+        /// 遮蔽された身体を削除する
         /// </summary>
         /// <param name="body"></param>
         /// <returns></returns>
-        private SerializableBody CalcBodyCrossVectorAndCleanOcculusions(SerializableBody body)
+        private SerializableBody CleanOcculusions(SerializableBody body)
         {
             SerializableBody newBody = body.CloneDeep();
-            CvPoint3D64f bodyCrossVector = this.BodyCrossVector(body.Joints);
-            newBody.bodyCrossVector = bodyCrossVector.ToArrayPoints();
-            double bodyAngle = this.BodyAngle(bodyCrossVector);
-            newBody.bodyAngle = bodyAngle;
+            // 以下4行は別メソッド
+            //CvPoint3D64f bodyCrossVector = this.BodyCrossVector(body.Joints);
+            //newBody.bodyCrossVector = bodyCrossVector.ToArrayPoints();
+            //double bodyAngle = this.BodyAngle(bodyCrossVector);
+            //newBody.bodyAngle = bodyAngle;
             // 閾値はてきとう
-            if (Math.Abs(bodyAngle) < 0.309)
+            if (Math.Abs(body.bodyAngle) < 0.309)
             {
-                if (bodyCrossVector.X > 0)
+                if (body.bodyCrossVector[0] > 0)
                 {
                     List<JointType> removeJoints = Utility.RightBody.ToList().Concat(Utility.Spines.ToList()).ToList();
                     newBody.Joints = this.RemoveJoints(body.Joints, removeJoints);
@@ -122,6 +123,32 @@ namespace KinectMotionCapture
                 }
             }
             return newBody;
+        }
+
+        /// <summary>
+        /// ミラー状態を補正するための基準骨格フレーム複数から、比較すべきフレームの範囲を決定する
+        /// </summary>
+        /// <param name="frameLength"></param>
+        /// <param name="trustDataList"></param>
+        /// <returns></returns>
+        private List<Tuple<int, int>> GenerateIterationRanges(int frameLength, List<TrustData> trustDataList)
+        {
+            List<Tuple<int, int>> iterationRanges = new List<Tuple<int, int>>();
+            iterationRanges.Add(Tuple.Create(0, trustDataList.First().frameIndex));
+            // 基準フレームが複数の場合
+            if (trustDataList.Count >= 2)
+            {
+                for (int i = 0; i < trustDataList.Count; i++)
+                {
+                    int currIndex = trustDataList[i].frameIndex;
+                    int nextIndex = trustDataList[i + 1].frameIndex;
+                    int halfIndex = (currIndex + nextIndex) / 2;
+                    iterationRanges.Add(Tuple.Create(currIndex, halfIndex));
+                    iterationRanges.Add(Tuple.Create(nextIndex, halfIndex + 1));
+                }
+            }
+            iterationRanges.Add(Tuple.Create(trustDataList.Last().frameIndex, frameLength - 1));
+            return iterationRanges;
         }
 
     }
