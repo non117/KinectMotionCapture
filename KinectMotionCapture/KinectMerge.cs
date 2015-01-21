@@ -14,12 +14,39 @@ using OpenCvSharp;
 namespace KinectMotionCapture
 {
     /// <summary>
+    /// 信頼できるデータのメタ情報
+    /// </summary>
+    public struct TrustData
+    {
+        int frameIndex;
+        int recordIndex;
+        int integratedBodyId;
+        public TrustData(int fIndex, int rIndex, int bodyId)
+        {
+            this.frameIndex = fIndex;
+            this.recordIndex = rIndex;
+            this.integratedBodyId = bodyId;
+        }
+
+        /// <summary>
+        /// 該当のBodyを返す
+        /// </summary>
+        /// <param name="frames"></param>
+        /// <returns></returns>
+        public SerializableBody GetBody(List<Frame> frames)
+        {
+            return frames[this.frameIndex].GetSelectedBody(this.recordIndex, integratedId: this.integratedBodyId);
+        }
+    }
+
+    /// <summary>
     /// フレームの集合
     /// </summary>
     [Serializable]
     public class FrameSequence
     {
         private List<CvMat> convList;
+        private List<TrustData> trustData;
         private string[] dataDirs;
         //private string bodyInfoFilename = @"BodyInfo.mpac";
         private string bodyInfoFilename = @"BodyInfo.dump";
@@ -363,6 +390,7 @@ namespace KinectMotionCapture
             this.recordNum = dataDirs.Count();
             this.selectedOriginalIdList = new ulong[this.recordNum];
             this.selecteedIntegretedIdList = new int[this.recordNum];
+            this.trustData = new List<TrustData>();
             
             this.dataDirs = dataDirs;
             // 外側がKinectの数だけあるレコード、内側がフレーム数分

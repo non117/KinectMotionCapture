@@ -472,5 +472,7 @@ namespace KinectMotionCapture
         public double[] bodyCrossVector;
         [NonSerialized]
         public double bodyAngle;
+        [NonSerialized]
+        public bool trustData = false;
     }
 }
