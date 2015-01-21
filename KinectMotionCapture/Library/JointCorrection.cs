@@ -151,5 +151,14 @@ namespace KinectMotionCapture
             return iterationRanges;
         }
 
+        public void Correct(FrameSequence frameSeq)
+        {
+            // 1. iteration
+            // 2. pivot
+            // 3. vector, angle
+            // 4. reverse
+            // 5. occulusion
+            // 6. normalize
+        }
     }
 }
