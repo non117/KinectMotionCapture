@@ -18,14 +18,12 @@ namespace KinectMotionCapture
         /// </summary>
         /// <param name="body"></param>
         /// <returns></returns>
-        private CvPoint3D64f BodyCrossVector(Dictionary<JointType, Joint> joints)
+        private CvPoint3D64f BodyCrossVector(Dictionary<JointType, CvPoint3D64f> joints)
         {
             if (joints.ContainsKey(JointType.SpineBase) && joints.ContainsKey(JointType.ShoulderRight) && joints.ContainsKey(JointType.ShoulderLeft))
             {
-                CvPoint3D64f torsoToRightShoulder = joints[JointType.SpineMid].Position.ToCvPoint3D()
-                    - joints[JointType.ShoulderRight].Position.ToCvPoint3D();
-                CvPoint3D64f torsoToLeftShoulder = joints[JointType.SpineMid].Position.ToCvPoint3D()
-                    - joints[JointType.ShoulderLeft].Position.ToCvPoint3D();
+                CvPoint3D64f torsoToRightShoulder = joints[JointType.SpineMid] - joints[JointType.ShoulderRight];
+                CvPoint3D64f torsoToLeftShoulder = joints[JointType.SpineMid] - joints[JointType.ShoulderLeft];
                 CvPoint3D64f bodyCross = CvEx.Cross(torsoToRightShoulder, torsoToLeftShoulder);
                 return bodyCross;
             }
@@ -103,11 +101,6 @@ namespace KinectMotionCapture
         private SerializableBody CleanOcculusions(SerializableBody body)
         {
             SerializableBody newBody = body.CloneDeep();
-            // 以下4行は別メソッド
-            //CvPoint3D64f bodyCrossVector = this.BodyCrossVector(body.Joints);
-            //newBody.bodyCrossVector = bodyCrossVector.ToArrayPoints();
-            //double bodyAngle = this.BodyAngle(bodyCrossVector);
-            //newBody.bodyAngle = bodyAngle;
             // 閾値はてきとう
             if (Math.Abs(body.bodyAngle) < 0.309)
             {
@@ -131,30 +124,75 @@ namespace KinectMotionCapture
         /// <param name="frameLength"></param>
         /// <param name="trustDataList"></param>
         /// <returns></returns>
-        private List<Tuple<int, int>> GenerateIterationRanges(int frameLength, List<TrustData> trustDataList)
+        private List<Tuple<TrustData, int>> GenerateIterationRanges(int frameLength, List<TrustData> trustDataList)
         {
-            List<Tuple<int, int>> iterationRanges = new List<Tuple<int, int>>();
-            iterationRanges.Add(Tuple.Create(0, trustDataList.First().frameIndex));
+            List<Tuple<TrustData, int>> iterationRanges = new List<Tuple<TrustData, int>>();
+            iterationRanges.Add(Tuple.Create(trustDataList.First(), 0));
             // 基準フレームが複数の場合
             if (trustDataList.Count >= 2)
             {
                 for (int i = 0; i < trustDataList.Count; i++)
                 {
-                    int currIndex = trustDataList[i].frameIndex;
-                    int nextIndex = trustDataList[i + 1].frameIndex;
-                    int halfIndex = (currIndex + nextIndex) / 2;
-                    iterationRanges.Add(Tuple.Create(currIndex, halfIndex));
-                    iterationRanges.Add(Tuple.Create(nextIndex, halfIndex + 1));
+                    TrustData curr = trustDataList[i];
+                    TrustData next = trustDataList[i + 1];
+                    int halfIndex = (curr.frameIndex + next.frameIndex) / 2;
+                    iterationRanges.Add(Tuple.Create(curr, halfIndex));
+                    iterationRanges.Add(Tuple.Create(next, halfIndex + 1));
                 }
             }
-            iterationRanges.Add(Tuple.Create(trustDataList.Last().frameIndex, frameLength - 1));
+            iterationRanges.Add(Tuple.Create(trustDataList.Last(), frameLength - 1));
             return iterationRanges;
+        }
+
+        /// <summary>
+        /// 昇順かどうかを判定して適切なRangeを生成する
+        /// </summary>
+        /// <param name="first"></param>
+        /// <param name="second"></param>
+        /// <returns></returns>
+        private IEnumerable<int> GenerateContinuousRange(int first, int second)
+        {
+            if (first < second)
+            {
+                return Enumerable.Range(first, second);
+            }
+            else
+            {
+                return Enumerable.Reverse(Enumerable.Range(second, first));
+            }
         }
 
         public void Correct(FrameSequence frameSeq)
         {
-            // 1. iteration
-            // 2. pivot
+            // generate iteration
+            List<Tuple<TrustData, int>> iterations = this.GenerateIterationRanges(frameSeq.Frames.Count(), frameSeq.trustData);
+            foreach (Tuple<TrustData, int> iterationRange in iterations)
+            {
+                // set and calcurate pivot
+                TrustData trustData = iterationRange.Item1;
+                SerializableBody pivotBody = trustData.GetBody(frameSeq.Frames);
+                // translate to world coordinate
+                Dictionary<JointType, CvPoint3D64f> pivotJoints = pivotBody.Joints.ToDictionary(p => p.Key, 
+                    p => CvEx.ConvertPoint3D(p.Value.Position.ToCvPoint3D(), frameSeq.ToWorldConversions[trustData.recordIndex]));
+                CvPoint3D64f pivotBodyCrossVector = this.BodyCrossVector(pivotJoints);
+                pivotBody.bodyCrossVector = pivotBodyCrossVector.ToArrayPoints();
+                double bodyAngle = this.BodyAngle(pivotBodyCrossVector);
+                pivotBody.bodyAngle = bodyAngle;
+                // 繰り返し範囲の連続indexを生成して回す
+                foreach (int frameIndex in this.GenerateContinuousRange(trustData.frameIndex, iterationRange.Item2))
+                {
+                    for (int recordNo = 0; recordNo < frameSeq.recordNum; recordNo++)
+                    {
+                        // pivotと一致した場合
+                        if (trustData.recordIndex == recordNo && trustData.frameIndex == frameIndex)
+                        {
+                            continue;
+                        }
+
+                    }
+                }
+                
+            }
             // 3. vector, angle
             // 4. reverse
             // 5. occulusion
