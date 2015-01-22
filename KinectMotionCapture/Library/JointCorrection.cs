@@ -18,7 +18,7 @@ namespace KinectMotionCapture
         /// </summary>
         /// <param name="body"></param>
         /// <returns></returns>
-        private CvPoint3D64f BodyCrossVector(Dictionary<JointType, CvPoint3D64f> joints)
+        private CvPoint3D64f CalcBodyCrossVector(Dictionary<JointType, CvPoint3D64f> joints)
         {
             if (joints.ContainsKey(JointType.SpineBase) && joints.ContainsKey(JointType.ShoulderRight) && joints.ContainsKey(JointType.ShoulderLeft))
             {
@@ -35,7 +35,7 @@ namespace KinectMotionCapture
         /// </summary>
         /// <param name="bodyCrossVector"></param>
         /// <returns></returns>
-        private double BodyAngle(CvPoint3D64f bodyCrossVector)
+        private double CalcBodyAngle(CvPoint3D64f bodyCrossVector)
         {
             CvPoint3D64f zVector = new CvPoint3D64f(0, 0, 1);
             double angle = CvEx.Cos(bodyCrossVector, zVector);
@@ -174,27 +174,58 @@ namespace KinectMotionCapture
                 // translate to world coordinate
                 Dictionary<JointType, CvPoint3D64f> pivotJoints = pivotBody.Joints.ToDictionary(p => p.Key, 
                     p => CvEx.ConvertPoint3D(p.Value.Position.ToCvPoint3D(), frameSeq.ToWorldConversions[trustData.recordIndex]));
-                CvPoint3D64f pivotBodyCrossVector = this.BodyCrossVector(pivotJoints);
+                CvPoint3D64f pivotBodyCrossVector = this.CalcBodyCrossVector(pivotJoints);
+                double bodyAngle = this.CalcBodyAngle(pivotBodyCrossVector);
                 pivotBody.bodyCrossVector = pivotBodyCrossVector.ToArrayPoints();
-                double bodyAngle = this.BodyAngle(pivotBodyCrossVector);
                 pivotBody.bodyAngle = bodyAngle;
                 // 繰り返し範囲の連続indexを生成して回す
                 foreach (int frameIndex in this.GenerateContinuousRange(trustData.frameIndex, iterationRange.Item2))
                 {
+                    // jointの数が多いやつを集計するための
+                    int[] jointCounts = new int[frameSeq.recordNum];
                     for (int recordNo = 0; recordNo < frameSeq.recordNum; recordNo++)
                     {
                         // pivotと一致した場合
                         if (trustData.recordIndex == recordNo && trustData.frameIndex == frameIndex)
                         {
+                            jointCounts[recordNo] = pivotJoints.Keys.Count();
                             continue;
                         }
+                        SerializableBody body = frameSeq.Frames[frameIndex].GetSelectedBody(recordNo, integratedId: trustData.integratedBodyId);
+                        if (body == null || body == default(SerializableBody) || body.Joints.Count == 0)
+                        {
+                            jointCounts[recordNo] = 0;
+                            continue;
+                        }
+                        Dictionary<JointType, CvPoint3D64f> joints = body.Joints.ToDictionary(p => p.Key,
+                            p => CvEx.ConvertPoint3D(p.Value.Position.ToCvPoint3D(), frameSeq.ToWorldConversions[recordNo]));
+                        CvPoint3D64f bodyCrossVector = this.CalcBodyCrossVector(joints);
+                        bodyAngle = this.CalcBodyAngle(bodyCrossVector);
+                        body.bodyCrossVector = bodyCrossVector.ToArrayPoints();
+                        body.bodyAngle = bodyAngle;
+                        // reverse check
+                        if (CvEx.Cos(bodyCrossVector, pivotBody.bodyCrossVector.ToCvPoint3D()) <= -0.8)
+                        {
+                            // reverse and update
+                            body.Joints = this.ReverseBody(body.Joints);
+                            joints = body.Joints.ToDictionary(p => p.Key,
+                                p => CvEx.ConvertPoint3D(p.Value.Position.ToCvPoint3D(), frameSeq.ToWorldConversions[recordNo]));
+                            bodyCrossVector = this.CalcBodyCrossVector(joints);
+                            bodyAngle = this.CalcBodyAngle(bodyCrossVector);
+                        }
+                        body.bodyCrossVector = bodyCrossVector.ToArrayPoints();
+                        body.bodyAngle = bodyAngle;
 
+                        jointCounts[recordNo] = body.Joints.Keys.Count();
                     }
+                    // max joint count recordNo
+                    int pivotRecordNo = jointCounts.ToList().IndexOf(jointCounts.Max());
+                    // update pivot body
+                    pivotBody = frameSeq.Frames[frameIndex].GetSelectedBody(pivotRecordNo, integratedId: trustData.integratedBodyId);
                 }
                 
             }
-            // 3. vector, angle
-            // 4. reverse
+
             // 5. occulusion
             // 6. normalize
         }
