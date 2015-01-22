@@ -213,9 +213,14 @@ namespace KinectMotionCapture
                             bodyCrossVector = this.CalcBodyCrossVector(joints);
                             bodyAngle = this.CalcBodyAngle(bodyCrossVector);
                         }
+                        // set to body
                         body.bodyCrossVector = bodyCrossVector.ToArrayPoints();
                         body.bodyAngle = bodyAngle;
-
+                        // remove occulusion
+                        body = this.CleanOcculusions(body);
+                        // normalize
+                        body.Joints = this.NormalizeLegJoints(body.Joints, frameSeq.BodyStat.boneLengthSqStatistics);
+                        // update joint count
                         jointCounts[recordNo] = body.Joints.Keys.Count();
                     }
                     // max joint count recordNo
@@ -223,11 +228,7 @@ namespace KinectMotionCapture
                     // update pivot body
                     pivotBody = frameSeq.Frames[frameIndex].GetSelectedBody(pivotRecordNo, integratedId: trustData.integratedBodyId);
                 }
-                
             }
-
-            // 5. occulusion
-            // 6. normalize
         }
     }
 }
