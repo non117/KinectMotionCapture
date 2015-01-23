@@ -574,9 +574,6 @@ namespace KinectMotionCapture
             frameSequence.Segmentations = segm.ToList();
             // UserIdを選択するUIのリフレッシュ
             this.UpdateIntegratedIds();
-            //debug
-            JointMirroredCorrection.Correct(frameSequence);
-            JointMirroredCorrection.SequentialCorrect(frameSequence);
         }
 
         /// <summary>
@@ -1002,6 +999,20 @@ namespace KinectMotionCapture
                 }
             }
 
+        }
+
+        /// <summary>
+        /// 骨格を修正するボタン
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CorrectJoints_Click(object sender, RoutedEventArgs e)
+        {
+            //debug
+            //JointMirroredCorrection.Correct(frameSequence);
+            //JointMirroredCorrection.SequentialCorrect(frameSequence);
+            JointCorrection jc = new JointCorrection();
+            jc.Correct(this.frameSequence);
         }
     }
 }
