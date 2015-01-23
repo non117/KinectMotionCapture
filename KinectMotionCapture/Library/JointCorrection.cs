@@ -126,12 +126,13 @@ namespace KinectMotionCapture
         /// <returns></returns>
         private List<Tuple<TrustData, int>> GenerateIterationRanges(int frameLength, List<TrustData> trustDataList)
         {
+            trustDataList.Sort((a, b) => a.frameIndex - b.frameIndex);
             List<Tuple<TrustData, int>> iterationRanges = new List<Tuple<TrustData, int>>();
             iterationRanges.Add(Tuple.Create(trustDataList.First(), 0));
             // 基準フレームが複数の場合
             if (trustDataList.Count >= 2)
             {
-                for (int i = 0; i < trustDataList.Count; i++)
+                for (int i = 0; i < trustDataList.Count() - 1; i++)
                 {
                     TrustData curr = trustDataList[i];
                     TrustData next = trustDataList[i + 1];
@@ -154,11 +155,11 @@ namespace KinectMotionCapture
         {
             if (first < second)
             {
-                return Enumerable.Range(first, second);
+                return Enumerable.Range(first, second - first + 1);
             }
             else
             {
-                return Enumerable.Reverse(Enumerable.Range(second, first));
+                return Enumerable.Reverse(Enumerable.Range(second, first - second + 1));
             }
         }
 
@@ -179,7 +180,8 @@ namespace KinectMotionCapture
                 pivotBody.bodyCrossVector = pivotBodyCrossVector.ToArrayPoints();
                 pivotBody.bodyAngle = bodyAngle;
                 // 繰り返し範囲の連続indexを生成して回す
-                foreach (int frameIndex in this.GenerateContinuousRange(trustData.frameIndex, iterationRange.Item2))
+                IEnumerable<int> continuousRange = this.GenerateContinuousRange(trustData.frameIndex, iterationRange.Item2);
+                foreach (int frameIndex in continuousRange)
                 {
                     // jointの数が多いやつを集計するための
                     int[] jointCounts = new int[frameSeq.recordNum];
