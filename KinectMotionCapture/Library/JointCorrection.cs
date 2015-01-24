@@ -22,8 +22,8 @@ namespace KinectMotionCapture
         {
             if (joints.ContainsKey(JointType.SpineBase) && joints.ContainsKey(JointType.ShoulderRight) && joints.ContainsKey(JointType.ShoulderLeft))
             {
-                CvPoint3D64f torsoToRightShoulder = joints[JointType.SpineMid] - joints[JointType.ShoulderRight];
-                CvPoint3D64f torsoToLeftShoulder = joints[JointType.SpineMid] - joints[JointType.ShoulderLeft];
+                CvPoint3D64f torsoToRightShoulder = joints[JointType.ShoulderRight] - joints[JointType.SpineMid];
+                CvPoint3D64f torsoToLeftShoulder = joints[JointType.ShoulderLeft] - joints[JointType.SpineMid];
                 CvPoint3D64f bodyCross = CvEx.Cross(torsoToRightShoulder, torsoToLeftShoulder);
                 return bodyCross;
             }
