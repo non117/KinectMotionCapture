@@ -218,10 +218,6 @@ namespace KinectMotionCapture
                         // set to body
                         body.bodyCrossVector = bodyCrossVector.ToArrayPoints();
                         body.bodyAngle = bodyAngle;
-                        // remove occulusion
-                        body = this.CleanOcculusions(body);
-                        // normalize
-                        body.Joints = this.NormalizeLegJoints(body.Joints, frameSeq.BodyStat.boneLengthSqStatistics);
                         // update joint count
                         jointCounts[recordNo] = body.Joints.Keys.Count();
                     }
@@ -231,6 +227,13 @@ namespace KinectMotionCapture
                     pivotBody = frameSeq.Frames[frameIndex].GetSelectedBody(pivotRecordNo, integratedId: trustData.integratedBodyId);
                 }
             }
+        }
+
+
+        public void Normalize(FrameSequence frameSeq)
+        {
+            // TODO : 
+            //body.Joints = this.NormalizeLegJoints(body.Joints, frameSeq.BodyStat.boneLengthSqStatistics);
         }
     }
 }
