@@ -1006,11 +1006,8 @@ namespace KinectMotionCapture
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void CorrectJoints_Click(object sender, RoutedEventArgs e)
+        private void CorrectMirroredJoints_Click(object sender, RoutedEventArgs e)
         {
-            //debug
-            //JointMirroredCorrection.Correct(frameSequence);
-            //JointMirroredCorrection.SequentialCorrect(frameSequence);
             JointCorrection jc = new JointCorrection();
             jc.Correct(this.frameSequence);
         }
