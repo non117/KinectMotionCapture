@@ -209,7 +209,8 @@ namespace KinectMotionCapture
                         if (CvEx.Cos(bodyCrossVector, pivotBody.bodyCrossVector.ToCvPoint3D()) <= -0.8)
                         {
                             // reverse and update
-                            body.Joints = this.ReverseBody(body.Joints);
+                            body.InverseJoints();
+                            //body.Joints = this.ReverseBody(body.Joints);
                             joints = body.Joints.ToDictionary(p => p.Key,
                                 p => CvEx.ConvertPoint3D(p.Value.Position.ToCvPoint3D(), frameSeq.ToWorldConversions[recordNo]));
                             bodyCrossVector = this.CalcBodyCrossVector(joints);
