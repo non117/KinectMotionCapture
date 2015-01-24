@@ -81,18 +81,29 @@ namespace KinectMotionCapture
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// 外積ベクトルを蓄積する
+        /// </summary>
+        /// <param name="joints"></param>
+        /// <param name="conversionMatrix"></param>
+        public void StoreCrossVector(Dictionary<JointType, Joint> joints, CvMat conversionMatrix)
+        {
+            Dictionary<JointType, CvPoint3D64f> validJoints = Utility.GetValidJoints(joints).ToDictionary(
+                p => p.Key, p => CvEx.ConvertPoint3D(p.Value.Position.ToCvPoint3D(), conversionMatrix));
             // 右半身の外積ベクトル
             if (validJoints.ContainsKey(JointType.ShoulderRight) && validJoints.ContainsKey(JointType.SpineShoulder) && validJoints.ContainsKey(JointType.SpineBase))
             {
-                CvPoint3D64f spineBaseToSpineShoulder = validJoints[JointType.SpineBase].Position.ToCvPoint3D() - validJoints[JointType.SpineShoulder].Position.ToCvPoint3D();
-                CvPoint3D64f spineBaseToRightShoulder = validJoints[JointType.SpineBase].Position.ToCvPoint3D() - validJoints[JointType.ShoulderRight].Position.ToCvPoint3D();
+                CvPoint3D64f spineBaseToSpineShoulder = validJoints[JointType.SpineBase] - validJoints[JointType.SpineShoulder];
+                CvPoint3D64f spineBaseToRightShoulder = validJoints[JointType.SpineBase] - validJoints[JointType.ShoulderRight];
                 this.rightBodyCrossVectors.Add(CvEx.Cross(spineBaseToSpineShoulder, spineBaseToRightShoulder));
             }
             // 左半身の外積ベクトル
             if (validJoints.ContainsKey(JointType.ShoulderLeft) && validJoints.ContainsKey(JointType.SpineShoulder) && validJoints.ContainsKey(JointType.SpineBase))
             {
-                CvPoint3D64f spineBaseToSpineShoulder = validJoints[JointType.SpineBase].Position.ToCvPoint3D() - validJoints[JointType.SpineShoulder].Position.ToCvPoint3D();
-                CvPoint3D64f spineBaseToLeftShoulder = validJoints[JointType.SpineBase].Position.ToCvPoint3D() - validJoints[JointType.ShoulderLeft].Position.ToCvPoint3D();
+                CvPoint3D64f spineBaseToSpineShoulder = validJoints[JointType.SpineBase] - validJoints[JointType.SpineShoulder];
+                CvPoint3D64f spineBaseToLeftShoulder = validJoints[JointType.SpineBase] - validJoints[JointType.ShoulderLeft];
                 this.leftBodyCrossVectors.Add(CvEx.Cross(spineBaseToSpineShoulder, spineBaseToLeftShoulder));
             }
         }
@@ -209,6 +220,8 @@ namespace KinectMotionCapture
             };
             this.boneLengthSqLog = new Dictionary<Bone, List<double>>();
             this.boneLengthSqStatistics = new Dictionary<Bone, BoneStatistics>();
+            this.rightBodyCrossVectors = new List<CvPoint3D64f>();
+            this.leftBodyCrossVectors = new List<CvPoint3D64f>();
         }
     }
 }

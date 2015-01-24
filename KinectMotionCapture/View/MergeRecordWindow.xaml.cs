@@ -957,6 +957,7 @@ namespace KinectMotionCapture
 
         /// <summary>
         /// 骨の統計情報を記録しておく
+        /// TODO : ボタンを使えなくしてしまえば良いのでは？
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -966,9 +967,10 @@ namespace KinectMotionCapture
             foreach (Frame frame in this.frameSequence.Frames)
             {
                 List<SerializableBody> bodies = frame.GetSelectedBodyList(this.frameSequence.selecteedIntegretedIdList);
-                foreach (var body in bodies)
+                for (int no = 0; no < frame.recordNum; no++)
                 {
-                    bodyStat.StoreBoneLength(body.Joints);
+                    bodyStat.StoreBoneLength(bodies[no].Joints);
+                    bodyStat.StoreCrossVector(bodies[no].Joints, this.frameSequence.ToWorldConversions[no]);
                 }
             }
             bodyStat.CalcMedianBoneRange();
