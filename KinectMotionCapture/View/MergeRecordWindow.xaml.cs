@@ -967,6 +967,10 @@ namespace KinectMotionCapture
             foreach (Frame frame in this.frameSequence.Frames)
             {
                 List<SerializableBody> bodies = frame.GetSelectedBodyList(this.frameSequence.selecteedIntegretedIdList);
+                if (bodies.Count == 0)
+                {
+                    continue;
+                }
                 for (int no = 0; no < frame.recordNum; no++)
                 {
                     bodyStat.StoreBoneLength(bodies[no].Joints);
