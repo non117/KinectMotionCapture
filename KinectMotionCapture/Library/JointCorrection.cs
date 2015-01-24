@@ -24,7 +24,7 @@ namespace KinectMotionCapture
             {
                 CvPoint3D64f torsoToRightShoulder = joints[JointType.ShoulderRight] - joints[JointType.SpineMid];
                 CvPoint3D64f torsoToLeftShoulder = joints[JointType.ShoulderLeft] - joints[JointType.SpineMid];
-                CvPoint3D64f bodyCross = CvEx.Cross(torsoToRightShoulder, torsoToLeftShoulder);
+                CvPoint3D64f bodyCross = CvEx.Cross(torsoToLeftShoulder, torsoToRightShoulder);
                 return bodyCross;
             }
             return default(CvPoint3D64f);
@@ -176,7 +176,16 @@ namespace KinectMotionCapture
                 Dictionary<JointType, CvPoint3D64f> pivotJoints = pivotBody.Joints.ToDictionary(p => p.Key, 
                     p => CvEx.ConvertPoint3D(p.Value.Position.ToCvPoint3D(), frameSeq.ToWorldConversions[trustData.recordIndex]));
                 CvPoint3D64f pivotBodyCrossVector = this.CalcBodyCrossVector(pivotJoints);
+                // -1が正しい
                 double bodyAngle = this.CalcBodyAngle(pivotBodyCrossVector);
+                if (bodyAngle > 0)
+                {
+                    pivotBody.InverseJoints();
+                    pivotJoints = pivotBody.Joints.ToDictionary(p => p.Key,
+                    p => CvEx.ConvertPoint3D(p.Value.Position.ToCvPoint3D(), frameSeq.ToWorldConversions[trustData.recordIndex]));
+                    pivotBodyCrossVector = this.CalcBodyCrossVector(pivotJoints);
+                    bodyAngle = this.CalcBodyAngle(pivotBodyCrossVector);
+                }
                 pivotBody.bodyCrossVector = pivotBodyCrossVector.ToArrayPoints();
                 pivotBody.bodyAngle = bodyAngle;
                 // 繰り返し範囲の連続indexを生成して回す
@@ -184,19 +193,19 @@ namespace KinectMotionCapture
                 foreach (int frameIndex in continuousRange)
                 {
                     // jointの数が多いやつを集計するための
-                    int[] jointCounts = new int[frameSeq.recordNum];
+                    double[] bodyAngles = new double[frameSeq.recordNum];
                     for (int recordNo = 0; recordNo < frameSeq.recordNum; recordNo++)
                     {
                         // pivotと一致した場合
                         if (trustData.recordIndex == recordNo && trustData.frameIndex == frameIndex)
                         {
-                            jointCounts[recordNo] = pivotJoints.Keys.Count();
+                            bodyAngles[recordNo] = pivotBody.bodyAngle;
                             continue;
                         }
                         SerializableBody body = frameSeq.Frames[frameIndex].GetSelectedBody(recordNo, integratedId: trustData.integratedBodyId);
                         if (body == null || body == default(SerializableBody) || body.Joints.Count == 0)
                         {
-                            jointCounts[recordNo] = 0;
+                            bodyAngles[recordNo] = 100;
                             continue;
                         }
                         Dictionary<JointType, CvPoint3D64f> joints = body.Joints.ToDictionary(p => p.Key,
@@ -220,10 +229,10 @@ namespace KinectMotionCapture
                         body.bodyCrossVector = bodyCrossVector.ToArrayPoints();
                         body.bodyAngle = bodyAngle;
                         // update joint count
-                        jointCounts[recordNo] = body.Joints.Keys.Count();
+                        bodyAngles[recordNo] = body.bodyAngle;
                     }
-                    // max joint count recordNo
-                    int pivotRecordNo = jointCounts.ToList().IndexOf(jointCounts.Max());
+                    // 光軸と胸の正面方向が逆、-1に近いほどよい
+                    int pivotRecordNo = bodyAngles.ToList().IndexOf(bodyAngles.Min());
                     // update pivot body
                     pivotBody = frameSeq.Frames[frameIndex].GetSelectedBody(pivotRecordNo, integratedId: trustData.integratedBodyId);
                 }
