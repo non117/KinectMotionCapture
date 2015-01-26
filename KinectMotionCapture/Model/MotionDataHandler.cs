@@ -445,6 +445,30 @@ namespace KinectMotionCapture
             this.depthSpacePoints = newDepthPoints;
         }
 
+        /// <summary>
+        /// 骨を取り除く
+        /// </summary>
+        /// <param name="joints"></param>
+        /// <param name="removeJoints"></param>
+        public void RemoveJoints(List<JointType> removeJoints)
+        {
+            Dictionary<JointType, Joint> newJoints = this.Joints.CloneDeep();
+            Dictionary<JointType, Point> newColorPoints = this.colorSpacePoints.CloneDeep();
+            Dictionary<JointType, Point> newDepthPoints = this.depthSpacePoints.CloneDeep();
+            foreach (JointType jointType in removeJoints)
+            {
+                if (newJoints.ContainsKey(jointType))
+                    newJoints.Remove(jointType);
+                if (newColorPoints.ContainsKey(jointType))
+                    newColorPoints.Remove(jointType);
+                if (newDepthPoints.ContainsKey(jointType))
+                    newDepthPoints.Remove(jointType);
+            }
+            this.Joints = newJoints;
+            this.colorSpacePoints = newColorPoints;
+            this.depthSpacePoints = newDepthPoints;
+        }
+
         public Dictionary<Activity, DetectionResult> Activities { get; set; }
         public Dictionary<Appearance, DetectionResult> Appearance { get; set; }
         public FrameEdges ClippedEdges { get; set; }

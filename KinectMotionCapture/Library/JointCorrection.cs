@@ -67,33 +67,6 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
-        /// 骨を取り除く
-        /// </summary>
-        /// <param name="joints"></param>
-        /// <param name="removeJoints"></param>
-        private Dictionary<JointType, Joint> RemoveJoints(Dictionary<JointType, Joint> joints, List<JointType> removeJoints)
-        {
-            Dictionary<JointType, Joint> newJoints = joints.CloneDeep();
-            foreach (JointType jointType in removeJoints)
-            {
-                if (newJoints.ContainsKey(jointType))
-                {
-                    newJoints.Remove(jointType);
-                }
-            }
-            return newJoints;
-        }
-
-        /// <summary>
-        /// 身体の骨を反転する
-        /// </summary>
-        /// <param name="joints"></param>
-        private Dictionary<JointType, Joint> ReverseBody(Dictionary<JointType, Joint> joints)
-        {
-            return joints.ToDictionary(p => CalcEx.GetMirroredJoint(p.Key), p => p.Value);
-        }
-
-        /// <summary>
         /// 遮蔽された身体を削除する
         /// </summary>
         /// <param name="body"></param>
@@ -107,12 +80,12 @@ namespace KinectMotionCapture
                 if (body.bodyCrossVector[0] > 0)
                 {
                     List<JointType> removeJoints = Utility.RightBody.ToList().Concat(Utility.Spines.ToList()).ToList();
-                    newBody.Joints = this.RemoveJoints(body.Joints, removeJoints);
+                    newBody.RemoveJoints(removeJoints);
                 }
                 else
                 {
                     List<JointType> removeJoints = Utility.LeftBody.ToList().Concat(Utility.Spines.ToList()).ToList();
-                    newBody.Joints = this.RemoveJoints(body.Joints, removeJoints);
+                    newBody.RemoveJoints(removeJoints);
                 }
             }
             return newBody;
