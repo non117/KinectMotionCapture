@@ -642,6 +642,15 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
+        /// validフラグをまとめて返すやつ
+        /// </summary>
+        /// <returns></returns>
+        public bool[] GetValidFlags()
+        {
+            return this.records.Select(md => md.isValid).ToArray();
+        }
+
+        /// <summary>
         /// Bodyの左右を反転する
         /// </summary>
         /// <param name="recordNo"></param>
@@ -809,11 +818,16 @@ namespace KinectMotionCapture
                 return convList;
             }
 
+            bool[] validFlags = frame.GetValidFlags();
+
             for (int j = 1; j < frame.recordNum; j++)
             {
                 Dictionary<JointType, Joint> joint1 = Utility.GetValidJoints(bodies[0].Joints);
                 Dictionary<JointType, Joint> joint2 = Utility.GetValidJoints(bodies[j].Joints);
-
+                if (validFlags[0] && validFlags[j] == false)
+                {
+                    continue;
+                }
                 ICoordConversion3D crtc = new CoordRotTransConversion();
                 foreach (JointType jointType in Enum.GetValues(typeof(JointType)))
                 {
@@ -851,13 +865,20 @@ namespace KinectMotionCapture
                     bodies = frame.GetSelectedBodyList(integratedIds:frameSeq.selecteedIntegretedIdList);
                 }
                 if (bodies.Count() != frame.recordNum)
+                {
                     continue;
+                }
+
+                bool[] validFlags = frame.GetValidFlags();
 
                 for (int i = 0; i < frame.recordNum; i++)
                 {
                     for (int j = i + 1; j < frame.recordNum; j++)
                     {
-
+                        if (validFlags[i] && validFlags[j] == false)
+                        {
+                            continue;
+                        }
                         Dictionary<JointType, Joint> joint1 = Utility.GetValidJoints(bodies[i].Joints);
                         Dictionary<JointType, Joint> joint2 = Utility.GetValidJoints(bodies[j].Joints);
 
@@ -901,9 +922,15 @@ namespace KinectMotionCapture
                         continue;
 
                     List<CvSize> depthUsersizeList = frame.DepthUserSize;
+                    bool[] validFlags = frame.GetValidFlags();
 
                     foreach (KeyValuePair<int, int> dependencyPair in CalcEx.EnumerateDependencyPairs(baseRecordIndex, dependencies))
                     {
+                        if (validFlags[dependencyPair.Key] && validFlags[dependencyPair.Value] == false)
+                        {
+                            continue;
+                        }
+
                         // 変換計算用オブジェクトを拾ってくる
                         ICoordConversion3D conv;
                         if (!conversionsPerDependencyKey.TryGetValue(dependencyPair.Key, out conv))
