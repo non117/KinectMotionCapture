@@ -67,31 +67,6 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
-        /// 遮蔽された身体を削除する
-        /// </summary>
-        /// <param name="body"></param>
-        /// <returns></returns>
-        private SerializableBody CleanOcculusions(SerializableBody body)
-        {
-            SerializableBody newBody = body.CloneDeep();
-            // 閾値はてきとう
-            if (Math.Abs(body.bodyAngle) < 0.309)
-            {
-                if (body.bodyCrossVector[0] > 0)
-                {
-                    List<JointType> removeJoints = Utility.RightBody.ToList().Concat(Utility.Spines.ToList()).ToList();
-                    newBody.RemoveJoints(removeJoints);
-                }
-                else
-                {
-                    List<JointType> removeJoints = Utility.LeftBody.ToList().Concat(Utility.Spines.ToList()).ToList();
-                    newBody.RemoveJoints(removeJoints);
-                }
-            }
-            return newBody;
-        }
-
-        /// <summary>
         /// ミラー状態を補正するための基準骨格フレーム複数から、比較すべきフレームの範囲を決定する
         /// </summary>
         /// <param name="frameLength"></param>
@@ -192,7 +167,6 @@ namespace KinectMotionCapture
                         {
                             // reverse and update
                             body.InverseJoints();
-                            //body.Joints = this.ReverseBody(body.Joints);
                             joints = body.Joints.ToDictionary(p => p.Key,
                                 p => CvEx.ConvertPoint3D(p.Value.Position.ToCvPoint3D(), frameSeq.ToWorldConversions[recordNo]));
                             bodyCrossVector = this.CalcBodyCrossVector(joints);
