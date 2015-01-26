@@ -187,7 +187,7 @@ namespace KinectMotionCapture
         }
 
 
-        public void Normalize(FrameSequence frameSeq)
+        public void CleanAndNormalize(FrameSequence frameSeq)
         {
             // TODO : 
             //body.Joints = this.NormalizeLegJoints(body.Joints, frameSeq.BodyStat.boneLengthSqStatistics);

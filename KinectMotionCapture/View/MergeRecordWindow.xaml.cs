@@ -974,7 +974,6 @@ namespace KinectMotionCapture
                 for (int no = 0; no < frame.recordNum; no++)
                 {
                     bodyStat.StoreBoneLength(bodies[no].Joints);
-                    bodyStat.StoreCrossVector(bodies[no].Joints, this.frameSequence.ToWorldConversions[no]);
                 }
             }
             bodyStat.CalcMedianBoneRange();
