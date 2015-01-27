@@ -41,31 +41,6 @@ namespace KinectMotionCapture
             _conversions.Add(newFrameNo, newMapping);
         }
 
-        //public TupleStruct<int, TupleStruct<int, int>[]>[] SerializableConversions
-        //{
-        //    get
-        //    {
-        //        return _conversions.Select(p => new TupleStruct<int, TupleStruct<int, int>[]>(p.Key, p.Value.Select(q => new TupleStruct<int, int>(q.Key, q.Value)).ToArray())).ToArray();
-        //    }
-        //    set
-        //    {
-        //        _conversions = new SortedList<int, Dictionary<int, int>>();
-        //        foreach (var pair in value)
-        //        {
-        //            Dictionary<int, int> conv = new Dictionary<int, int>();
-        //            foreach (var innerPair in pair.Item2)
-        //            {
-        //                conv.Add(innerPair.Item1, innerPair.Item2);
-        //                if (_numUsers <= innerPair.Item2)
-        //                {
-        //                    _numUsers = innerPair.Item2 + 1;
-        //                }
-        //            }
-        //            _conversions.Add(pair.Item1, conv);
-        //        }
-        //    }
-        //}
-
         public void MergeSegment(int fromUser, int toUser)
         {
             if (_conversions == null)
