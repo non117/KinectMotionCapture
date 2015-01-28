@@ -179,18 +179,18 @@ namespace KinectMotionCapture
                         // そもそも骨がなかった場合
                         if (rightVector == default(CvPoint3D64f))
                         {
-                            body.RemoveJoints(Utility.RightBody.ToList());
+                            body.RemoveJoints(Utility.RightBody);
                             removedFlag = true;
                         }
                         if (leftVector == default(CvPoint3D64f))
                         {
-                            body.RemoveJoints(Utility.LeftBody.ToList());
+                            body.RemoveJoints(Utility.LeftBody);
                             removedFlag = true;
                         }
                         // 右と左のベクトルが離れすぎてる場合
                         if (bothCrossAngle <= 0)
                         {
-                            body.RemoveJoints(Utility.Body.ToList());
+                            body.RemoveJoints(Utility.UpperBody);
                             removedFlag = true;
                         }
                         if (removedFlag)

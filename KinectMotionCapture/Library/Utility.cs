@@ -489,18 +489,18 @@ namespace KinectMotionCapture
         }
 
         // 右半身
-        public static JointType[] RightBody = new JointType[]{JointType.ShoulderRight, JointType.ElbowRight, JointType.WristRight,
+        public static List<JointType> RightBody = new List<JointType>(){JointType.ShoulderRight, JointType.ElbowRight, JointType.WristRight,
                                                               JointType.HandRight, JointType.ThumbRight, JointType.HandTipRight,
                                                               JointType.HipRight, JointType.KneeRight, JointType.AnkleRight, JointType.FootRight};
         // 左半身
-        public static JointType[] LeftBody = new JointType[]{JointType.ShoulderLeft, JointType.ElbowLeft, JointType.WristLeft,
+        public static List<JointType> LeftBody = new List<JointType>(){JointType.ShoulderLeft, JointType.ElbowLeft, JointType.WristLeft,
                                                              JointType.HandLeft, JointType.ThumbLeft, JointType.HandTipLeft,
                                                              JointType.HipLeft, JointType.KneeLeft, JointType.AnkleLeft, JointType.FootLeft};
         // 体幹
-        public static JointType[] Spines = new JointType[]{JointType.Head, JointType.Neck, JointType.SpineShoulder, JointType.SpineMid, JointType.SpineBase};
+        public static List<JointType> Spines = new List<JointType>() { JointType.Head, JointType.Neck, JointType.SpineShoulder, JointType.SpineMid, JointType.SpineBase };
 
         // 上半身
-        public static JointType[] Body = RightBody.ToList().Concat(LeftBody.ToList()).Concat(Spines.ToList()).ToArray();
+        public static List<JointType> UpperBody = RightBody.Concat(LeftBody).Concat(Spines).ToList();
 
         /*
         /// <summary>
