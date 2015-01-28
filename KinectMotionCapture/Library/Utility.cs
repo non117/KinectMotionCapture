@@ -499,6 +499,9 @@ namespace KinectMotionCapture
         // 体幹
         public static JointType[] Spines = new JointType[]{JointType.Head, JointType.Neck, JointType.SpineShoulder, JointType.SpineMid, JointType.SpineBase};
 
+        // 上半身
+        public static JointType[] Body = RightBody.ToList().Concat(LeftBody.ToList()).Concat(Spines.ToList()).ToArray();
+
         /*
         /// <summary>
         /// DPマッチングのための座標, Point2D使って書き直すべき

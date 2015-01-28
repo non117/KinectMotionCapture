@@ -14,32 +14,37 @@ namespace KinectMotionCapture
     class JointCorrection
     {
         /// <summary>
-        /// 胴体の外積ベクトル
+        /// 右胸の外積ベクトル
         /// </summary>
         /// <param name="body"></param>
         /// <returns></returns>
-        private CvPoint3D64f CalcBodyCrossVector(Dictionary<JointType, CvPoint3D64f> joints)
+        private CvPoint3D64f CalcRightChestCrossVector(Dictionary<JointType, CvPoint3D64f> joints)
         {
-            if (joints.ContainsKey(JointType.SpineBase) && joints.ContainsKey(JointType.ShoulderRight) && joints.ContainsKey(JointType.ShoulderLeft))
+            if (joints.ContainsKey(JointType.SpineBase) && joints.ContainsKey(JointType.ShoulderRight))
             {
                 CvPoint3D64f torsoToRightShoulder = joints[JointType.ShoulderRight] - joints[JointType.SpineMid];
-                CvPoint3D64f torsoToLeftShoulder = joints[JointType.ShoulderLeft] - joints[JointType.SpineMid];
-                CvPoint3D64f bodyCross = CvEx.Cross(torsoToLeftShoulder, torsoToRightShoulder);
-                return bodyCross;
+                CvPoint3D64f spine = joints[JointType.SpineShoulder] - joints[JointType.SpineMid];
+                CvPoint3D64f bodyCross = CvEx.Cross(spine, torsoToRightShoulder);
+                return CvEx.Normalize(bodyCross);
             }
             return default(CvPoint3D64f);
         }
 
         /// <summary>
-        /// z軸正方向に対する胴体ベクトルの向き
+        /// 左胸の外積ベクトル
         /// </summary>
-        /// <param name="bodyCrossVector"></param>
+        /// <param name="body"></param>
         /// <returns></returns>
-        private double CalcBodyAngle(CvPoint3D64f bodyCrossVector)
+        private CvPoint3D64f CalcLeftChestCrossVector(Dictionary<JointType, CvPoint3D64f> joints)
         {
-            CvPoint3D64f zVector = new CvPoint3D64f(0, 0, 1);
-            double angle = CvEx.Cos(bodyCrossVector, zVector);
-            return angle;
+            if (joints.ContainsKey(JointType.SpineBase) && joints.ContainsKey(JointType.ShoulderLeft))
+            {
+                CvPoint3D64f torsoToLeftShoulder = joints[JointType.ShoulderLeft] - joints[JointType.SpineMid];
+                CvPoint3D64f spine = joints[JointType.SpineShoulder] - joints[JointType.SpineMid];
+                CvPoint3D64f bodyCross = CvEx.Cross(torsoToLeftShoulder, spine);
+                return CvEx.Normalize(bodyCross);
+            }
+            return default(CvPoint3D64f);
         }
 
         /// <summary>
@@ -123,65 +128,99 @@ namespace KinectMotionCapture
                 // translate to world coordinate
                 Dictionary<JointType, CvPoint3D64f> pivotJoints = pivotBody.Joints.ToDictionary(p => p.Key, 
                     p => CvEx.ConvertPoint3D(p.Value.Position.ToCvPoint3D(), frameSeq.ToWorldConversions[trustData.recordIndex]));
-                CvPoint3D64f pivotBodyCrossVector = this.CalcBodyCrossVector(pivotJoints);
-                // -1が正しい
-                double bodyAngle = this.CalcBodyAngle(pivotBodyCrossVector);
-                if (bodyAngle > 0)
+                CvPoint3D64f pivotBodyRightVector = this.CalcRightChestCrossVector(pivotJoints);
+                CvPoint3D64f pivotBodyLeftVector = this.CalcLeftChestCrossVector(pivotJoints);
+                CvPoint3D64f pivotBodyCrossVector = CvEx.Normalize(pivotBodyRightVector + pivotBodyLeftVector);
+                // z軸との角度 +だったらあっち向いてる
+                double pivotCrossZCos = CvEx.Cos(pivotBodyCrossVector, new CvPoint3D64f(0, 0, 1));
+                // ので、反転してたら修正する
+                if (pivotCrossZCos > 0)
                 {
                     pivotBody.InverseJoints();
                     pivotJoints = pivotBody.Joints.ToDictionary(p => p.Key,
                     p => CvEx.ConvertPoint3D(p.Value.Position.ToCvPoint3D(), frameSeq.ToWorldConversions[trustData.recordIndex]));
-                    pivotBodyCrossVector = this.CalcBodyCrossVector(pivotJoints);
-                    bodyAngle = this.CalcBodyAngle(pivotBodyCrossVector);
+                    pivotBodyRightVector = this.CalcRightChestCrossVector(pivotJoints);
+                    pivotBodyLeftVector = this.CalcLeftChestCrossVector(pivotJoints);
+                    pivotBodyCrossVector = CvEx.Normalize(pivotBodyRightVector + pivotBodyLeftVector);
                 }
-                pivotBody.bodyCrossVector = pivotBodyCrossVector.ToArrayPoints();
-                pivotBody.bodyAngle = bodyAngle;
+
                 // 繰り返し範囲の連続indexを生成して回す
                 IEnumerable<int> continuousRange = this.GenerateContinuousRange(trustData.frameIndex, iterationRange.Item2);
                 foreach (int frameIndex in continuousRange)
                 {
-                    // jointの数が多いやつを集計するための
-                    double[] bodyAngles = new double[frameSeq.recordNum];
+                    // 前のpivotとのベクトルの差が小さいやつを選んでいく投票空間
+                    double[] bodyCos = new double[frameSeq.recordNum];
+                    CvPoint3D64f[] bodyCrosses = new CvPoint3D64f[frameSeq.recordNum];
                     for (int recordNo = 0; recordNo < frameSeq.recordNum; recordNo++)
                     {
                         // pivotと一致した場合
                         if (trustData.recordIndex == recordNo && trustData.frameIndex == frameIndex)
                         {
-                            bodyAngles[recordNo] = pivotBody.bodyAngle;
+                            bodyCos[recordNo] = 1;
+                            bodyCrosses[recordNo] = pivotBodyCrossVector;
                             continue;
                         }
                         SerializableBody body = frameSeq.Frames[frameIndex].GetSelectedBody(recordNo, integratedId: trustData.integratedBodyId);
                         if (body == null || body == default(SerializableBody) || body.Joints.Count == 0)
                         {
-                            bodyAngles[recordNo] = 100;
+                            bodyCos[recordNo] = -1;
                             continue;
                         }
                         Dictionary<JointType, CvPoint3D64f> joints = body.Joints.ToDictionary(p => p.Key,
                             p => CvEx.ConvertPoint3D(p.Value.Position.ToCvPoint3D(), frameSeq.ToWorldConversions[recordNo]));
-                        CvPoint3D64f bodyCrossVector = this.CalcBodyCrossVector(joints);
-                        bodyAngle = this.CalcBodyAngle(bodyCrossVector);
-                        body.bodyCrossVector = bodyCrossVector.ToArrayPoints();
-                        body.bodyAngle = bodyAngle;
+                        // 右胸、左胸の外積ベクトル（正規化済み）
+                        CvPoint3D64f rightVector = this.CalcRightChestCrossVector(joints);
+                        CvPoint3D64f leftVector = this.CalcLeftChestCrossVector(joints);
+                        // 前フレームの基準ベクトルとの角度(cos)
+                        double bothCrossAngle = CvEx.Cos(rightVector, leftVector);
+                        double rightPivotAngle = CvEx.Cos(rightVector, pivotBodyCrossVector);
+                        double leftPivotAngle = CvEx.Cos(leftVector, pivotBodyCrossVector);
+                        bool removedFlag = false;
+                        // そもそも骨がなかった場合
+                        if (rightVector == default(CvPoint3D64f))
+                        {
+                            body.RemoveJoints(Utility.RightBody.ToList());
+                            removedFlag = true;
+                        }
+                        if (leftVector == default(CvPoint3D64f))
+                        {
+                            body.RemoveJoints(Utility.LeftBody.ToList());
+                            removedFlag = true;
+                        }
+                        // 右と左のベクトルが離れすぎてる場合
+                        if (bothCrossAngle <= 0)
+                        {
+                            body.RemoveJoints(Utility.Body.ToList());
+                            removedFlag = true;
+                        }
+                        if (removedFlag)
+                        {
+                            bodyCos[recordNo] = -1;
+                            continue;
+                        }
+
+                        CvPoint3D64f bodyCrossVector = CvEx.Normalize(rightVector + leftVector);
+                        double bodyCrossdiff = CvEx.Cos(bodyCrossVector, pivotBodyCrossVector);
                         // reverse check
-                        if (CvEx.Cos(bodyCrossVector, pivotBody.bodyCrossVector.ToCvPoint3D()) <= -0.8)
+                        if (bodyCrossdiff <= -0.8)
                         {
                             // reverse and update
                             body.InverseJoints();
                             joints = body.Joints.ToDictionary(p => p.Key,
                                 p => CvEx.ConvertPoint3D(p.Value.Position.ToCvPoint3D(), frameSeq.ToWorldConversions[recordNo]));
-                            bodyCrossVector = this.CalcBodyCrossVector(joints);
-                            bodyAngle = this.CalcBodyAngle(bodyCrossVector);
+                            rightVector = this.CalcRightChestCrossVector(joints);
+                            leftVector = this.CalcLeftChestCrossVector(joints);
+                            bodyCrossVector = CvEx.Normalize(rightVector + leftVector);
+                            bodyCrossdiff = CvEx.Cos(bodyCrossVector, pivotBodyCrossVector);
                         }
-                        // set to body
-                        body.bodyCrossVector = bodyCrossVector.ToArrayPoints();
-                        body.bodyAngle = bodyAngle;
-                        // update joint count
-                        bodyAngles[recordNo] = body.bodyAngle;
+                        // update body angle
+                        bodyCos[recordNo] = bodyCrossdiff;
+                        bodyCrosses[recordNo] = bodyCrossVector;
                     }
                     // 光軸と胸の正面方向が逆、-1に近いほどよい
-                    int pivotRecordNo = bodyAngles.ToList().IndexOf(bodyAngles.Min());
-                    // update pivot body
-                    pivotBody = frameSeq.Frames[frameIndex].GetSelectedBody(pivotRecordNo, integratedId: trustData.integratedBodyId);
+                    int pivotRecordNo = bodyCos.ToList().IndexOf(bodyCos.Min());
+                    // update pivot body angle, vector TODO
+                    //pivotBody = frameSeq.Frames[frameIndex].GetSelectedBody(pivotRecordNo, integratedId: trustData.integratedBodyId);
                 }
             }
         }

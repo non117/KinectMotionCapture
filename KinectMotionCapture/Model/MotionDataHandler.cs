@@ -493,10 +493,6 @@ namespace KinectMotionCapture
         [NonSerialized]
         public int integratedId = -1;
         [NonSerialized]
-        public double[] bodyCrossVector;
-        [NonSerialized]
-        public double bodyAngle;
-        [NonSerialized]
         public bool trustData = false;
     }
 }
