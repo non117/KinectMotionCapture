@@ -151,6 +151,7 @@ namespace KinectMotionCapture
                     // 前のpivotとのベクトルの差が小さいやつを選んでいく投票空間
                     double[] bodyCos = new double[frameSeq.recordNum];
                     CvPoint3D64f[] bodyCrosses = new CvPoint3D64f[frameSeq.recordNum];
+                    bool[] validFlags = frameSeq.Frames[frameIndex].GetValidFlags();
                     for (int recordNo = 0; recordNo < frameSeq.recordNum; recordNo++)
                     {
                         // pivotと一致した場合
@@ -161,7 +162,7 @@ namespace KinectMotionCapture
                             continue;
                         }
                         SerializableBody body = frameSeq.Frames[frameIndex].GetSelectedBody(recordNo, integratedId: trustData.integratedBodyId);
-                        if (body == null || body == default(SerializableBody) || body.Joints.Count == 0)
+                        if (body == null || body == default(SerializableBody) || body.Joints.Count == 0 || validFlags[recordNo] == false)
                         {
                             bodyCos[recordNo] = -1;
                             continue;
@@ -217,10 +218,10 @@ namespace KinectMotionCapture
                         bodyCos[recordNo] = bodyCrossdiff;
                         bodyCrosses[recordNo] = bodyCrossVector;
                     }
-                    // 光軸と胸の正面方向が逆、-1に近いほどよい
-                    int pivotRecordNo = bodyCos.ToList().IndexOf(bodyCos.Min());
-                    // update pivot body angle, vector TODO
-                    //pivotBody = frameSeq.Frames[frameIndex].GetSelectedBody(pivotRecordNo, integratedId: trustData.integratedBodyId);
+                    // 前のpivotVectorと似ているほどよい. つまり1に近いほど
+                    int pivotRecordNo = bodyCos.ToList().IndexOf(bodyCos.Max());
+                    // update pivot body vector
+                    pivotBodyCrossVector = bodyCrosses[pivotRecordNo];
                 }
             }
         }

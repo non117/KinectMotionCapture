@@ -546,7 +546,7 @@ namespace KinectMotionCapture
             List<Tuple<ulong, Point>> ret = new List<Tuple<ulong, Point>>();
             foreach (SerializableBody body in md.bodies)
             {
-                if (body.colorSpacePoints != null)
+                if (body.colorSpacePoints != null && body.colorSpacePoints.Count != 0)
                 {
                     ret.Add(Tuple.Create(body.TrackingId, Utility.GetAveragePoint(body.colorSpacePoints.Values)));
                 }
