@@ -964,7 +964,8 @@ namespace KinectMotionCapture
         private void StoreBonesStatistics_Click(object sender, RoutedEventArgs e)
         {
             BodyStatistics bodyStat = new BodyStatistics();
-            foreach (Frame frame in this.frameSequence.Frames)
+            IEnumerable<Frame> frames = frameSequence.Slice(this.startIndex, this.endIndex);
+            foreach (Frame frame in frames)
             {
                 List<SerializableBody> bodies = frame.GetSelectedBodyList(this.frameSequence.selecteedIntegretedIdList);
                 if (bodies.Count == 0)
@@ -978,6 +979,7 @@ namespace KinectMotionCapture
             }
             bodyStat.CalcMedianBoneRange();
             this.frameSequence.BodyStat = bodyStat;
+            Utility.SaveToBinary(bodyStat.boneLengthSqStatistics, System.IO.Path.Combine(Environment.CurrentDirectory, @"StatData.dump"));
         }
 
         /// <summary>

@@ -227,7 +227,6 @@
                 <MenuItem Name="ExportFrameRangeUserPointClouds" Header="現在のフレーム範囲のユーザの点群を出力" Click="ExportFrameRangeUserPointClouds_Click" />
             </MenuItem>
             <MenuItem Name="Edit" Header="Edit">
-                <!--
                 <MenuItem Name="MirrorSelectedRecordFrame" Header="現在のフレームで選択中のレコード・ユーザの骨格情報を左右反転する" Click="MirrorSelectedRecordFrame_Click"/>
                 <MenuItem Name="MirrorSelectedRecordRange" Header="現在のフレーム範囲で選択中のレコード・ユーザの骨格情報を左右反転する" Click="MirrorSelectedRecordRange_Click"/>
                 <Separator/>

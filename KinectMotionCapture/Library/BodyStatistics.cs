@@ -14,6 +14,7 @@ namespace KinectMotionCapture
     /// <summary>
     /// 骨の統計情報を格納するための構造体
     /// </summary>
+    [Serializable]
     public struct BoneStatistics
     {
         public double minLengthSq;
@@ -49,8 +50,6 @@ namespace KinectMotionCapture
         // 骨一覧
         private List<Bone> bones;
         private JointType[] arms;
-        private List<CvPoint3D64f> rightBodyCrossVectors;
-        private List<CvPoint3D64f> leftBodyCrossVectors;
         private Dictionary<Bone, List<double>> boneLengthSqLog;
         public Dictionary<Bone, BoneStatistics> boneLengthSqStatistics;
 
@@ -195,8 +194,6 @@ namespace KinectMotionCapture
             };
             this.boneLengthSqLog = new Dictionary<Bone, List<double>>();
             this.boneLengthSqStatistics = new Dictionary<Bone, BoneStatistics>();
-            this.rightBodyCrossVectors = new List<CvPoint3D64f>();
-            this.leftBodyCrossVectors = new List<CvPoint3D64f>();
         }
     }
 }
