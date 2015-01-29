@@ -802,66 +802,6 @@ namespace KinectMotionCapture
             }
         }
 
-        private Point startPoint;
-        private Rectangle rect;
-        private int recordInvalidStart;
-
-        /// <summary>
-        /// レコードのスライダーでのマウスダウン
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void CanvasMouseDown(object sender, MouseButtonEventArgs e)
-        {
-            Slider slider = (Slider)sender;
-            int index = slider.Name[slider.Name.Length - 1] - '0' - 1;
-            startPoint = e.GetPosition(slider);
-            rect = new Rectangle { Stroke = Brushes.OrangeRed, StrokeThickness = 6 };
-            Canvas.SetLeft(rect, startPoint.X);
-            Canvas.SetTop(rect, 0);
-            this.canvases[index].Children.Add(rect);
-            this.recordInvalidStart = (int)slider.Value;
-        }
-
-        /// <summary>
-        /// レコードのスライダーでのマウス操作
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void CanvasMouseMove(object sender, MouseEventArgs e)
-        {
-            if (e.LeftButton == MouseButtonState.Released || rect == null)
-                return;
-            Slider slider = (Slider)sender;
-            Point pos = e.GetPosition(slider);
-            double x = Math.Min(pos.X, startPoint.X);
-            double w = Math.Max(pos.X, startPoint.X) - x;
-            rect.Width = w;
-            rect.Height = 5;
-            Canvas.SetLeft(rect, x);
-            Canvas.SetTop(rect, 0);
-        }
-
-        /// <summary>
-        /// レコードのスライダーでのマウスアップ
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void CanvasMouseUp(object sender, MouseButtonEventArgs e)
-        {
-            rect = null;
-            Slider slider = (Slider)sender;
-            int index = slider.Name[slider.Name.Length - 1] - '0' - 1;
-            // フレーム範囲を無効に
-            IEnumerable<Frame> frames = frameSequence.Slice(this.recordInvalidStart, (int)slider.Value);
-            foreach (Frame frame in frames)
-            {
-                frame.SetDataNotValid(index);
-            }
-            // 初期化
-            this.recordInvalidStart = this.frameSequence.Frames.Count;
-        }
-
         /// <summary>
         /// レコードの選択範囲をクリア
         /// </summary>
@@ -1005,12 +945,54 @@ namespace KinectMotionCapture
         {
         }
 
+        private Point startPoint;
+        private Rectangle rect;
+        private int recordInvalidStart;
+
+        /// <summary>
+        /// レコードのスライダーでのマウスダウン
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CanvasMouseDown(object sender, MouseButtonEventArgs e)
+        {
+        }
+
+        /// <summary>
+        /// レコードのスライダーでのマウス操作
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CanvasMouseMove(object sender, MouseEventArgs e)
+        {
+            //if (e.LeftButton == MouseButtonState.Released || rect == null)
+            //    return;
+            //Slider slider = (Slider)sender;
+            //Point pos = e.GetPosition(slider);
+            //double x = Math.Min(pos.X, startPoint.X);
+            //double w = Math.Max(pos.X, startPoint.X) - x;
+            //rect.Width = w;
+            //rect.Height = 5;
+            //Canvas.SetLeft(rect, x);
+            //Canvas.SetTop(rect, 0);
+        }
+
+        /// <summary>
+        /// レコードのスライダーでのマウスアップ
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CanvasMouseUp(object sender, MouseButtonEventArgs e)
+        {
+        }
+
         bool IsSeeking = false;
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.S)
             {
-                if (IsSeeking == false && FocusManager.GetFocusedElement(this) == this.PlaySlider)
+                var focusedElement = FocusManager.GetFocusedElement(this);
+                if (IsSeeking == false && focusedElement == this.PlaySlider)
                 {
                     this.startIndex = (int)this.PlaySlider.Value;
                     this.PlaySlider.SelectionStart = this.startIndex;
@@ -1021,6 +1003,31 @@ namespace KinectMotionCapture
                     }
                     IsSeeking = true;
                 }
+                else if (IsSeeking == false && focusedElement is Slider)
+                {
+                    Slider slider = (Slider)focusedElement;
+                    int index = slider.Name[slider.Name.Length - 1] - '0' - 1;
+                    startPoint = Mouse.GetPosition(slider);
+                    rect = new Rectangle { Stroke = Brushes.OrangeRed, StrokeThickness = 6 };
+                    Canvas.SetLeft(rect, startPoint.X);
+                    Canvas.SetTop(rect, 0);
+                    this.canvases[index].Children.Add(rect);
+                    this.recordInvalidStart = (int)slider.Value;
+                    IsSeeking = true;
+                }
+                else if (IsSeeking == true && focusedElement is Slider)
+                {
+                    if (rect == null)
+                        return;
+                    Slider slider = (Slider)sender;
+                    Point pos = Mouse.GetPosition(slider);
+                    double x = Math.Min(pos.X, startPoint.X);
+                    double w = Math.Max(pos.X, startPoint.X) - x;
+                    rect.Width = w;
+                    rect.Height = 5;
+                    Canvas.SetLeft(rect, x);
+                    Canvas.SetTop(rect, 0);
+                }
             }
         }
 
@@ -1028,7 +1035,8 @@ namespace KinectMotionCapture
         {
             if (e.Key == Key.S)
             {
-                if (IsSeeking == true && FocusManager.GetFocusedElement(this) == this.PlaySlider)
+                var focusedElement = FocusManager.GetFocusedElement(this);
+                if (IsSeeking == true && focusedElement == this.PlaySlider)
                 {
                     this.endIndex = (int)this.PlaySlider.Value;
                     this.PlaySlider.SelectionEnd = this.endIndex;
@@ -1037,6 +1045,21 @@ namespace KinectMotionCapture
                     {
                         slider.Maximum = this.endIndex;
                     }
+                    IsSeeking = false;
+                }
+                else if (IsSeeking == true && focusedElement is Slider)
+                {
+                    rect = null;
+                    Slider slider = (Slider)focusedElement;
+                    int index = slider.Name[slider.Name.Length - 1] - '0' - 1;
+                    // フレーム範囲を無効に
+                    IEnumerable<Frame> frames = frameSequence.Slice(this.recordInvalidStart, (int)slider.Value);
+                    foreach (Frame frame in frames)
+                    {
+                        frame.SetDataNotValid(index);
+                    }
+                    // 初期化
+                    this.recordInvalidStart = this.frameSequence.Frames.Count;
                     IsSeeking = false;
                 }
             }
