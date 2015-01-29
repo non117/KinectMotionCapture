@@ -1015,8 +1015,19 @@ namespace KinectMotionCapture
         /// <param name="e"></param>
         private void CorrectMirroredJoints_Click(object sender, RoutedEventArgs e)
         {
-            JointCorrection jc = new JointCorrection();
-            jc.Correct(this.frameSequence);
+            if (this.isUserSelected.All(b => b))
+            {
+                int userId = this.frameSequence.selecteedIntegretedIdList[0];
+                if (this.frameSequence.selecteedIntegretedIdList.Select(id => id == userId).All(b => b))
+                {
+                    JointCorrection jc = new JointCorrection();
+                    jc.Correct(this.frameSequence);
+                }
+                else
+                {
+                    System.Windows.MessageBox.Show("選択ユーザが一致していません");
+                }
+            }
         }
     }
 }

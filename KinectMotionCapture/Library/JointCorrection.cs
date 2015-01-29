@@ -118,6 +118,8 @@ namespace KinectMotionCapture
 
         public void Correct(FrameSequence frameSeq)
         {
+            // 選択中の統合IDをチェック
+            List<TrustData> trustDatas = frameSeq.trustData.Where(t => t.integratedBodyId == frameSeq.selecteedIntegretedIdList[0]).ToList();
             // generate iteration
             List<Tuple<TrustData, int>> iterations = this.GenerateIterationRanges(frameSeq.Frames.Count(), frameSeq.trustData);
             foreach (Tuple<TrustData, int> iterationRange in iterations)
