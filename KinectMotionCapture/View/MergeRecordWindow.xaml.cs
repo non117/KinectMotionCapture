@@ -421,38 +421,6 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
-        /// スライダーのマウスが押されたとき
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void PlaySlider_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            this.startIndex = (int)this.PlaySlider.Value;
-            this.PlaySlider.SelectionStart = this.startIndex;
-
-            foreach (Slider slider in this.recordSliders)
-            {
-                slider.Minimum = this.startIndex;
-            }
-        }
-
-        /// <summary>
-        /// スライダーのマウスが話されたとき
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void PlaySlider_MouseUp(object sender, MouseButtonEventArgs e)
-        {
-            this.endIndex = (int)this.PlaySlider.Value;
-            this.PlaySlider.SelectionEnd = this.endIndex;
-
-            foreach (Slider slider in this.recordSliders)
-            {
-                slider.Maximum = this.endIndex;
-            }
-        }
-
-        /// <summary>
         /// 人間が再生スライダーを動かした時の処理
         /// </summary>
         /// <param name="sender"></param>
@@ -1015,6 +983,61 @@ namespace KinectMotionCapture
                 else
                 {
                     System.Windows.MessageBox.Show("選択ユーザが一致していません");
+                }
+            }
+        }
+
+        /// <summary>
+        /// スライダーのマウスが押されたとき
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void PlaySlider_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+        }
+
+        /// <summary>
+        /// スライダーのマウスが離されたとき
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void PlaySlider_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+        }
+
+        bool IsSeeking = false;
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.S)
+            {
+                if (IsSeeking == false && FocusManager.GetFocusedElement(this) == this.PlaySlider)
+                {
+                    this.startIndex = (int)this.PlaySlider.Value;
+                    this.PlaySlider.SelectionStart = this.startIndex;
+
+                    foreach (Slider slider in this.recordSliders)
+                    {
+                        slider.Minimum = this.startIndex;
+                    }
+                    IsSeeking = true;
+                }
+            }
+        }
+
+        private void Window_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.S)
+            {
+                if (IsSeeking == true && FocusManager.GetFocusedElement(this) == this.PlaySlider)
+                {
+                    this.endIndex = (int)this.PlaySlider.Value;
+                    this.PlaySlider.SelectionEnd = this.endIndex;
+
+                    foreach (Slider slider in this.recordSliders)
+                    {
+                        slider.Maximum = this.endIndex;
+                    }
+                    IsSeeking = false;
                 }
             }
         }
