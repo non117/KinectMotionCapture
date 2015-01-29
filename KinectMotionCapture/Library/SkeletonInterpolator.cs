@@ -252,7 +252,7 @@ namespace KinectMotionCapture
             return CalcEx.LinearMedianSkeletons(jointsArr, modifiedReliabilityList);
         }
 
-        public static Dictionary<int, List<Dictionary<JointType, CvPoint3D64f>>> ExportFromProject(FrameSequence frameseq, int startIndex, int endIndex)
+        public static Tuple<Dictionary<int, List<Dictionary<JointType, CvPoint3D64f>>>, Dictionary<int, List<DateTime>>> ExportFromProject(FrameSequence frameseq, int startIndex, int endIndex)
         {
             TimeSpan period = new TimeSpan((long)(10000000 / frameseq.frameRate));
             List<DateTime> timestamps = new List<DateTime>();
@@ -288,6 +288,7 @@ namespace KinectMotionCapture
                 ).ToList();
 
             Dictionary<int, List<Dictionary<JointType, CvPoint3D64f>>> allBodies = new Dictionary<int, List<Dictionary<JointType, CvPoint3D64f>>>();
+            Dictionary<int, List<DateTime>> allTimes = new Dictionary<int, List<DateTime>>();
             SkeletonInterpolator skeletonInterpolator = new SkeletonInterpolator(0.5, true);
             foreach (int user in userJointPairs.Select(p => p.Item1).Distinct())            
             {
@@ -312,6 +313,7 @@ namespace KinectMotionCapture
                 }
 
                 List<Dictionary<JointType, CvPoint3D64f>> jointsSeq = new List<Dictionary<JointType, CvPoint3D64f>>();
+                List<DateTime> times = new List<DateTime>();
                 foreach(DateTime time in timestamps)
                 {
                     Dictionary<JointType, CvPoint3D64f> joints = skeletonInterpolator.IntegrateSkeleton(time, user, frameseq);
@@ -324,12 +326,12 @@ namespace KinectMotionCapture
                     {
                         jointsSeq.Add(joints);
                     }
+                    times.Add(time);
                 }
-                // 長さの帳尻合わせ
-                jointsSeq.Add(jointsSeq.Last());
                 allBodies[user] = jointsSeq;
+                allTimes[user] = times;
             }
-            return allBodies;
+            return Tuple.Create(allBodies, allTimes);
         }
     }
 }

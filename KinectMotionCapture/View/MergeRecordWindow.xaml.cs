@@ -585,13 +585,14 @@ namespace KinectMotionCapture
         {
             if (frameSequence.Segmentations != null)
             {
-                Dictionary<int, List<Dictionary<JointType, CvPoint3D64f>>> mergedBodies = SkeletonInterpolator.ExportFromProject(frameSequence, startIndex, endIndex);
+                var res = SkeletonInterpolator.ExportFromProject(frameSequence, startIndex, endIndex);
+                Dictionary<int, List<Dictionary<JointType, CvPoint3D64f>>> mergedBodies = res.Item1;
                 foreach (int userId in mergedBodies.Keys)
                 {
                     string path = System.IO.Path.Combine(Environment.CurrentDirectory, userId.ToString() + @"_Body.dump");
                     Utility.SaveBodySequence(mergedBodies[userId], path);
                 }
-                Utility.SaveTimeMetaData(frameSequence.Frames, System.IO.Path.Combine(Environment.CurrentDirectory, @"TimeData.dump"));
+                //Utility.SaveToBinary(res.Item2, System.IO.Path.Combine(Environment.CurrentDirectory, @"TimeData.dump"));
             }
         }
 
@@ -604,26 +605,25 @@ namespace KinectMotionCapture
         {
             if (frameSequence.Segmentations != null && this.isUserSelected.All(b => b))
             {
-                Dictionary<int, List<Dictionary<JointType, CvPoint3D64f>>> mergedBodies = SkeletonInterpolator.ExportFromProject(frameSequence, startIndex, endIndex);
+                var res = SkeletonInterpolator.ExportFromProject(frameSequence, startIndex, endIndex);
+                Dictionary<int, List<Dictionary<JointType, CvPoint3D64f>>> mergedBodies = res.Item1;
                 string path = System.IO.Path.Combine(Environment.CurrentDirectory, @"SelectedUserBody.dump");
                 int id = this.frameSequence.selecteedIntegretedIdList[0];
                 if (this.frameSequence.selecteedIntegretedIdList.All(i => i == id))
                 {
-                    //Utility.SaveBodySequence(mergedBodies[id], path);
                     Utility.SaveBodySequence(JointMirroredCorrection.SequentialCorrect(mergedBodies[id]), path);
+                    Utility.SaveToBinary(res.Item2[id], System.IO.Path.Combine(Environment.CurrentDirectory, @"TimeData.dump"));
                 }
-                Utility.SaveTimeMetaData(frameSequence.Frames, System.IO.Path.Combine(Environment.CurrentDirectory, @"TimeData.dump"));
-
                 //DEBUG
-                IEnumerable<Frame> frames = frameSequence.Slice(this.startIndex, this.endIndex).Where(f => f.IsAllBodyAvailable());
-                for (int i = 0; i < frameSequence.recordNum; i++)
-                {
-                    var bodies = frames.Select(f => f.GetMotionData(i).bodies.Where(b => b.integratedId == frameSequence.selecteedIntegretedIdList[i]).First());
+                //IEnumerable<Frame> frames = frameSequence.Slice(this.startIndex, this.endIndex).Where(f => f.IsAllBodyAvailable());
+                //for (int i = 0; i < frameSequence.recordNum; i++)
+                //{
+                //    var bodies = frames.Select(f => f.GetMotionData(i).bodies.Where(b => b.integratedId == frameSequence.selecteedIntegretedIdList[i]).First());
 
-                    List<Dictionary<JointType, Joint>> joints = bodies.Select(b => Utility.GetValidJoints(Utility.ApplyConversions(b.Joints, frameSequence.ToWorldConversions[i]))).ToList();
-                    path = System.IO.Path.Combine(Environment.CurrentDirectory, i.ToString() + @"_RecordBodies.dump");
-                    Utility.SaveBodySequence(joints, path);
-                }
+                //    List<Dictionary<JointType, Joint>> joints = bodies.Select(b => Utility.GetValidJoints(Utility.ApplyConversions(b.Joints, frameSequence.ToWorldConversions[i]))).ToList();
+                //    path = System.IO.Path.Combine(Environment.CurrentDirectory, i.ToString() + @"_RecordBodies.dump");
+                //    Utility.SaveBodySequence(joints, path);
+                //}
             }
         }
 

@@ -165,8 +165,6 @@ namespace KinectMotionCapture
             CvPoint3D64f prevHipVector = new CvPoint3D64f();
             List<Dictionary<JointType, CvPoint3D64f>> res = new List<Dictionary<JointType, CvPoint3D64f>>();
 
-            //List<List<double>> hoge = new List<List<double>>();
-            //List<List<double>> fuga = new List<List<double>>();
             foreach (Dictionary<JointType, CvPoint3D64f> joints in seqJoints)
             {
                 bool reverse = false;
@@ -181,16 +179,6 @@ namespace KinectMotionCapture
                     {
                         reverse = true;
                     }
-
-                    //var shor = joints[JointType.ShoulderLeft];
-                    //var shorr = joints[JointType.ShoulderRight];
-                    //hoge.Add(new List<double>() { shor.X, shor.Y, shor.Z });
-                    //fuga.Add(new List<double>() { shorr.X, shorr.Y, shorr.Z });
-                }
-                else
-                {
-                    //hoge.Add(new List<double>() { 0, 0, 0 });
-                    //fuga.Add(new List<double>() { 0, 0, 0 });
                 }
                 if (joints.ContainsKey(JointType.HipLeft) && joints.ContainsKey(JointType.HipRight))
                 {
@@ -220,8 +208,6 @@ namespace KinectMotionCapture
                     res.Add(joints);
                 }
             }
-            //Utility.SaveToCsv(@"kataL.csv", new List<string>() { "x", "y", "z" }, hoge);
-            //Utility.SaveToCsv(@"kataR.csv", new List<string>() { "x", "y", "z" }, fuga);
             return res;
         }
     }
