@@ -685,11 +685,9 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
-        /// 現在のフレームで選択中のユーザ・レコードに対して左右反転処理
+        /// 現在のレコード・ユーザで左右反転
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void MirrorSelectedRecordFrame_Click(object sender, RoutedEventArgs e)
+        private void InverseCurrentRecordUser()
         {
             int[] integratedIds = this.frameSequence.selecteedIntegretedIdList;
             ulong[] originalIds = this.frameSequence.selectedOriginalIdList;
@@ -709,6 +707,16 @@ namespace KinectMotionCapture
 
                 }
             }
+        }
+
+        /// <summary>
+        /// 現在のフレームで選択中のユーザ・レコードに対して左右反転処理
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void MirrorSelectedRecordFrame_Click(object sender, RoutedEventArgs e)
+        {
+            this.InverseCurrentRecordUser();
         }
 
         /// <summary>
@@ -965,16 +973,16 @@ namespace KinectMotionCapture
         /// <param name="e"></param>
         private void CanvasMouseMove(object sender, MouseEventArgs e)
         {
-            //if (e.LeftButton == MouseButtonState.Released || rect == null)
-            //    return;
-            //Slider slider = (Slider)sender;
-            //Point pos = e.GetPosition(slider);
-            //double x = Math.Min(pos.X, startPoint.X);
-            //double w = Math.Max(pos.X, startPoint.X) - x;
-            //rect.Width = w;
-            //rect.Height = 5;
-            //Canvas.SetLeft(rect, x);
-            //Canvas.SetTop(rect, 0);
+            if (e.LeftButton == MouseButtonState.Released || rect == null)
+                return;
+            Slider slider = (Slider)sender;
+            Point pos = e.GetPosition(slider);
+            double x = Math.Min(pos.X, startPoint.X);
+            double w = Math.Max(pos.X, startPoint.X) - x;
+            rect.Width = w;
+            rect.Height = 5;
+            Canvas.SetLeft(rect, x);
+            Canvas.SetTop(rect, 0);
         }
 
         /// <summary>
@@ -987,6 +995,7 @@ namespace KinectMotionCapture
         }
 
         bool IsSeeking = false;
+        List<int> frameInversedFlags = new List<int>();
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.S)
@@ -1017,16 +1026,25 @@ namespace KinectMotionCapture
                 }
                 else if (IsSeeking == true && focusedElement is Slider)
                 {
-                    if (rect == null)
-                        return;
-                    Slider slider = (Slider)sender;
-                    Point pos = Mouse.GetPosition(slider);
-                    double x = Math.Min(pos.X, startPoint.X);
-                    double w = Math.Max(pos.X, startPoint.X) - x;
-                    rect.Width = w;
-                    rect.Height = 5;
-                    Canvas.SetLeft(rect, x);
-                    Canvas.SetTop(rect, 0);
+                    //if (rect == null)
+                    //    return;
+                    //Slider slider = (Slider)sender;
+                    //Point pos = Mouse.GetPosition(slider);
+                    //double x = Math.Min(pos.X, startPoint.X);
+                    //double w = Math.Max(pos.X, startPoint.X) - x;
+                    //rect.Width = w;
+                    //rect.Height = 5;
+                    //Canvas.SetLeft(rect, x);
+                    //Canvas.SetTop(rect, 0);
+                }
+            }
+            else if (e.Key == Key.R)
+            {
+                int frame = this.playingIndex;
+                if (frameInversedFlags.Contains(frame) == false)
+                {
+                    this.InverseCurrentRecordUser();
+                    this.frameInversedFlags.Add(frame);
                 }
             }
         }
@@ -1062,6 +1080,10 @@ namespace KinectMotionCapture
                     this.recordInvalidStart = this.frameSequence.Frames.Count;
                     IsSeeking = false;
                 }
+            }
+            else if (e.Key == Key.R)
+            {
+                frameInversedFlags.Clear();
             }
         }
     }
