@@ -576,8 +576,16 @@ namespace KinectMotionCapture
             {
                 foreach (SerializableBody body in md.bodies)
                 {
-                    int integratedId = mapping[body.TrackingId];
-                    body.integratedId = integratedId;
+                    // 何故かキーが落ちた
+                    try
+                    {
+                        int integratedId = mapping[body.TrackingId];
+                        body.integratedId = integratedId;
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.WriteLine("why???");
+                    }
                 }
             }
         }
