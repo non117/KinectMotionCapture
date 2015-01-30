@@ -80,11 +80,16 @@ namespace KinectMotionCapture
                                                     @"E:\kinect4\coordmap.dump", 
                                                     @"E:\kinect5\coordmap.dump", 
             };
-
-            string cameradir = @"E:\kinect1\CameraInfo.dump";
+            List<string> cameradir = new List<string>() {
+                                                    @"E:\kinect1\CameraInfo.dump",  
+                                                    @"E:\kinect2\CameraInfo.dump", 
+                                                    @"E:\kinect3\CameraInfo.dump", 
+                                                    @"E:\kinect4\CameraInfo.dump", 
+                                                    @"E:\kinect5\CameraInfo.dump", 
+            };
             this.frameSequence = new FrameSequence(datadir);
             this.frameSequence.LocalCoordinateMappers = mapdir.Select(s => (LocalCoordinateMapper)Utility.LoadFromBinary(s)).ToList();
-            this.frameSequence.CameraInfo = (CameraIntrinsics)Utility.LoadFromBinary(cameradir);            
+            this.frameSequence.CameraInfo = cameradir.Select(s => (CameraIntrinsics)Utility.LoadFromBinary(s)).ToList();
         }
 
         /// <summary>

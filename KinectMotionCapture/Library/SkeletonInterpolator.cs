@@ -164,7 +164,7 @@ namespace KinectMotionCapture
         public Dictionary<JointType, CvPoint3D64f> IntegrateSkeleton(DateTime time, int userInt, FrameSequence frameSeq)
         {
             List<CvMat> ToWorldConversions = frameSeq.ToWorldConversions;
-            CameraIntrinsics cameraInfo = frameSeq.CameraInfo;
+            List<CameraIntrinsics> cameraInfo = frameSeq.CameraInfo;
             List<UserSegmentation> segm = frameSeq.Segmentations;
 
             Dictionary<JointType, CvPoint3D64f>[] jointsArr = new Dictionary<JointType, CvPoint3D64f>[frameSeq.recordNum];
@@ -229,7 +229,7 @@ namespace KinectMotionCapture
                 }
 
                 jointsArr[recordNo] = this.InterpolateSkeleton(prevData, nextData, prevJoints, nextJoints, time, ToWorldConversions[recordNo]);
-                reliabilityArr[recordNo] = this.GetSkeletonReliability(prevData, nextData, prevJoints, nextJoints, time, cameraInfo);
+                reliabilityArr[recordNo] = this.GetSkeletonReliability(prevData, nextData, prevJoints, nextJoints, time, cameraInfo[recordNo]);
                 weightArr[recordNo] = this.GetVarianceWeight(prevData, nextData, prevJoints, nextJoints, time);
             }
 

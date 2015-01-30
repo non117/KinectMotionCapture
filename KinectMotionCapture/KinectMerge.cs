@@ -68,7 +68,7 @@ namespace KinectMotionCapture
         // TODO: IEnumerableにしても良さそう。イテレータブロックとか使うらしい。        
         public List<Frame> Frames { get; set; }
         public List<LocalCoordinateMapper> LocalCoordinateMappers { get; set; }
-        public CameraIntrinsics CameraInfo { get; set; }
+        public List<CameraIntrinsics> CameraInfo { get; set; }
         public BodyStatistics BodyStat { get; set; }
         
         public List<UserSegmentation> Segmentations
