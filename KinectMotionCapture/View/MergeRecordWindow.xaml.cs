@@ -692,7 +692,7 @@ namespace KinectMotionCapture
         /// <summary>
         /// 現在のレコード・ユーザで左右反転
         /// </summary>
-        private void InverseCurrentRecordUser()
+        private void InverseRecordUser(Frame frame)
         {
             int[] integratedIds = this.frameSequence.selecteedIntegretedIdList;
             ulong[] originalIds = this.frameSequence.selectedOriginalIdList;
@@ -700,7 +700,6 @@ namespace KinectMotionCapture
             {
                 if (this.isRecordSelected[recordNo] && this.isUserSelected[recordNo])
                 {
-                    Frame frame = this.frameSequence.Frames[this.playingIndex];
                     if (frameSequence.Segmentations == null)
                     {
                         frame.InverseBody(recordNo, originalId: originalIds[recordNo]);
@@ -721,7 +720,8 @@ namespace KinectMotionCapture
         /// <param name="e"></param>
         private void MirrorSelectedRecordFrame_Click(object sender, RoutedEventArgs e)
         {
-            this.InverseCurrentRecordUser();
+            Frame frame = this.frameSequence.Frames[this.playingIndex];
+            this.InverseRecordUser(frame);
         }
 
         /// <summary>
@@ -990,7 +990,7 @@ namespace KinectMotionCapture
         }
 
         bool IsSeeking = false;
-        List<int> frameInversedFlags = new List<int>();
+        List<int> frameInverseList = new List<int>();
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.S)
@@ -1011,7 +1011,7 @@ namespace KinectMotionCapture
                 {
                     Slider slider = (Slider)focusedElement;
                     int index = slider.Name[slider.Name.Length - 1] - '0' - 1;
-                    startX = slider.ActualWidth * slider.Value / (double)(slider.Maximum - slider.Minimum);
+                    startX = Mouse.GetPosition(slider).X;//slider.ActualWidth * slider.Value / (double)(slider.Maximum - slider.Minimum);
                     rect = new Rectangle { Stroke = Brushes.OrangeRed, StrokeThickness = 6 };
                     Canvas.SetLeft(rect, startX);
                     Canvas.SetTop(rect, 0);
@@ -1024,7 +1024,7 @@ namespace KinectMotionCapture
                     if (rect == null)
                         return;
                     Slider slider = (Slider)focusedElement;
-                    double PosX = slider.ActualWidth * slider.Value / (double)(slider.Maximum - slider.Minimum);
+                    double PosX = Mouse.GetPosition(slider).X;//slider.ActualWidth * slider.Value / (double)(slider.Maximum - slider.Minimum);
                     double x = Math.Min(PosX, startX);
                     double w = Math.Max(PosX, startX) - x;
                     rect.Width = w;
@@ -1036,10 +1036,9 @@ namespace KinectMotionCapture
             else if (e.Key == Key.R)
             {
                 int frame = this.playingIndex;
-                if (frameInversedFlags.Contains(frame) == false)
+                if (frameInverseList.Contains(frame) == false)
                 {
-                    this.InverseCurrentRecordUser();
-                    this.frameInversedFlags.Add(frame);
+                    this.frameInverseList.Add(frame);
                 }
             }
         }
@@ -1078,7 +1077,12 @@ namespace KinectMotionCapture
             }
             else if (e.Key == Key.R)
             {
-                frameInversedFlags.Clear();
+                foreach (int frameIndex in frameInverseList)
+                {
+                    Frame frame = this.frameSequence.Frames[frameIndex];
+                    this.InverseRecordUser(frame);
+                }
+                frameInverseList.Clear();
             }
         }
     }
