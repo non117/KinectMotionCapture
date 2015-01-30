@@ -953,7 +953,7 @@ namespace KinectMotionCapture
         {
         }
 
-        private Point startPoint;
+        private double startX;
         private Rectangle rect;
         private int recordInvalidStart;
 
@@ -973,16 +973,6 @@ namespace KinectMotionCapture
         /// <param name="e"></param>
         private void CanvasMouseMove(object sender, MouseEventArgs e)
         {
-            if (e.LeftButton == MouseButtonState.Released || rect == null)
-                return;
-            Slider slider = (Slider)sender;
-            Point pos = e.GetPosition(slider);
-            double x = Math.Min(pos.X, startPoint.X);
-            double w = Math.Max(pos.X, startPoint.X) - x;
-            rect.Width = w;
-            rect.Height = 5;
-            Canvas.SetLeft(rect, x);
-            Canvas.SetTop(rect, 0);
         }
 
         /// <summary>
@@ -1016,9 +1006,9 @@ namespace KinectMotionCapture
                 {
                     Slider slider = (Slider)focusedElement;
                     int index = slider.Name[slider.Name.Length - 1] - '0' - 1;
-                    startPoint = Mouse.GetPosition(slider);
+                    startX = slider.ActualWidth * slider.Value / (double)(slider.Maximum - slider.Minimum);
                     rect = new Rectangle { Stroke = Brushes.OrangeRed, StrokeThickness = 6 };
-                    Canvas.SetLeft(rect, startPoint.X);
+                    Canvas.SetLeft(rect, startX);
                     Canvas.SetTop(rect, 0);
                     this.canvases[index].Children.Add(rect);
                     this.recordInvalidStart = (int)slider.Value;
@@ -1026,16 +1016,16 @@ namespace KinectMotionCapture
                 }
                 else if (IsSeeking == true && focusedElement is Slider)
                 {
-                    //if (rect == null)
-                    //    return;
-                    //Slider slider = (Slider)sender;
-                    //Point pos = Mouse.GetPosition(slider);
-                    //double x = Math.Min(pos.X, startPoint.X);
-                    //double w = Math.Max(pos.X, startPoint.X) - x;
-                    //rect.Width = w;
-                    //rect.Height = 5;
-                    //Canvas.SetLeft(rect, x);
-                    //Canvas.SetTop(rect, 0);
+                    if (rect == null)
+                        return;
+                    Slider slider = (Slider)focusedElement;
+                    double PosX = slider.ActualWidth * slider.Value / (double)(slider.Maximum - slider.Minimum);
+                    double x = Math.Min(PosX, startX);
+                    double w = Math.Max(PosX, startX) - x;
+                    rect.Width = w;
+                    rect.Height = 5;
+                    Canvas.SetLeft(rect, x);
+                    Canvas.SetTop(rect, 0);
                 }
             }
             else if (e.Key == Key.R)
