@@ -991,11 +991,14 @@ namespace KinectMotionCapture
 
         bool IsSeeking = false;
         List<int> frameInverseList = new List<int>();
+        List<int> frameRemoveList = new List<int>();
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
+            // select
             if (e.Key == Key.S)
             {
                 var focusedElement = FocusManager.GetFocusedElement(this);
+                // select処理の上のスライダー
                 if (IsSeeking == false && focusedElement == this.PlaySlider)
                 {
                     this.startIndex = (int)this.PlaySlider.Value;
@@ -1007,6 +1010,7 @@ namespace KinectMotionCapture
                     }
                     IsSeeking = true;
                 }
+                // select処理のrecordスライダー
                 else if (IsSeeking == false && focusedElement is Slider)
                 {
                     Slider slider = (Slider)focusedElement;
@@ -1019,6 +1023,7 @@ namespace KinectMotionCapture
                     this.recordInvalidStart = (int)slider.Value;
                     IsSeeking = true;
                 }
+                // select処理のrecordスライダー塗りつぶし
                 else if (IsSeeking == true && focusedElement is Slider)
                 {
                     if (rect == null)
@@ -1033,21 +1038,25 @@ namespace KinectMotionCapture
                     Canvas.SetTop(rect, 0);
                 }
             }
+            // reverse
             else if (e.Key == Key.R)
             {
-                int frame = this.playingIndex;
-                if (frameInverseList.Contains(frame) == false)
-                {
-                    this.frameInverseList.Add(frame);
-                }
+                this.frameInverseList.Add(this.playingIndex);
+            }
+            // delete upper body or legs
+            else if (e.Key == Key.U || e.Key == Key.D)
+            {
+                this.frameRemoveList.Add(this.playingIndex);
             }
         }
 
         private void Window_KeyUp(object sender, KeyEventArgs e)
         {
+            // select
             if (e.Key == Key.S)
             {
                 var focusedElement = FocusManager.GetFocusedElement(this);
+                // 上のスライダー
                 if (IsSeeking == true && focusedElement == this.PlaySlider)
                 {
                     this.endIndex = (int)this.PlaySlider.Value;
@@ -1059,6 +1068,7 @@ namespace KinectMotionCapture
                     }
                     IsSeeking = false;
                 }
+                // レコードスライダー
                 else if (IsSeeking == true && focusedElement is Slider)
                 {
                     rect = null;
@@ -1075,6 +1085,7 @@ namespace KinectMotionCapture
                     IsSeeking = false;
                 }
             }
+            // reverse
             else if (e.Key == Key.R)
             {
                 IEnumerable<int> range = Enumerable.Range(frameInverseList.Min(), (frameInverseList.Max() - frameInverseList.Min() + 1));
@@ -1084,6 +1095,34 @@ namespace KinectMotionCapture
                     this.InverseRecordUser(frame);
                 }
                 frameInverseList.Clear();
+            }
+            // delete upper body or legs
+            else if (e.Key == Key.U || e.Key == Key.D)
+            {
+                IEnumerable<int> range = Enumerable.Range(frameInverseList.Min(), (frameInverseList.Max() - frameInverseList.Min() + 1));
+                foreach (int frameIndex in range)
+                {
+                    for (int recordNo = 0; recordNo < frameSequence.recordNum; recordNo++)
+                    {
+                        if (this.isRecordSelected[recordNo])
+                        {
+                            SerializableBody body = this.frameSequence.Frames[frameIndex].GetSelectedBody(recordNo, frameSequence.selecteedIntegretedIdList[recordNo]);
+                            if (body != null)
+                            {
+                                if (e.Key == Key.U)
+                                {
+                                    body.RemoveJoints(Utility.UpperBody);
+                                }
+                                else if (e.Key == Key.D)
+                                {
+                                    body.RemoveJoints(Utility.Legs);
+                                }
+                            }
+                            // 1レコードしか処理対象ではない
+                            continue;
+                        }
+                    }
+                }
             }
         }
     }
