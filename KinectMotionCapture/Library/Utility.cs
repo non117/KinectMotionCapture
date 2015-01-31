@@ -509,6 +509,10 @@ namespace KinectMotionCapture
         // 上半身
         public static List<JointType> UpperBody = RightBody.Concat(LeftBody).Concat(Spines).ToList();
 
+        // 下半身
+        public static List<JointType> Legs = new List<JointType>() {JointType.HipRight, JointType.HipLeft, JointType.KneeRight, JointType.KneeLeft,
+                                                                    JointType.AnkleRight, JointType.AnkleLeft, JointType.FootRight, JointType.FootLeft};
+
         /*
         /// <summary>
         /// DPマッチングのための座標, Point2D使って書き直すべき
