@@ -216,22 +216,29 @@ namespace KinectMotionCapture
         /// <param name="path"></param>
         /// <param name="header"></param>
         /// <param name="data"></param>
-        public static void SaveToCsv<T>(string path, List<string> header, List<List<T>> data)
+        public static void SaveToCsv<T>(string path, List<List<T>> data,  List<string> header = null)
         {
             using (StreamWriter sw = new StreamWriter(path))
             {
-                foreach (string str in header)
+                string buffer = "";
+                if (header != null)
                 {
-                    sw.Write(str + ",");
+                    foreach (string str in header)
+                    {
+                        buffer += str + ",";
+                    }
+                    buffer.Remove(buffer.Count() - 1);
+                    sw.WriteLine(buffer);
                 }
-                sw.WriteLine();
                 foreach(List<T> line in data)
                 {
+                    buffer = "";
                     foreach(T cell in line)
-                    {                        
-                        sw.Write(cell.ToString() + ",");
+                    {
+                        buffer += cell.ToString() + ",";
                     }
-                    sw.WriteLine();
+                    buffer.Remove(buffer.Count() - 1);
+                    sw.WriteLine(buffer);
                 }
                 sw.WriteLine();
             }
