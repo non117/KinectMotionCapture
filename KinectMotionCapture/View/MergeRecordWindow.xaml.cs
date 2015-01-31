@@ -1077,7 +1077,8 @@ namespace KinectMotionCapture
             }
             else if (e.Key == Key.R)
             {
-                foreach (int frameIndex in frameInverseList)
+                IEnumerable<int> range = Enumerable.Range(frameInverseList.Min(), (frameInverseList.Max() - frameInverseList.Min() + 1));
+                foreach (int frameIndex in range)
                 {
                     Frame frame = this.frameSequence.Frames[frameIndex];
                     this.InverseRecordUser(frame);
