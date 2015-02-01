@@ -13,6 +13,9 @@ namespace KinectDataAnalyzer
 {
     using Bone = Tuple<JointType, JointType>;
 
+    /// <summary>
+    /// 骨の統計情報
+    /// </summary>
     public struct BoneStatistics
     {
         public double minLengthSq;
@@ -43,6 +46,46 @@ namespace KinectDataAnalyzer
         }
     }
 
+    /// <summary>
+    /// あるJointの座標時系列
+    /// </summary>
+    public class PointSequence
+    {
+        public List<CvPoint3D64f?> points;
+        public List<DateTime> times;
+        public JointType jointType;
+        public PointSequence(List<CvPoint3D64f?> points, List<DateTime> times, JointType jointType)
+        {
+            this.points = points;
+            this.times = times;
+            this.jointType = jointType;
+        }
+        /// <summary>
+        /// 変な点をはじく処理
+        /// </summary>
+        public void DropIrregularPoint()
+        {
+            // ここに変な点をはじく処理
+        }
+        /// <summary>
+        /// 無い点を補完する
+        /// </summary>
+        public void Interpolate()
+        {
+            // 補完処理
+        }
+        /// <summary>
+        /// csvに吐く
+        /// </summary>
+        public void Dump()
+        {
+
+        }
+    }
+
+    /// <summary>
+    /// ある瞬間の姿勢
+    /// </summary>
     public struct Pose
     {
         public Dictionary<JointType, CvPoint3D64f> joints;
@@ -52,11 +95,28 @@ namespace KinectDataAnalyzer
             this.joints = joints;
             this.timeStamp = time;
         }
+        /// <summary>
+        /// あるjointTypeの点を返す。null許容。
+        /// </summary>
+        /// <param name="jointType"></param>
+        /// <returns></returns>
+        public CvPoint3D64f? GetPoint(JointType jointType)
+        {
+            if (this.joints.ContainsKey(jointType))
+            {
+                return this.joints[jointType];
+            }
+            return null;
+        }
     }
 
+    /// <summary>
+    /// 統括するメタデータ
+    /// </summary>
     public struct MotionMetaData
     {
         public List<Pose> motionLog;
+        public Dictionary<JointType, PointSequence> pointSeqs;
         public BoneStatistics stat;
         public MotionMetaData(List<Dictionary<JointType, CvPoint3D64f>> jointsSeq, List<DateTime> timeSeq, BoneStatistics stat)
         {
@@ -65,6 +125,12 @@ namespace KinectDataAnalyzer
             {
                 Pose pose = new Pose(pair.joints, pair.time);
                 this.motionLog.Add(pose);
+            }
+            this.pointSeqs = new Dictionary<JointType, PointSequence>();
+            foreach (JointType jointType in Enum.GetValues(typeof(JointType)))
+            {
+                List<CvPoint3D64f?> points = this.motionLog.Select(m => m.GetPoint(jointType)).ToList();
+                pointSeqs[jointType] = new PointSequence(points, timeSeq, jointType);
             }
             this.stat = stat;
         }
