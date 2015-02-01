@@ -209,47 +209,26 @@ namespace KinectDataAnalyzer
         }
 
         /// <summary>
-        /// Unityに吐くためのデータ変換
+        /// Unity用に吐かれたデータを変換しておく
         /// </summary>
-        /// <param name="originalJoints"></param>
+        /// <param name="rawJointsSeq"></param>
         /// <returns></returns>
-        public static List<Dictionary<int, float[]>> ConverToCompatibleJoint(List<Dictionary<JointType, Joint>> originalJoints)
+        public static List<Dictionary<JointType, CvPoint3D64f>> ConvertToCvPoint(List<Dictionary<int, float[]>> rawJointsSeq)
         {
-            List<Dictionary<int, float[]>> newJoints = new List<Dictionary<int, float[]>>();
-            foreach (Dictionary<JointType, Joint> joints in originalJoints)
+            List<Dictionary<JointType, CvPoint3D64f>> newJointsSeq = new List<Dictionary<JointType, CvPoint3D64f>>();
+            foreach (Dictionary<int, float[]> joints in rawJointsSeq)
             {
-                Dictionary<int, float[]> body = new Dictionary<int, float[]>();
-                foreach (JointType jointType in joints.Keys)
+                Dictionary<JointType, CvPoint3D64f> newJoints = new Dictionary<JointType, CvPoint3D64f>();
+                foreach (int jointNo in joints.Keys)
                 {
-                    CameraSpacePoint position = joints[jointType].Position;
-                    float[] points = new float[] { position.X, position.Y, position.Z };                    
-                    body.Add((int)jointType, points);
+                    JointType jointType = ConvertIntToJointType(jointNo);
+                    float[] jointAry = joints[jointNo];
+                    CvPoint3D64f point = new CvPoint3D64f(jointAry[0], jointAry[1], jointAry[2]);
+                    newJoints[jointType] = point;
                 }
-                newJoints.Add(body);
+                newJointsSeq.Add(newJoints);
             }
-            return newJoints;
-        }
-
-        /// <summary>
-        /// Unityに吐くためのデータ変換
-        /// </summary>
-        /// <param name="originalJoints"></param>
-        /// <returns></returns>
-        public static List<Dictionary<int, float[]>> ConverToCompatibleJoint(List<Dictionary<JointType, CvPoint3D64f>> originalJoints)
-        {
-            List<Dictionary<int, float[]>> newJoints = new List<Dictionary<int, float[]>>();
-            foreach (Dictionary<JointType, CvPoint3D64f> joints in originalJoints)
-            {
-                Dictionary<int, float[]> body = new Dictionary<int, float[]>();
-                foreach (JointType jointType in joints.Keys)
-                {
-                    CvPoint3D64f position = joints[jointType];
-                    float[] points = new float[] { (float)position.X, (float)position.Y, (float)position.Z };
-                    body.Add((int)jointType, points);
-                }
-                newJoints.Add(body);
-            }
-            return newJoints;
+            return newJointsSeq;
         }
 
         /// <summary>
