@@ -79,7 +79,12 @@ namespace KinectDataAnalyzer
         /// </summary>
         public void Dump()
         {
-
+            List<List<string>> outputs = new List<List<string>>();
+            foreach(var pair in times.Zip(points, (time, point) => new {time, point}))
+            {
+                List<string> line = new List<string>();
+                line.Add(pair.time.ToString("mm:ss:fff"));
+            }
         }
     }
 
@@ -134,6 +139,7 @@ namespace KinectDataAnalyzer
             }
             this.stat = stat;
         }
+        // TODO, filter, interpolate呼び出し, Poseへの書き戻し, Normalizeの呼び出し, 出力への整形
     }
 
 
