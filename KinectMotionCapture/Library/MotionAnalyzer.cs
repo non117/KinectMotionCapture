@@ -102,6 +102,20 @@ namespace KinectMotionCapture
     }
 
     /// <summary>
+    /// Jointの接続関係をアレする
+    /// </summary>
+    public struct JointNode
+    {
+        JointNode[] nextNodes;
+        JointType jointType;
+        public JointNode(JointType jointType, JointNode[] next)
+        {
+            this.jointType = jointType;
+            this.nextNodes = next;
+        }
+    }
+
+    /// <summary>
     /// 統括するメタデータ
     /// </summary>
     public struct MotionMetaData
@@ -110,11 +124,12 @@ namespace KinectMotionCapture
         public Dictionary<JointType, PointSequence> pointSeqs;
         public List<Dictionary<Bone, BoneStatistics>> stats;
         public Dictionary<Bone, double> boneLengthes;
+        public JointNode rootNodes;
 
         /// <summary>
         /// 骨の長さの代表値を決定する
         /// </summary>
-        public void CalcBoneLength()
+        private void CalcBoneLength()
         {
             foreach (Bone bone in Utility.GetBones())
             {
@@ -126,7 +141,7 @@ namespace KinectMotionCapture
         /// <summary>
         /// SequenceをPoseに戻す
         /// </summary>
-        public void SequenceToPose()
+        private void SequenceToPose()
         {
             int n = motionLog.Count();
             motionLog.Clear();
@@ -143,6 +158,36 @@ namespace KinectMotionCapture
             }
         }
 
+        private JointNode InitializeNodes()
+        {
+            JointNode head = new JointNode(JointType.Head, new JointNode[] { });
+            JointNode neck = new JointNode(JointType.Neck, new JointNode[] { head });
+
+            JointNode handLeft = new JointNode(JointType.HandLeft, new JointNode[] { });
+            JointNode elbowLeft = new JointNode(JointType.ElbowLeft, new JointNode[] { handLeft });
+            JointNode shoulderLeft = new JointNode(JointType.ShoulderLeft, new JointNode[] { elbowLeft });
+
+            JointNode handRight = new JointNode(JointType.HandRight, new JointNode[] { });
+            JointNode elbowRight = new JointNode(JointType.ElbowRight, new JointNode[] { handRight });
+            JointNode shoulderRight = new JointNode(JointType.ShoulderRight, new JointNode[] { elbowRight });
+
+            JointNode footLeft = new JointNode(JointType.FootLeft, new JointNode[] { });
+            JointNode ankleLeft = new JointNode(JointType.AnkleLeft, new JointNode[] { footLeft });
+            JointNode kneeLeft = new JointNode(JointType.KneeLeft, new JointNode[] { ankleLeft });
+            JointNode hipLeft = new JointNode(JointType.HipLeft, new JointNode[] { kneeLeft });
+
+            JointNode footRight = new JointNode(JointType.FootRight, new JointNode[] { });
+            JointNode ankleRight = new JointNode(JointType.AnkleRight, new JointNode[] { footRight });
+            JointNode kneeRight = new JointNode(JointType.KneeRight, new JointNode[] { ankleRight });
+            JointNode hipRight = new JointNode(JointType.HipRight, new JointNode[] { kneeRight });
+
+            JointNode spineShoulder = new JointNode(JointType.SpineShoulder, new JointNode[] { neck, shoulderRight, shoulderLeft });
+            JointNode spineMid = new JointNode(JointType.SpineMid, new JointNode[] { spineShoulder });
+            JointNode spineBase = new JointNode(JointType.SpineBase, new JointNode[] { spineMid, hipRight, hipLeft });
+
+            return spineBase;
+        }
+
         /// <summary>
         /// こんすとらくたん
         /// </summary>
@@ -151,8 +196,9 @@ namespace KinectMotionCapture
         /// <param name="stats"></param>
         public MotionMetaData(List<Dictionary<JointType, CvPoint3D64f>> jointsSeq, List<DateTime> timeSeq, List<Dictionary<Bone, BoneStatistics>> stats)
         {
-            this.motionLog = new List<Pose>();
+            this.rootNodes = new JointNode();
             // poseのデータを生成
+            this.motionLog = new List<Pose>();
             foreach (var pair in jointsSeq.Zip(timeSeq, (joints, time) => new { joints, time }))
             {
                 Pose pose = new Pose(pair.joints, pair.time);
@@ -165,6 +211,7 @@ namespace KinectMotionCapture
                 List<CvPoint3D64f?> points = this.motionLog.Select(m => m.GetPoint(jointType)).ToList();
                 pointSeqs[jointType] = new PointSequence(points, timeSeq, jointType);
             }
+
             // すむーじんぐ            
             foreach (PointSequence pointSeq in this.pointSeqs.Values)
             {
@@ -174,6 +221,9 @@ namespace KinectMotionCapture
             this.stats = stats;
             this.boneLengthes = new Dictionary<Bone, double>();
             this.CalcBoneLength();
+
+            // nodeの接続関係をイニシャライズ            
+            this.rootNodes = this.InitializeNodes();
         }
         // TODO, 分節化, Normalizeの呼び出し, 出力への整形
     }
