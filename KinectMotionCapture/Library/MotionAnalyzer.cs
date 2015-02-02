@@ -19,6 +19,13 @@ namespace KinectMotionCapture
         public List<CvPoint3D64f?> points;
         public List<DateTime> times;
         public JointType jointType;
+        
+        /// <summary>
+        /// こんすとらくたん
+        /// </summary>
+        /// <param name="points"></param>
+        /// <param name="times"></param>
+        /// <param name="jointType"></param>
         public PointSequence(List<CvPoint3D64f?> points, List<DateTime> times, JointType jointType)
         {
             this.points = points;
@@ -68,6 +75,12 @@ namespace KinectMotionCapture
     {
         public Dictionary<JointType, CvPoint3D64f> joints;
         public DateTime timeStamp;
+        
+        /// <summary>
+        /// こんすとらくたん
+        /// </summary>
+        /// <param name="joints"></param>
+        /// <param name="time"></param>
         public Pose(Dictionary<JointType, CvPoint3D64f> joints, DateTime time)
         {
             this.joints = joints;
@@ -98,6 +111,9 @@ namespace KinectMotionCapture
         public List<Dictionary<Bone, BoneStatistics>> stats;
         public Dictionary<Bone, double> boneLengthes;
 
+        /// <summary>
+        /// 骨の長さの代表値を決定する
+        /// </summary>
         public void CalcBoneLength()
         {
             foreach (Bone bone in Utility.GetBones())
@@ -107,30 +123,58 @@ namespace KinectMotionCapture
             }
         }
 
+        /// <summary>
+        /// SequenceをPoseに戻す
+        /// </summary>
+        public void SequenceToPose()
+        {
+            int n = motionLog.Count();
+            motionLog.Clear();
+            for (int i = 0; i < n; i++)
+            {
+                Dictionary<JointType, CvPoint3D64f> joints = new Dictionary<JointType, CvPoint3D64f>();
+                DateTime time = new DateTime();
+                foreach (JointType jointType in Enum.GetValues(typeof(JointType)))
+                {
+                    joints[jointType] = (CvPoint3D64f)pointSeqs[jointType].points[i];
+                    time = pointSeqs[jointType].times[i];
+                }
+                motionLog.Add(new Pose(joints, time));
+            }
+        }
+
+        /// <summary>
+        /// こんすとらくたん
+        /// </summary>
+        /// <param name="jointsSeq"></param>
+        /// <param name="timeSeq"></param>
+        /// <param name="stats"></param>
         public MotionMetaData(List<Dictionary<JointType, CvPoint3D64f>> jointsSeq, List<DateTime> timeSeq, List<Dictionary<Bone, BoneStatistics>> stats)
         {
             this.motionLog = new List<Pose>();
+            // poseのデータを生成
             foreach (var pair in jointsSeq.Zip(timeSeq, (joints, time) => new { joints, time }))
             {
                 Pose pose = new Pose(pair.joints, pair.time);
                 this.motionLog.Add(pose);
             }
+            // seqに詰め込む
             this.pointSeqs = new Dictionary<JointType, PointSequence>();
             foreach (JointType jointType in Enum.GetValues(typeof(JointType)))
             {
                 List<CvPoint3D64f?> points = this.motionLog.Select(m => m.GetPoint(jointType)).ToList();
                 pointSeqs[jointType] = new PointSequence(points, timeSeq, jointType);
             }
-            this.stats = stats;
-            this.boneLengthes = new Dictionary<Bone, double>();
-
+            // すむーじんぐ            
             foreach (PointSequence pointSeq in this.pointSeqs.Values)
             {
                 pointSeq.Smoothing();
             }
 
+            this.stats = stats;
+            this.boneLengthes = new Dictionary<Bone, double>();
             this.CalcBoneLength();
         }
-        // TODO, 分節化, Poseへの書き戻し, Normalizeの呼び出し, 出力への整形
+        // TODO, 分節化, Normalizeの呼び出し, 出力への整形
     }
 }
