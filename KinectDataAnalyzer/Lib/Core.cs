@@ -84,7 +84,21 @@ namespace KinectDataAnalyzer
             {
                 List<string> line = new List<string>();
                 line.Add(pair.time.ToString("mm:ss:fff"));
+                if (points == null)
+                {
+                    line.Add("");
+                    line.Add("");
+                    line.Add("");
+                }
+                else
+                {
+                    line.Add(pair.point.Value.X.ToString());
+                    line.Add(pair.point.Value.Y.ToString());
+                    line.Add(pair.point.Value.Z.ToString());
+                }
+                outputs.Add(line);
             }
+            Utility.SaveToCsv(jointType.ToString() + ".csv", outputs);
         }
     }
 
