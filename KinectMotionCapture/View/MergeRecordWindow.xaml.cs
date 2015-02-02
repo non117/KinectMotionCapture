@@ -1099,7 +1099,6 @@ namespace KinectMotionCapture
             // delete upper body or legs
             else if (e.Key == Key.U || e.Key == Key.D)
             {
-                IEnumerable<int> range = Enumerable.Range(frameInverseList.Min(), (frameInverseList.Max() - frameInverseList.Min() + 1));
                 IEnumerable<int> range = Enumerable.Range(frameRemoveList.Min(), (frameRemoveList.Max() - frameRemoveList.Min() + 1));
                 foreach (int frameIndex in range)
                 {
