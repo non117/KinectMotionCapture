@@ -1100,6 +1100,7 @@ namespace KinectMotionCapture
             else if (e.Key == Key.U || e.Key == Key.D)
             {
                 IEnumerable<int> range = Enumerable.Range(frameInverseList.Min(), (frameInverseList.Max() - frameInverseList.Min() + 1));
+                IEnumerable<int> range = Enumerable.Range(frameRemoveList.Min(), (frameRemoveList.Max() - frameRemoveList.Min() + 1));
                 foreach (int frameIndex in range)
                 {
                     for (int recordNo = 0; recordNo < frameSequence.recordNum; recordNo++)
@@ -1118,11 +1119,10 @@ namespace KinectMotionCapture
                                     body.RemoveJoints(Utility.Legs);
                                 }
                             }
-                            // 1レコードしか処理対象ではない
-                            continue;
                         }
                     }
                 }
+                frameRemoveList.Clear();
             }
         }
     }
