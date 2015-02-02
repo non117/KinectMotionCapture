@@ -57,6 +57,10 @@ namespace KinectMotionCapture
             List<string> statData = new List<string>()
             {
                 @"C:\Users\non\Desktop\Data\1222\L1\L1StudentStatData.dump",
+                @"C:\Users\non\Desktop\Data\1222\L2\L2StudentStatData.dump",
+                @"C:\Users\non\Desktop\Data\1222\L3\L3StudentStatData.dump",
+                @"C:\Users\non\Desktop\Data\1222\L4\L4StudentStatData.dump",
+                @"C:\Users\non\Desktop\Data\1222\L5\L5StudentStatData.dump",
             };
             List<Dictionary<JointType, CvPoint3D64f>> jointsSeq = Utility.ConvertToCvPoint((List<Dictionary<int, float[]>>)Utility.LoadFromBinary(bodyData));
             List<DateTime> timeSeq = (List<DateTime>)Utility.LoadFromBinary(timeData);

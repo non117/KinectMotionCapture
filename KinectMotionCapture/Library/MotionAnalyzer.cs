@@ -96,6 +96,17 @@ namespace KinectMotionCapture
         public List<Pose> motionLog;
         public Dictionary<JointType, PointSequence> pointSeqs;
         public List<Dictionary<Bone, BoneStatistics>> stats;
+        public Dictionary<Bone, double> boneLengthes;
+
+        public void CalcBoneLength()
+        {
+            foreach (Bone bone in Utility.GetBones())
+            {
+                double length = Utility.CalcMedianLength(stats.Select(d => d[bone]).ToList());
+                this.boneLengthes[bone] = length;
+            }
+        }
+
         public MotionMetaData(List<Dictionary<JointType, CvPoint3D64f>> jointsSeq, List<DateTime> timeSeq, List<Dictionary<Bone, BoneStatistics>> stats)
         {
             this.motionLog = new List<Pose>();
@@ -111,11 +122,14 @@ namespace KinectMotionCapture
                 pointSeqs[jointType] = new PointSequence(points, timeSeq, jointType);
             }
             this.stats = stats;
+            this.boneLengthes = new Dictionary<Bone, double>();
 
             foreach (PointSequence pointSeq in this.pointSeqs.Values)
             {
                 pointSeq.Smoothing();
             }
+
+            this.CalcBoneLength();
         }
         // TODO, 分節化, Poseへの書き戻し, Normalizeの呼び出し, 出力への整形
     }

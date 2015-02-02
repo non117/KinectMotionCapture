@@ -580,9 +580,15 @@ namespace KinectMotionCapture
             return res;
         }
 
-        public static double CalcMedianAverage(List<double> seq)
+        /// <summary>
+        /// MedianAverage
+        /// </summary>
+        /// <param name="seq"></param>
+        /// <param name="rate"></param>
+        /// <returns></returns>
+        public static double CalcMedianAverage(List<double> seq, double rate = 0.3)
         {
-            int skip = (int)(seq.Count() * 0.3);
+            int skip = (int)(seq.Count() * rate);
             int take = seq.Count() - skip * 2;
             seq.Sort();
             // 上下30%を削除
@@ -626,6 +632,23 @@ namespace KinectMotionCapture
                 res.Add(new CvPoint3D64f(x, y, z));
             }
             return res;
+        }
+
+        public static double CalcMedianLength(List<BoneStatistics> stats)
+        {
+            List<double> minSqs = new List<double>();
+            List<double> maxSqs = new List<double>();
+            foreach (BoneStatistics stat in stats)
+            {
+                minSqs.Add(stat.minLengthSq);
+                maxSqs.Add(stat.maxLengthSq);
+            }
+            minSqs.Sort();
+            maxSqs.Sort();
+            double minSq = CalcMedianAverage(minSqs, 0.2);
+            double maxSq = CalcMedianAverage(maxSqs, 0.2);
+            double length = (Math.Sqrt(minSq) + Math.Sqrt(maxSq)) / 2;
+            return length;
         }
 
         /// <summary>
