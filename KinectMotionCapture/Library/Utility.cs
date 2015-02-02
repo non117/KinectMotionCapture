@@ -507,8 +507,9 @@ namespace KinectMotionCapture
         public static List<JointType> Spines = new List<JointType>() { JointType.Head, JointType.Neck, JointType.SpineShoulder, JointType.SpineMid, JointType.SpineBase };
 
         // 上半身
-        public static List<JointType> UpperBody = RightBody.Concat(LeftBody).Concat(Spines).ToList();
-
+        public static List<JointType> UpperBody = new List<JointType>(){JointType.ShoulderLeft, JointType.ElbowLeft, JointType.WristLeft, JointType.HandLeft, JointType.ThumbLeft,
+                                                                        JointType.ShoulderRight, JointType.ElbowRight, JointType.WristRight, JointType.HandRight, JointType.ThumbRight,
+                                                                        JointType.Head, JointType.Neck, JointType.SpineShoulder, JointType.SpineMid};
         // 下半身
         public static List<JointType> Legs = new List<JointType>() {JointType.HipRight, JointType.HipLeft, JointType.KneeRight, JointType.KneeLeft,
                                                                     JointType.AnkleRight, JointType.AnkleLeft, JointType.FootRight, JointType.FootLeft};
