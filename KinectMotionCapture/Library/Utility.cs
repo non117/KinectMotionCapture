@@ -580,6 +580,54 @@ namespace KinectMotionCapture
             return res;
         }
 
+        public static double CalcMedianAverage(List<double> seq)
+        {
+            int skip = (int)(seq.Count() * 0.3);
+            int take = seq.Count() - skip * 2;
+            seq.Sort();
+            // 上下30%を削除
+            seq = seq.Skip(skip).Take(take).ToList();
+            return seq.Average();            
+        }
+
+        /// <summary>
+        /// 中央値移動平均. 真ん中を基準とする.
+        /// </summary>
+        /// <param name="sequence"></param>
+        /// <param name="windowSize"></param>
+        /// <returns></returns>
+        public static List<CvPoint3D64f?> MovingMedianAverage(List<CvPoint3D64f?> sequence, int windowSize)
+        {
+            List<CvPoint3D64f?> res = new List<CvPoint3D64f?>();
+            int length = sequence.Count();
+            // 現在のフレームから前後に探索する窓を定義
+            List<int> window = new List<int>();
+            for (int i = -(windowSize / 2); i <= (windowSize / 2); i++)
+                window.Add(i);
+
+            List<double> xs = new List<double>();
+            List<double> ys = new List<double>();
+            List<double> zs = new List<double>();
+            for (int frameNo = 0; frameNo < length; frameNo++)
+            {
+                xs.Clear(); ys.Clear(); zs.Clear();
+                foreach (int i in window)
+                {
+                    int index = frameNo + i;
+                    if (index < 0 || index >= length || sequence[index] == null)
+                        continue;
+                    xs.Add(sequence[index].Value.X);
+                    ys.Add(sequence[index].Value.Y);
+                    zs.Add(sequence[index].Value.Z);
+                }
+                double x = CalcMedianAverage(xs);
+                double y = CalcMedianAverage(ys);
+                double z = CalcMedianAverage(zs);
+                res.Add(new CvPoint3D64f(x, y, z));
+            }
+            return res;
+        }
+
         /// <summary>
         /// Unity用に吐かれたデータを変換しておく
         /// </summary>

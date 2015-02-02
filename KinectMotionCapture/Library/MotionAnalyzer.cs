@@ -26,18 +26,11 @@ namespace KinectMotionCapture
             this.jointType = jointType;
         }
         /// <summary>
-        /// 変な点をはじく処理
+        /// 平滑化
         /// </summary>
-        public void DropIrregularPoint()
+        public void Smoothing(int n = 10)
         {
-            // ここに変な点をはじく処理
-        }
-        /// <summary>
-        /// 無い点を補完する
-        /// </summary>
-        public void Interpolate()
-        {
-            // 補完処理
+            this.points = Utility.MovingMedianAverage(this.points, n);
         }
         /// <summary>
         /// csvに吐く
@@ -118,9 +111,12 @@ namespace KinectMotionCapture
                 pointSeqs[jointType] = new PointSequence(points, timeSeq, jointType);
             }
             this.stats = stats;
-            // debug
-            this.pointSeqs[JointType.KneeRight].Dump();
+
+            foreach (PointSequence pointSeq in this.pointSeqs.Values)
+            {
+                pointSeq.Smoothing();
+            }
         }
-        // TODO, filter, interpolate呼び出し, Poseへの書き戻し, Normalizeの呼び出し, 出力への整形
+        // TODO, 分節化, Poseへの書き戻し, Normalizeの呼び出し, 出力への整形
     }
 }
