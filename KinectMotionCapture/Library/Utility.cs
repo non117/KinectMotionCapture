@@ -514,6 +514,95 @@ namespace KinectMotionCapture
         public static List<JointType> Legs = new List<JointType>() {JointType.HipRight, JointType.HipLeft, JointType.KneeRight, JointType.KneeLeft,
                                                                     JointType.AnkleRight, JointType.AnkleLeft, JointType.FootRight, JointType.FootLeft};
 
+        /// <summary>
+        /// JointTYpeを表す数値をJointTypeに変換する
+        /// </summary>
+        /// <param name="jointNum"></param>
+        /// <returns></returns>
+        public static JointType ConvertIntToJointType(int jointNum)
+        {
+            Dictionary<int, JointType> mapping = new Dictionary<int, JointType>();
+            foreach (JointType jointType in Enum.GetValues(typeof(JointType)))
+            {
+                mapping.Add((int)jointType, jointType);
+            }
+            return mapping[jointNum];
+        }
+
+        /// <summary>
+        /// 単純移動平均. 真ん中を基準とする.
+        /// </summary>
+        /// <param name="sequence"></param>
+        /// <param name="windowSize"></param>
+        /// <returns></returns>
+        public static List<Dictionary<int, float[]>> MovingAverage(List<Dictionary<int, float[]>> sequence, int windowSize)
+        {
+            List<Dictionary<int, float[]>> res = new List<Dictionary<int, float[]>>();
+            int length = sequence.Count();
+            // 現在のフレームから前後に探索する窓を定義
+            List<int> window = new List<int>();
+            for (int i = -(windowSize / 2); i <= (windowSize / 2); i++)
+                window.Add(i);
+
+            for (int frameNo = 0; frameNo < length; frameNo++)
+            {
+                Dictionary<int, float[]> newJoints = new Dictionary<int, float[]>();
+                foreach (JointType key in Enum.GetValues(typeof(JointType)))
+                {
+                    float x = 0, y = 0, z = 0;
+                    int count = 0;
+                    foreach (int i in window)
+                    {
+                        int index = frameNo + i;
+                        if (index < 0 || index >= length)
+                            continue;
+                        float[] points;
+                        if (sequence[index].TryGetValue((int)key, out points))
+                        {
+                            // ダミーデータチェック
+                            if (points[0] > 1e10)
+                                continue;
+                            x += points[0]; y += points[1]; z += points[2];
+                            count++;
+                        }
+                    }
+                    if (count == 0)
+                    {
+                        newJoints[(int)key] = new float[] { float.MaxValue, float.MaxValue, float.MaxValue };
+                    }
+                    else
+                    {
+                        newJoints[(int)key] = new float[] { x / count, y / count, z / count };
+                    }
+                }
+                res.Add(newJoints);
+            }
+            return res;
+        }
+
+        /// <summary>
+        /// Unity用に吐かれたデータを変換しておく
+        /// </summary>
+        /// <param name="rawJointsSeq"></param>
+        /// <returns></returns>
+        public static List<Dictionary<JointType, CvPoint3D64f>> ConvertToCvPoint(List<Dictionary<int, float[]>> rawJointsSeq)
+        {
+            List<Dictionary<JointType, CvPoint3D64f>> newJointsSeq = new List<Dictionary<JointType, CvPoint3D64f>>();
+            foreach (Dictionary<int, float[]> joints in rawJointsSeq)
+            {
+                Dictionary<JointType, CvPoint3D64f> newJoints = new Dictionary<JointType, CvPoint3D64f>();
+                foreach (int jointNo in joints.Keys)
+                {
+                    JointType jointType = ConvertIntToJointType(jointNo);
+                    float[] jointAry = joints[jointNo];
+                    CvPoint3D64f point = new CvPoint3D64f(jointAry[0], jointAry[1], jointAry[2]);
+                    newJoints[jointType] = point;
+                }
+                newJointsSeq.Add(newJoints);
+            }
+            return newJointsSeq;
+        }
+
         /*
         /// <summary>
         /// DPマッチングのための座標, Point2D使って書き直すべき

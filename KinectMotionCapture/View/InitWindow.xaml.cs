@@ -12,8 +12,12 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
+using OpenCvSharp;
+using Microsoft.Kinect;
+
 namespace KinectMotionCapture
 {
+    using Bone = Tuple<JointType, JointType>;
     /// <summary>
     /// InitWindow.xaml の相互作用ロジック
     /// </summary>
@@ -48,7 +52,16 @@ namespace KinectMotionCapture
 
         private void UtilityButton_Click(object sender, RoutedEventArgs e)
         {
-
+            string bodyData = @"C:\Users\non\Desktop\Data\1222\L1\Student1SelectedUserBody.dump";
+            string timeData = @"C:\Users\non\Desktop\Data\1222\L1\Student1TimeData.dump";
+            List<string> statData = new List<string>()
+            {
+                @"C:\Users\non\Desktop\Data\1222\L1\L1StudentStatData.dump",
+            };
+            List<Dictionary<JointType, CvPoint3D64f>> jointsSeq = Utility.ConvertToCvPoint((List<Dictionary<int, float[]>>)Utility.LoadFromBinary(bodyData));
+            List<DateTime> timeSeq = (List<DateTime>)Utility.LoadFromBinary(timeData);
+            List<Dictionary<Bone, BoneStatistics>> boneStats = statData.Select(s => (Dictionary<Bone, BoneStatistics>)Utility.LoadFromBinary(s)).ToList();
+            MotionMetaData mmd = new MotionMetaData(jointsSeq, timeSeq, boneStats);
         }
     }
 }

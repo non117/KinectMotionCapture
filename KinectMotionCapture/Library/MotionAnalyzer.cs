@@ -1,16 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.IO;
 using System.Text;
 using System.Threading.Tasks;
-using System.Runtime.Serialization.Formatters.Binary;
 
-using KinectMotionCapture;
-using Microsoft.Kinect;
 using OpenCvSharp;
+using Microsoft.Kinect;
 
-namespace KinectDataAnalyzer
+namespace KinectMotionCapture
 {
     using Bone = Tuple<JointType, JointType>;
 
@@ -123,6 +120,4 @@ namespace KinectDataAnalyzer
         }
         // TODO, filter, interpolate呼び出し, Poseへの書き戻し, Normalizeの呼び出し, 出力への整形
     }
-
-
 }

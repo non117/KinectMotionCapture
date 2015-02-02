@@ -149,6 +149,7 @@
     <Compile Include="Library\CalcEx.cs" />
     <Compile Include="Library\JointCorrection.cs" />
     <Compile Include="Library\JointMirroredCorrection.cs" />
+    <Compile Include="Library\MotionAnalyzer.cs" />
     <Compile Include="Library\SkeletonInterpolator.cs" />
     <Compile Include="Library\UserSegmentation.cs" />
     <Compile Include="Model\IdentificationSet.cs" />
