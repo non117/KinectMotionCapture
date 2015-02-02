@@ -45,11 +45,12 @@ namespace KinectMotionCapture
         public void Dump()
         {
             List<List<string>> outputs = new List<List<string>>();
+            DateTime start = this.times[0];
             foreach(var pair in times.Zip(points, (time, point) => new {time, point}))
             {
                 List<string> line = new List<string>();
-                line.Add(pair.time.ToString("mm:ss:fff"));
-                if (points == null)
+                line.Add((pair.time - start).TotalSeconds.ToString());
+                if (pair.point == null)
                 {
                     line.Add("");
                     line.Add("");
@@ -117,6 +118,8 @@ namespace KinectMotionCapture
                 pointSeqs[jointType] = new PointSequence(points, timeSeq, jointType);
             }
             this.stats = stats;
+            // debug
+            this.pointSeqs[JointType.KneeRight].Dump();
         }
         // TODO, filter, interpolate呼び出し, Poseへの書き戻し, Normalizeの呼び出し, 出力への整形
     }

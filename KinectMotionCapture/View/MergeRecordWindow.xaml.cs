@@ -67,11 +67,11 @@ namespace KinectMotionCapture
         private void LoadFrames()
         {
             string[] datadir = new string[] {
-                                                    @"E:\kinect1\calib",  
-                                                    @"E:\kinect2\calib", 
-                                                    @"E:\kinect3\calib", 
-                                                    @"E:\kinect4\calib", 
-                                                    @"E:\kinect5\calib", 
+                                                    @"C:\Users\non\Desktop\1222\1222_kinect1\master",  
+                                                    @"C:\Users\non\Desktop\1222\1222_kinect2\master", 
+                                                    @"C:\Users\non\Desktop\1222\1222_kinect3\master", 
+                                                    @"C:\Users\non\Desktop\1222\1222_kinect4\master", 
+                                                    @"C:\Users\non\Desktop\1222\1222_kinect5\master", 
             };
             List<string> mapdir = new List<string>() {
                                                     @"E:\kinect1\coordmap.dump",  

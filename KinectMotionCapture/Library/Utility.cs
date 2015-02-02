@@ -237,7 +237,7 @@ namespace KinectMotionCapture
                     {
                         buffer += cell.ToString() + ",";
                     }
-                    buffer.Remove(buffer.Count() - 1);
+                    buffer = buffer.Remove(buffer.Count() - 1);
                     sw.WriteLine(buffer);
                 }
                 sw.WriteLine();
