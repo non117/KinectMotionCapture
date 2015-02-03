@@ -86,6 +86,11 @@ namespace KinectMotionCapture
             this.joints = joints;
             this.timeStamp = time;
         }
+
+        public void SetJoints(Dictionary<JointType, CvPoint3D64f> joints)
+        {
+            this.joints = joints;
+        }
         /// <summary>
         /// あるjointTypeの点を返す。null許容。
         /// </summary>
@@ -106,14 +111,18 @@ namespace KinectMotionCapture
     /// </summary>
     public struct JointNode
     {
-        JointNode[] nextNodes;
-        JointType parent;
-        JointType chid;
-        public JointNode(JointType parent, JointType child, JointNode[] next)
+        public JointNode[] nextNodes;
+        public JointType from;
+        public JointType to;
+        public JointNode(JointType from, JointType to, JointNode[] next)
         {
-            this.parent = parent;
-            this.chid = child;
+            this.from = from;
+            this.to = to;
             this.nextNodes = next;
+        }
+        public bool isRoot()
+        {
+            return this.from == default(JointType) && this.to == default(JointType);
         }
     }
 
@@ -135,8 +144,77 @@ namespace KinectMotionCapture
         {
             foreach (Bone bone in Utility.GetBones())
             {
+                // 左右反転を考慮すべきでは
                 double length = Utility.CalcMedianLength(stats.Select(d => d[bone]).ToList());
                 this.boneLengthes[bone] = length;
+            }
+        }
+
+        /// <summary>
+        /// 骨の長さを探してくる
+        /// </summary>
+        /// <param name="from"></param>
+        /// <param name="to"></param>
+        /// <returns></returns>
+        private double SearchBoneLength(JointType from, JointType to)
+        {
+            Bone fromTo = Tuple.Create(from, to);
+            Bone toFrom = Tuple.Create(to, from);
+            double length;
+            if (this.boneLengthes.TryGetValue(fromTo, out length))
+            {
+                return length;
+            }
+            else
+            {
+                return this.boneLengthes[toFrom];
+            }
+        }
+
+        /// <summary>
+        /// 長さの調整された関節点をつくる
+        /// </summary>
+        /// <param name="origFrom"></param>
+        /// <param name="origTo"></param>
+        /// <param name="normedFrom"></param>
+        /// <param name="length"></param>
+        /// <returns></returns>
+        private CvPoint3D64f GetFixedJoint(CvPoint3D64f origFrom, CvPoint3D64f origTo, CvPoint3D64f normedFrom, double length)
+        {
+            return CvEx.Normalize(origTo - origFrom) * length + normedFrom;
+        }
+
+        /// <summary>
+        /// 骨の長さをなおす。ぜんぶ。
+        /// </summary>
+        private void FixBoneLength()
+        {
+            Stack<JointNode> stack = new Stack<JointNode>();
+            foreach (Pose pose in this.motionLog)
+            {
+                stack.Clear();
+                stack.Push(this.rootNode);
+                Dictionary<JointType, CvPoint3D64f> origJoints = pose.joints;
+                Dictionary<JointType, CvPoint3D64f> newJoints = new Dictionary<JointType, CvPoint3D64f>();
+                newJoints[JointType.SpineBase] = origJoints[JointType.SpineBase];
+                while (stack.Count() != 0)
+                {
+                    JointNode currentNode = stack.Pop();
+                    // rootじゃなかったら今のノードに対して骨の修正
+                    if (!currentNode.isRoot())
+                    {
+                        JointType from = currentNode.from;
+                        JointType to = currentNode.to;
+                        double length = this.SearchBoneLength(from, to);
+                        CvPoint3D64f newToPoint = this.GetFixedJoint(origJoints[from], origJoints[to], newJoints[from], length);
+                        newJoints[to] = newToPoint;
+                    }
+                    foreach (JointNode childNode in currentNode.nextNodes)
+                    {
+                        stack.Push(childNode);
+                    }
+                }
+                pose.SetJoints(newJoints);
             }
         }
 
@@ -160,6 +238,10 @@ namespace KinectMotionCapture
             }
         }
 
+        /// <summary>
+        /// いにしゃらいず
+        /// </summary>
+        /// <returns></returns>
         private JointNode InitializeNodes()
         {
             JointNode neckHead = new JointNode(JointType.Neck, JointType.Head, new JointNode[] { });
@@ -198,7 +280,7 @@ namespace KinectMotionCapture
         /// <param name="stats"></param>
         public MotionMetaData(List<Dictionary<JointType, CvPoint3D64f>> jointsSeq, List<DateTime> timeSeq, List<Dictionary<Bone, BoneStatistics>> stats)
         {
-            this.rootNodes = new JointNode();
+            this.rootNode = new JointNode();
             // poseのデータを生成
             this.motionLog = new List<Pose>();
             foreach (var pair in jointsSeq.Zip(timeSeq, (joints, time) => new { joints, time }))
@@ -226,6 +308,8 @@ namespace KinectMotionCapture
 
             // nodeの接続関係をイニシャライズ            
             this.rootNode = this.InitializeNodes();
+
+
         }
         // TODO, 分節化, Normalizeの呼び出し, 出力への整形
     }
