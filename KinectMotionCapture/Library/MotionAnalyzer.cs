@@ -131,11 +131,33 @@ namespace KinectMotionCapture
     /// </summary>
     public struct MotionMetaData
     {
-        public List<Pose> motionLog;
-        public Dictionary<JointType, PointSequence> pointSeqs;
-        public List<Dictionary<Bone, BoneStatistics>> stats;
-        public Dictionary<Bone, double> boneLengthes;
-        public JointNode rootNode;
+        private List<Pose> motionLog;
+        private Dictionary<JointType, PointSequence> pointSeqs;
+        private List<Dictionary<Bone, BoneStatistics>> stats;
+        private Dictionary<Bone, double> boneLengthes;
+        private JointNode rootNode;
+
+        /// <summary>
+        /// 出力用
+        /// </summary>
+        public List<Dictionary<JointType, CvPoint3D64f>> BodySequence
+        {
+            get
+            {
+                return this.motionLog.Select(m => m.joints).ToList();
+            }
+        }
+
+        /// <summary>
+        /// 出力用
+        /// </summary>
+        public List<DateTime> TimeSequence
+        {
+            get
+            {
+                return this.motionLog.Select(m => m.timeStamp).ToList();
+            }
+        }
 
         /// <summary>
         /// 骨の長さの代表値を決定する
@@ -314,7 +336,6 @@ namespace KinectMotionCapture
 
             // のーまらいず
             this.FixBoneLength();
-
         }
     }
 }
