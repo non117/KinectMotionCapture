@@ -107,10 +107,12 @@ namespace KinectMotionCapture
     public struct JointNode
     {
         JointNode[] nextNodes;
-        JointType jointType;
-        public JointNode(JointType jointType, JointNode[] next)
+        JointType parent;
+        JointType chid;
+        public JointNode(JointType parent, JointType child, JointNode[] next)
         {
-            this.jointType = jointType;
+            this.parent = parent;
+            this.chid = child;
             this.nextNodes = next;
         }
     }
@@ -124,7 +126,7 @@ namespace KinectMotionCapture
         public Dictionary<JointType, PointSequence> pointSeqs;
         public List<Dictionary<Bone, BoneStatistics>> stats;
         public Dictionary<Bone, double> boneLengthes;
-        public JointNode rootNodes;
+        public JointNode rootNode;
 
         /// <summary>
         /// 骨の長さの代表値を決定する
@@ -160,32 +162,32 @@ namespace KinectMotionCapture
 
         private JointNode InitializeNodes()
         {
-            JointNode head = new JointNode(JointType.Head, new JointNode[] { });
-            JointNode neck = new JointNode(JointType.Neck, new JointNode[] { head });
+            JointNode neckHead = new JointNode(JointType.Neck, JointType.Head, new JointNode[] { });
+            JointNode spineShoulderNeck = new JointNode(JointType.SpineShoulder, JointType.Neck, new JointNode[] { neckHead });
 
-            JointNode handLeft = new JointNode(JointType.HandLeft, new JointNode[] { });
-            JointNode elbowLeft = new JointNode(JointType.ElbowLeft, new JointNode[] { handLeft });
-            JointNode shoulderLeft = new JointNode(JointType.ShoulderLeft, new JointNode[] { elbowLeft });
+            JointNode elbowHandLeft = new JointNode(JointType.ElbowLeft, JointType.HandLeft, new JointNode[] { });
+            JointNode shoulderElbowLeft = new JointNode(JointType.ShoulderLeft, JointType.ElbowLeft, new JointNode[] { elbowHandLeft });
+            JointNode spineShoulderLeft = new JointNode(JointType.SpineShoulder, JointType.ShoulderLeft, new JointNode[] { shoulderElbowLeft });
 
-            JointNode handRight = new JointNode(JointType.HandRight, new JointNode[] { });
-            JointNode elbowRight = new JointNode(JointType.ElbowRight, new JointNode[] { handRight });
-            JointNode shoulderRight = new JointNode(JointType.ShoulderRight, new JointNode[] { elbowRight });
+            JointNode elbowHandRight = new JointNode(JointType.ElbowRight, JointType.HandRight, new JointNode[] { });
+            JointNode shoulderElbowRight = new JointNode(JointType.ShoulderRight, JointType.ElbowRight, new JointNode[] { elbowHandRight });
+            JointNode spineShoulderRight = new JointNode(JointType.SpineShoulder, JointType.ShoulderRight, new JointNode[] { shoulderElbowRight });
 
-            JointNode footLeft = new JointNode(JointType.FootLeft, new JointNode[] { });
-            JointNode ankleLeft = new JointNode(JointType.AnkleLeft, new JointNode[] { footLeft });
-            JointNode kneeLeft = new JointNode(JointType.KneeLeft, new JointNode[] { ankleLeft });
-            JointNode hipLeft = new JointNode(JointType.HipLeft, new JointNode[] { kneeLeft });
+            JointNode ankleFootLeft = new JointNode(JointType.AnkleLeft, JointType.FootLeft, new JointNode[] { });
+            JointNode kneeAnkleLeft = new JointNode(JointType.KneeLeft, JointType.AnkleLeft, new JointNode[] { ankleFootLeft });
+            JointNode hipKneeLeft = new JointNode(JointType.HipLeft, JointType.KneeLeft, new JointNode[] { kneeAnkleLeft });
+            JointNode spineHipLeft = new JointNode(JointType.SpineBase, JointType.HipLeft, new JointNode[] { hipKneeLeft });
 
-            JointNode footRight = new JointNode(JointType.FootRight, new JointNode[] { });
-            JointNode ankleRight = new JointNode(JointType.AnkleRight, new JointNode[] { footRight });
-            JointNode kneeRight = new JointNode(JointType.KneeRight, new JointNode[] { ankleRight });
-            JointNode hipRight = new JointNode(JointType.HipRight, new JointNode[] { kneeRight });
+            JointNode ankleFootRight = new JointNode(JointType.AnkleRight, JointType.FootRight, new JointNode[] { });
+            JointNode kneeAnkleRight = new JointNode(JointType.KneeRight, JointType.AnkleRight, new JointNode[] { ankleFootRight });
+            JointNode hipKneeRight = new JointNode(JointType.HipRight, JointType.KneeRight, new JointNode[] { kneeAnkleRight });
+            JointNode spineHipRight = new JointNode(JointType.SpineBase, JointType.HipRight, new JointNode[] { hipKneeRight });
 
-            JointNode spineShoulder = new JointNode(JointType.SpineShoulder, new JointNode[] { neck, shoulderRight, shoulderLeft });
-            JointNode spineMid = new JointNode(JointType.SpineMid, new JointNode[] { spineShoulder });
-            JointNode spineBase = new JointNode(JointType.SpineBase, new JointNode[] { spineMid, hipRight, hipLeft });
+            JointNode spineMidShoulder = new JointNode(JointType.SpineMid, JointType.SpineShoulder, new JointNode[] { spineShoulderNeck, spineShoulderRight, spineShoulderLeft });
+            JointNode spineBaseMid = new JointNode(JointType.SpineBase, JointType.SpineMid, new JointNode[] { spineMidShoulder });
+            JointNode root = new JointNode(default(JointType), default(JointType), new JointNode[] { spineBaseMid, spineHipRight, spineHipLeft });
 
-            return spineBase;
+            return root;
         }
 
         /// <summary>
@@ -223,7 +225,7 @@ namespace KinectMotionCapture
             this.CalcBoneLength();
 
             // nodeの接続関係をイニシャライズ            
-            this.rootNodes = this.InitializeNodes();
+            this.rootNode = this.InitializeNodes();
         }
         // TODO, 分節化, Normalizeの呼び出し, 出力への整形
     }
