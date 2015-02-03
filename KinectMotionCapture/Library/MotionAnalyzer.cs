@@ -86,11 +86,6 @@ namespace KinectMotionCapture
             this.joints = joints;
             this.timeStamp = time;
         }
-
-        public void SetJoints(Dictionary<JointType, CvPoint3D64f> joints)
-        {
-            this.joints = joints;
-        }
         /// <summary>
         /// あるjointTypeの点を返す。null許容。
         /// </summary>
@@ -212,6 +207,7 @@ namespace KinectMotionCapture
         private void FixBoneLength()
         {
             Stack<JointNode> stack = new Stack<JointNode>();
+            List<Pose> newLog = new List<Pose>();
             foreach (Pose pose in this.motionLog)
             {
                 stack.Clear();
@@ -236,8 +232,9 @@ namespace KinectMotionCapture
                         stack.Push(childNode);
                     }
                 }
-                pose.SetJoints(newJoints);
+                newLog.Add(new Pose(newJoints, pose.timeStamp));
             }
+            this.motionLog = newLog;
         }
 
         /// <summary>
