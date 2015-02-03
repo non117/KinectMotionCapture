@@ -309,8 +309,12 @@ namespace KinectMotionCapture
             // nodeの接続関係をイニシャライズ            
             this.rootNode = this.InitializeNodes();
 
+            // 書き戻し
+            this.SequenceToPose();
+
+            // のーまらいず
+            this.FixBoneLength();
 
         }
-        // TODO, 分節化, Normalizeの呼び出し, 出力への整形
     }
 }
