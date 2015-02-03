@@ -269,12 +269,12 @@ namespace KinectMotionCapture
             JointNode neckHead = new JointNode(JointType.Neck, JointType.Head, new JointNode[] { });
             JointNode spineShoulderNeck = new JointNode(JointType.SpineShoulder, JointType.Neck, new JointNode[] { neckHead });
 
-            JointNode elbowHandLeft = new JointNode(JointType.ElbowLeft, JointType.HandLeft, new JointNode[] { });
-            JointNode shoulderElbowLeft = new JointNode(JointType.ShoulderLeft, JointType.ElbowLeft, new JointNode[] { elbowHandLeft });
+            JointNode elbowWristLeft = new JointNode(JointType.ElbowLeft, JointType.WristLeft, new JointNode[] { });
+            JointNode shoulderElbowLeft = new JointNode(JointType.ShoulderLeft, JointType.ElbowLeft, new JointNode[] { elbowWristLeft });
             JointNode spineShoulderLeft = new JointNode(JointType.SpineShoulder, JointType.ShoulderLeft, new JointNode[] { shoulderElbowLeft });
 
-            JointNode elbowHandRight = new JointNode(JointType.ElbowRight, JointType.HandRight, new JointNode[] { });
-            JointNode shoulderElbowRight = new JointNode(JointType.ShoulderRight, JointType.ElbowRight, new JointNode[] { elbowHandRight });
+            JointNode elbowWristRight = new JointNode(JointType.ElbowRight, JointType.WristRight, new JointNode[] { });
+            JointNode shoulderElbowRight = new JointNode(JointType.ShoulderRight, JointType.ElbowRight, new JointNode[] { elbowWristRight });
             JointNode spineShoulderRight = new JointNode(JointType.SpineShoulder, JointType.ShoulderRight, new JointNode[] { shoulderElbowRight });
 
             JointNode ankleFootLeft = new JointNode(JointType.AnkleLeft, JointType.FootLeft, new JointNode[] { });

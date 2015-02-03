@@ -66,6 +66,13 @@ namespace KinectMotionCapture
             List<DateTime> timeSeq = (List<DateTime>)Utility.LoadFromBinary(timeData);
             List<Dictionary<Bone, BoneStatistics>> boneStats = statData.Select(s => (Dictionary<Bone, BoneStatistics>)Utility.LoadFromBinary(s)).ToList();
             MotionMetaData mmd = new MotionMetaData(jointsSeq, timeSeq, boneStats);
+
+            // ほぞーーーーーーーーん
+            string desktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+            string saveBodyPath = System.IO.Path.Combine(desktop, @"Student1FilteredBody.dump");
+            string saveTimePath = System.IO.Path.Combine(desktop, @"Student1TimeData.dump");
+            Utility.SaveBodySequence(mmd.BodySequence, saveBodyPath);
+            Utility.SaveToBinary(mmd.TimeSequence, saveTimePath);
         }
     }
 }
