@@ -9,11 +9,13 @@
                 <RowDefinition Height="100"/>
                 <RowDefinition Height="100"/>
                 <RowDefinition Height="100"/>
+                <RowDefinition Height="100"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <Button Grid.Row="0" Content="Record Motions" Margin="20" Name="RecordMotionButton" Click="RecordMotionButton_Click" />            
             <Button Grid.Row="1" Content="Merge Records" Margin="20" Name="MergeRecordButton" Click="MergeRecordButton_Click"/>
-            <Button Grid.Row="2" Content="Utility(Debug)" Margin="20" Name="UtilityButton" Click="UtilityButton_Click" />
+            <Button Grid.Row="2" Content="Motion Smoother" Margin="20" Name="UtilityButton" Click="UtilityButton_Click" />
+            <Button Grid.Row="3" Content="Motion Analyze" Margin="20" Name="MotionAnalyzeButton" Click="MotionAnalyzeButton_Click"/>
         </Grid>
     </Border>
 </Window>

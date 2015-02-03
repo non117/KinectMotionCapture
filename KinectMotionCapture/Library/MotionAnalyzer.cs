@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -124,7 +125,7 @@ namespace KinectMotionCapture
     /// <summary>
     /// 統括するメタデータ
     /// </summary>
-    public struct MotionMetaData
+    public class MotionMetaData
     {
         private List<Pose> motionLog;
         private Dictionary<JointType, PointSequence> pointSeqs;
@@ -333,6 +334,95 @@ namespace KinectMotionCapture
 
             // のーまらいず
             this.FixBoneLength();
+        }
+    }
+
+    public class User
+    {
+        public int day;
+        public int lesson;
+        public string userName;
+        public string motionDataPath;
+        public string timeDataPath;
+        public List<Pose> motionLog;
+        public Dictionary<JointType, PointSequence> pointSeqs;
+        public Dictionary<string, Tuple<DateTime, DateTime>> timeSlices;
+        /// <summary>
+        /// こんすとらくた
+        /// </summary>
+        /// <param name="day"></param>
+        /// <param name="lesson"></param>
+        /// <param name="name"></param>
+        public User(string day, string lesson, string name, string dir)
+        {
+            this.day = int.Parse(day);
+            this.lesson = int.Parse(lesson);
+            this.userName = name;
+            this.motionDataPath = Path.Combine(dir, name + "FilteredBody.dump");
+            this.timeDataPath = Path.Combine(dir, name + "TimeData.dump");
+            
+            this.motionLog = new List<Pose>();
+            this.pointSeqs = new Dictionary<JointType, PointSequence>();
+            this.LoadData();
+            // type, starttime, endtime
+            this.timeSlices = new Dictionary<string, Tuple<DateTime, DateTime>>();
+        }
+        /// <summary>
+        /// でーたをよみこむ
+        /// </summary>
+        public void LoadData()
+        {
+            List<Dictionary<JointType, CvPoint3D64f>> jointsSeq = Utility.ConvertToCvPoint((List<Dictionary<int, float[]>>)Utility.LoadFromBinary(this.motionDataPath));
+            List<DateTime> timeSeq = (List<DateTime>)Utility.LoadFromBinary(this.timeDataPath);
+            foreach (var pair in jointsSeq.Zip(timeSeq, (joints, time) => new { joints, time }))
+            {
+                Pose pose = new Pose(pair.joints, pair.time);
+                this.motionLog.Add(pose);
+            }
+            foreach (JointType jointType in Enum.GetValues(typeof(JointType)))
+            {
+                List<CvPoint3D64f?> points = this.motionLog.Select(m => m.GetPoint(jointType)).ToList();
+                pointSeqs[jointType] = new PointSequence(points, timeSeq, jointType);
+            }
+        }
+    }
+
+    public class MotionAnalyzer
+    {
+        List<User> users = new List<User>();
+        public MotionAnalyzer(string csvFilePath)
+        {
+            string folder = Path.GetDirectoryName(csvFilePath);
+            List<List<string>> csvData = Utility.LoadFromCsv(csvFilePath);
+            List<string> userNames = new List<string>();
+            foreach (List<string> line in csvData)
+            {
+                if (line.Contains("Day"))
+                {
+                    continue;
+                }
+                string userName = line[2];
+                if (!userNames.Contains(userName))
+                {
+                    User user = new User(line[0], line[1], line[2], folder);
+                    DateTime start = DateTime.ParseExact(line[4], "mm:ss:fff", System.Globalization.DateTimeFormatInfo.InvariantInfo,
+                        System.Globalization.DateTimeStyles.NoCurrentDateDefault);
+                    DateTime end = DateTime.ParseExact(line[5], "mm:ss:fff", System.Globalization.DateTimeFormatInfo.InvariantInfo,
+                        System.Globalization.DateTimeStyles.NoCurrentDateDefault);
+                    user.timeSlices[line[3]] = Tuple.Create(start, end);
+                    this.users.Add(user);
+                    userNames.Add(userName);
+                }
+                else
+                {
+                    User user = this.users.Where(u => u.userName == userName).First();
+                    DateTime start = DateTime.ParseExact(line[4], "mm:ss:fff", System.Globalization.DateTimeFormatInfo.InvariantInfo,
+                        System.Globalization.DateTimeStyles.NoCurrentDateDefault);
+                    DateTime end = DateTime.ParseExact(line[5], "mm:ss:fff", System.Globalization.DateTimeFormatInfo.InvariantInfo,
+                        System.Globalization.DateTimeStyles.NoCurrentDateDefault);
+                    user.timeSlices[line[3]] = Tuple.Create(start, end);
+                }
+            }
         }
     }
 }

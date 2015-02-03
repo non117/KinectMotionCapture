@@ -52,8 +52,8 @@ namespace KinectMotionCapture
 
         private void UtilityButton_Click(object sender, RoutedEventArgs e)
         {
-            string bodyData = @"C:\Users\non\Desktop\Data\1222\L1\Student1SelectedUserBody.dump";
-            string timeData = @"C:\Users\non\Desktop\Data\1222\L1\Student1TimeData.dump";
+            string bodyData = @"C:\Users\non\Desktop\Data\1222\L1\Student2SelectedUserBody.dump";
+            string timeData = @"C:\Users\non\Desktop\Data\1222\L1\Student2TimeData.dump";
             List<string> statData = new List<string>()
             {
                 @"C:\Users\non\Desktop\Data\1222\L1\L1StudentStatData.dump",
@@ -73,6 +73,12 @@ namespace KinectMotionCapture
             string saveTimePath = System.IO.Path.Combine(desktop, @"Student1TimeData.dump");
             Utility.SaveBodySequence(mmd.BodySequence, saveBodyPath);
             Utility.SaveToBinary(mmd.TimeSequence, saveTimePath);
+        }
+
+        private void MotionAnalyzeButton_Click(object sender, RoutedEventArgs e)
+        {
+            string csvFilePath = @"C:\Users\non\Desktop\Filtered\CutTiming.csv";
+            MotionAnalyzer ma = new MotionAnalyzer(csvFilePath);
         }
     }
 }

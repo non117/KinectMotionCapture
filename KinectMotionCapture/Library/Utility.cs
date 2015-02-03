@@ -245,6 +245,25 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
+        /// csvファイルを読み込む
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public static List<List<string>> LoadFromCsv(string path)
+        {
+            List<List<string>> data = new List<List<string>>();
+            using (StreamReader reader = new StreamReader(File.OpenRead(path)))
+            {
+                while (!reader.EndOfStream)
+                {
+                    string line = reader.ReadLine();
+                    data.Add(line.Split(',').Select(s => s.Trim()).ToList());
+                }
+            }
+            return data;
+        }
+
+        /// <summary>
         /// Unityに吐くためのデータ変換
         /// </summary>
         /// <param name="originalJoints"></param>
