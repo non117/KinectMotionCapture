@@ -443,6 +443,24 @@ namespace KinectMotionCapture
         }
     }
 
+    /// <summary>
+    /// 最終的なデータ？　セグメントされたデータ
+    /// </summary>
+    public struct SegmentedMotionData
+    {
+        public string stepName;
+        public JointType jointType;
+        public PointSequence pointSeqs;
+        public SegmentedMotionData(string stepName, JointType jointType, List<Pose> motions)
+        {
+            this.stepName = stepName;
+            this.jointType = jointType;
+            List<CvPoint3D64f?> points = motions.Select(p => p.GetPoint(jointType)).ToList();
+            List<DateTime> times = motions.Select(p => p.timeStamp).ToList();
+            this.pointSeqs = new PointSequence(points, times, jointType);
+        }
+    }
+    
     public class User
     {
         public int day;
@@ -451,8 +469,8 @@ namespace KinectMotionCapture
         public string motionDataPath;
         public string timeDataPath;
         public List<Pose> motionLog;
-        public Dictionary<JointType, PointSequence> pointSeqs;
         public Dictionary<string, Tuple<DateTime, DateTime>> timeSlices;
+        public List<SegmentedMotionData> segmentedData;
         /// <summary>
         /// こんすとらくた
         /// </summary>
@@ -468,10 +486,10 @@ namespace KinectMotionCapture
             this.timeDataPath = Path.Combine(dir, name + "TimeData.dump");
             
             this.motionLog = new List<Pose>();
-            this.pointSeqs = new Dictionary<JointType, PointSequence>();
             this.LoadData();
             // type, starttime, endtime
             this.timeSlices = new Dictionary<string, Tuple<DateTime, DateTime>>();
+            this.segmentedData = new List<SegmentedMotionData>();
         }
         /// <summary>
         /// でーたをよみこむ
@@ -483,17 +501,11 @@ namespace KinectMotionCapture
             foreach (var pair in jointsSeq.Zip(timeSeq, (joints, time) => new { joints, time }))
             {
                 Pose pose = new Pose(pair.joints, pair.time);
+                // Torso中心にする
+                pose.TranslateToTorsoCoordinate();
                 this.motionLog.Add(pose);
             }
-            // ここでTorso中心にして、肩をそろえる
-
-            foreach (JointType jointType in Enum.GetValues(typeof(JointType)))
-            {
-                List<CvPoint3D64f?> points = this.motionLog.Select(m => m.GetPoint(jointType)).ToList();
-                pointSeqs[jointType] = new PointSequence(points, timeSeq, jointType);
-            }
         }
-
         /// <summary>
         /// 切る時間を追加する
         /// </summary>
@@ -507,13 +519,45 @@ namespace KinectMotionCapture
             DateTime endTime = DateTime.Parse(modelTimeString + end);
             this.timeSlices[keyMotionType] = Tuple.Create(startTime, endTime);
         }
+        /// <summary>
+        /// データを時間に沿って切る
+        /// </summary>
+        public void SliceData()
+        {
+            foreach (string stepName in this.timeSlices.Keys)
+            {
+                DateTime start = this.timeSlices[stepName].Item1;
+                DateTime end = this.timeSlices[stepName].Item2;
+                List<Pose> sliced = this.motionLog.Where(p => start <= p.timeStamp && p.timeStamp <= end).ToList();
+                foreach (JointType jointType in Enum.GetValues(typeof(JointType)))
+                {
+                    this.segmentedData.Add(new SegmentedMotionData(stepName, jointType, sliced));
+                }
+            }
+        }
     }
 
     public class MotionAnalyzer
     {
-        List<User> users = new List<User>();
+        List<User> users;
+        List<double> rotateRadians;
+        public void AjustBodyDirection(string masterName)
+        {
+            User master = this.users.Where(u => u.userName == masterName).First();
+            foreach(User user in this.users)
+            {
+                if (user == master)
+                {
+                    continue;
+                }
+                
+            }
+        }
+
         public MotionAnalyzer(string csvFilePath)
         {
+            this.users = new List<User>();
+            this.rotateRadians = new List<double>();
             string folder = Path.GetDirectoryName(csvFilePath);
             List<List<string>> csvData = Utility.LoadFromCsv(csvFilePath);
             List<string> userNames = new List<string>();
