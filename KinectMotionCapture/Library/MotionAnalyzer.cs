@@ -50,8 +50,11 @@ namespace KinectMotionCapture
                     // index 0の場合をアレ
                     if (isPrevNull == false)
                     {
-                        interpolatePoints.Add(points[index - 1]);
-                        interpolateTimes.Add(times[index - 1]);
+                        if (index > 0)
+                        {
+                            interpolatePoints.Add(points[index - 1]);
+                            interpolateTimes.Add(times[index - 1]);
+                        }
                         isPrevNull = true;
                     }
                     interpolatePoints.Add(points[index]);
@@ -447,6 +450,20 @@ namespace KinectMotionCapture
                 pointSeqs[jointType] = new PointSequence(points, timeSeq, jointType);
             }
         }
+
+        /// <summary>
+        /// 切る時間を追加する
+        /// </summary>
+        /// <param name="keyMotionType"></param>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        public void AddTimeSlices(string keyMotionType, string start, string end)
+        {
+            string modelTimeString = this.motionLog.First().timeStamp.ToString("yyyy/MM/dd HH:");
+            DateTime startTime = DateTime.Parse(modelTimeString + start);
+            DateTime endTime = DateTime.Parse(modelTimeString + end);
+            this.timeSlices[keyMotionType] = Tuple.Create(startTime, endTime);
+        }
     }
 
     public class MotionAnalyzer
@@ -467,22 +484,14 @@ namespace KinectMotionCapture
                 if (!userNames.Contains(userName))
                 {
                     User user = new User(line[0], line[1], line[2], folder);
-                    DateTime start = DateTime.ParseExact(line[4], "mm:ss:fff", System.Globalization.DateTimeFormatInfo.InvariantInfo,
-                        System.Globalization.DateTimeStyles.NoCurrentDateDefault);
-                    DateTime end = DateTime.ParseExact(line[5], "mm:ss:fff", System.Globalization.DateTimeFormatInfo.InvariantInfo,
-                        System.Globalization.DateTimeStyles.NoCurrentDateDefault);
-                    user.timeSlices[line[3]] = Tuple.Create(start, end);
+                    user.AddTimeSlices(line[3], line[4], line[5]);
                     this.users.Add(user);
                     userNames.Add(userName);
                 }
                 else
                 {
                     User user = this.users.Where(u => u.userName == userName).First();
-                    DateTime start = DateTime.ParseExact(line[4], "mm:ss:fff", System.Globalization.DateTimeFormatInfo.InvariantInfo,
-                        System.Globalization.DateTimeStyles.NoCurrentDateDefault);
-                    DateTime end = DateTime.ParseExact(line[5], "mm:ss:fff", System.Globalization.DateTimeFormatInfo.InvariantInfo,
-                        System.Globalization.DateTimeStyles.NoCurrentDateDefault);
-                    user.timeSlices[line[3]] = Tuple.Create(start, end);
+                    user.AddTimeSlices(line[3], line[4], line[5]);
                 }
             }
         }

@@ -52,8 +52,10 @@ namespace KinectMotionCapture
 
         private void UtilityButton_Click(object sender, RoutedEventArgs e)
         {
-            string bodyData = @"C:\Users\non\Desktop\Data\1222\L1\Student3SelectedUserBody.dump";
-            string timeData = @"C:\Users\non\Desktop\Data\1222\L1\Student3TimeData.dump";
+            string bodyData = @"C:\Users\non\Desktop\Data\1222\L5\Student22SelectedUserBody.dump";
+            string timeData = @"C:\Users\non\Desktop\Data\1222\L5\Student22TimeData.dump";
+            string bodyFileName = System.IO.Path.GetFileName(bodyData);
+            string timeFileName = System.IO.Path.GetFileName(timeData);
             List<string> statData = new List<string>()
             {
                 @"C:\Users\non\Desktop\Data\1222\L1\L1StudentStatData.dump",
@@ -69,8 +71,8 @@ namespace KinectMotionCapture
 
             // ほぞーーーーーーーーん
             string desktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
-            string saveBodyPath = System.IO.Path.Combine(desktop, @"Student1FilteredBody.dump");
-            string saveTimePath = System.IO.Path.Combine(desktop, @"Student1TimeData.dump");
+            string saveBodyPath = System.IO.Path.Combine(desktop, bodyFileName);
+            string saveTimePath = System.IO.Path.Combine(desktop, timeFileName);
             Utility.SaveBodySequence(mmd.BodySequence, saveBodyPath);
             Utility.SaveToBinary(mmd.TimeSequence, saveTimePath);
         }
