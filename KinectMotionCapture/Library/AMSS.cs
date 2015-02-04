@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using OpenCvSharp;
+
 namespace KinectMotionCapture.Library
 {
     class AMSS
@@ -23,14 +25,30 @@ namespace KinectMotionCapture.Library
         /// </summary>
         private class Node
         {
-            public float cost;
+            public double cost;
             public Point prev;
             public Point current;
-            public Node() { this.cost = float.MaxValue; }
-            public Node(float cost, Point prev, Point cur)
+            public Node() { this.cost = double.MaxValue; }
+            public Node(double cost, Point prev, Point cur)
             {
                 this.cost = cost; this.prev = prev; this.current = cur;
             }
+        }
+
+        /// <summary>
+        /// CvPoint用のコサイン類似度コスト関数
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <returns></returns>
+        public static double CvPointCostFunction(CvPoint3D64f a, CvPoint3D64f b)
+        {
+            double cos = CvEx.Cos(a, b);
+            if (cos < 0)
+            {
+                cos = 0;
+            }
+            return 1 - cos;
         }
 
         /// <summary>
@@ -41,7 +59,7 @@ namespace KinectMotionCapture.Library
         /// <param name="targetSeq"></param>
         /// <param name="costFunc"></param>
         /// <returns></returns>
-        public static Tuple<float, int[]> DPmatching<T>(List<T> modelSeq, List<T> targetSeq, Func<T, T, float> costFunc)
+        public static Tuple<double, int[]> DPmatching<T>(List<T> modelSeq, List<T> targetSeq, Func<T, T, double> costFunc)
         {
             int m = modelSeq.Count();
             int n = targetSeq.Count();
@@ -56,6 +74,7 @@ namespace KinectMotionCapture.Library
             }
 
             Node point = new Node(costFunc(modelSeq[0], targetSeq[0]), new Point(-1, -1), new Point(0, 0));
+            pathMatrix[0, 0] = point;
             List<Node> priorityList = new List<Node>();
             priorityList.Add(point);
 
@@ -66,15 +85,21 @@ namespace KinectMotionCapture.Library
             {
                 Node curNode = priorityList[0];
                 priorityList.RemoveAt(0);
-                
-                if (pathMatrix[curNode.current.x, curNode.current.y].cost < curNode.cost){ continue; }
-                if (curNode.current.x == m - 1 && curNode.current.y == n - 1) { break; }
+
+                if (pathMatrix[curNode.current.x, curNode.current.y].cost < curNode.cost)
+                {
+                    continue;
+                }
+                if (curNode.current.x == m - 1 && curNode.current.y == n - 1)
+                {
+                    break;
+                }
 
                 for (int i = 0; i < 3; i++)
                 {
                     int nX = curNode.current.x + dirX[i];
                     int nY = curNode.current.y + dirY[i];
-                    float addCost = costFunc(modelSeq[nX], targetSeq[nY]);
+                    double addCost = costFunc(modelSeq[nX], targetSeq[nY]);
                     if (nX < m && nY < n && pathMatrix[nX, nY].cost > curNode.cost + addCost)
                     {
                         pathMatrix[nX, nY].cost = curNode.cost + addCost;
@@ -95,14 +120,14 @@ namespace KinectMotionCapture.Library
                 x = node.prev.x;
                 y = node.prev.y;
             }
-            int[] res = new int[m];
+            int[] shortestPath = new int[m];
             foreach (Point p in minPath)
             {
                 int i = p.x;
                 int j = p.y;
-                res[i] = j;
+                shortestPath[i] = j;
             }
-            return new Tuple<float, int[]>(pathMatrix[m - 1, n - 1].cost / minPath.Count, res);
+            return new Tuple<double, int[]>(pathMatrix[m - 1, n - 1].cost / minPath.Count, shortestPath);
         }
     }
 }
