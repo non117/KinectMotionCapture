@@ -18,6 +18,7 @@ namespace KinectMotionCapture
     public class PointSequence
     {
         public List<CvPoint3D64f?> points;
+        public List<CvPoint3D64f> trajectory;
         public List<DateTime> times;
         public JointType jointType;
         
@@ -104,6 +105,22 @@ namespace KinectMotionCapture
         {
             this.Interpolate();
             this.points = Utility.MovingMedianAverage(this.points, n);
+        }
+        /// <summary>
+        /// トラジェクトリをつくる
+        /// </summary>
+        public void MakeTrajectory()
+        {
+            List<CvPoint3D64f> res = new List<CvPoint3D64f>();
+            for (int index = 0; index < this.points.Count() - 1; index++)
+            {
+                double x = this.points[index + 1].Value.X - this.points[index].Value.X;
+                double y = this.points[index + 1].Value.Y - this.points[index].Value.Y;
+                double z = this.points[index + 1].Value.Z - this.points[index].Value.Z;
+                res.Add(new CvPoint3D64f(x, y, z));
+            }
+            res.Add(res.Last());
+            this.trajectory = res;
         }
         /// <summary>
         /// csvに吐く
