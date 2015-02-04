@@ -467,6 +467,8 @@ namespace KinectMotionCapture
     public struct SegmentedMotionData
     {
         public string stepName;
+        // TODO 変数のタイプをつくる
+        public string variableType;
         public JointType jointType;
         public PointSequence pointSeqs;
         public SegmentedMotionData(string stepName, JointType jointType, List<Pose> motions)
@@ -568,6 +570,13 @@ namespace KinectMotionCapture
             {
                 pose.RotateToY(rotate);
             }
+        }
+        /// <summary>
+        /// 足基準系、Torso加速度、Torso任意点外積、Torso加速度任意点外積、それぞれのトラジェクトリを生成
+        /// </summary>
+        public void GenerateVaiables()
+        {
+
         }
         /// <summary>
         /// データを時間に沿って切る
