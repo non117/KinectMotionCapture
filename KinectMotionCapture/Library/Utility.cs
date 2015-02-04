@@ -616,6 +616,20 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
+        /// CvPointの平均
+        /// </summary>
+        /// <param name="seq"></param>
+        /// <param name="rate"></param>
+        /// <returns></returns>
+        public static CvPoint3D64f CalcMedianAverage(List<CvPoint3D64f> seq, double rate = 0.3)
+        {
+            double x = CalcMedianAverage(seq.Select(p => p.X).ToList());
+            double y = CalcMedianAverage(seq.Select(p => p.Y).ToList());
+            double z = CalcMedianAverage(seq.Select(p => p.Z).ToList());
+            return new CvPoint3D64f(x, y, z);
+        }
+
+        /// <summary>
         /// 中央値移動平均. 真ん中を基準とする.
         /// </summary>
         /// <param name="sequence"></param>

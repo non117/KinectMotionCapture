@@ -520,6 +520,38 @@ namespace KinectMotionCapture
             this.timeSlices[keyMotionType] = Tuple.Create(startTime, endTime);
         }
         /// <summary>
+        /// 方向をそろえるためのサンプルをとってくる
+        /// </summary>
+        /// <returns></returns>
+        public List<CvPoint3D64f> GetDirectionSamples()
+        {
+            string[] sampleSteps = new string[] { "A", "B1", "C1", "D1" };
+            List<DateTime> times = new List<DateTime>();
+            foreach (string stepName in sampleSteps)
+            {
+                Tuple<DateTime, DateTime> timePair;
+                if (this.timeSlices.TryGetValue(stepName, out timePair))
+                {
+                    times.Add(timePair.Item1);
+                    times.Add(timePair.Item2);
+                }
+            }
+            DateTime start = times.Min();
+            DateTime end = times.Max();
+            return this.motionLog.Where(p => start <= p.timeStamp && p.timeStamp <= end).Select(p => p.GetBodyDirection()).ToList();
+        }
+        /// <summary>
+        /// Y軸に対して回転させる
+        /// </summary>
+        /// <param name="rotate"></param>
+        public void RotateToY(double rotate)
+        {
+            foreach (Pose pose in this.motionLog)
+            {
+                pose.RotateToY(rotate);
+            }
+        }
+        /// <summary>
         /// データを時間に沿って切る
         /// </summary>
         public void SliceData()
@@ -540,24 +572,50 @@ namespace KinectMotionCapture
     public class MotionAnalyzer
     {
         List<User> users;
-        List<double> rotateRadians;
+        /// <summary>
+        /// 統計とって方向をそろえる
+        /// </summary>
+        /// <param name="masterName"></param>
         public void AjustBodyDirection(string masterName)
         {
+            List<double> rotateRadians = new List<double>();
+            // 60% の区間同士で直積の平均とすべきかもしれない. しかし時間がない.
             User master = this.users.Where(u => u.userName == masterName).First();
+            List<CvPoint3D64f> masterDirections = master.GetDirectionSamples();
+            CvPoint3D64f avgMasterDirection = Utility.CalcMedianAverage(masterDirections);
             foreach(User user in this.users)
             {
                 if (user == master)
                 {
                     continue;
                 }
-                
+                List<CvPoint3D64f> directions = user.GetDirectionSamples();
+                CvPoint3D64f avgDirection = Utility.CalcMedianAverage(directions);
+                rotateRadians.Add(Utility.GetVectorRadian(avgMasterDirection, avgDirection));
+            }
+            double rotate = rotateRadians.Average();
+            foreach (User user in this.users)
+            {
+                user.RotateToY(rotate);
             }
         }
-
+        /// <summary>
+        /// すらいす
+        /// </summary>
+        public void Slice()
+        {
+            foreach (User user in this.users)
+            {
+                user.SliceData();
+            }
+        }
+        /// <summary>
+        /// こんすとらくた
+        /// </summary>
+        /// <param name="csvFilePath"></param>
         public MotionAnalyzer(string csvFilePath)
         {
             this.users = new List<User>();
-            this.rotateRadians = new List<double>();
             string folder = Path.GetDirectoryName(csvFilePath);
             List<List<string>> csvData = Utility.LoadFromCsv(csvFilePath);
             List<string> userNames = new List<string>();
