@@ -79,6 +79,12 @@ namespace KinectMotionCapture
 
         private void MotionAnalyzeButton_Click(object sender, RoutedEventArgs e)
         {
+            CvPoint3D64f slave = new CvPoint3D64f(0.7071, 0, 0.7071);
+            CvPoint3D64f master = new CvPoint3D64f(0, 0, 1);
+            double rad = Utility.GetVectorRadian(master, slave);
+            CvMat mat = CvEx.GetRotation3D(new CvPoint3D64f(0, 1, 0), rad);
+            CvPoint3D64f to = CvEx.RotatePoint3D(slave, mat);
+
             string csvFilePath = @"C:\Users\non\Desktop\Filtered\CutTiming.csv";
             MotionAnalyzer ma = new MotionAnalyzer(csvFilePath);
         }

@@ -740,6 +740,32 @@ namespace KinectMotionCapture
             return y0 + alpha * (y1 - y0);
         }
 
+        /// <summary>
+        /// 2つのベクトルの角度をラジアンで返す
+        /// </summary>
+        /// <param name="one"></param>
+        /// <param name="two"></param>
+        /// <returns></returns>
+        public static double GetVectorRadian(CvPoint3D64f one, CvPoint3D64f two)
+        {
+            // masterにslaveを回転させるコード
+            //CvPoint3D64f slave = new CvPoint3D64f(0.7071, 0, 0.7071);
+            //CvPoint3D64f master = new CvPoint3D64f(0, 0, 1);
+            //double rad = Utility.GetVectorRadian(master, slave);
+            //CvMat mat = CvEx.GetRotation3D(new CvPoint3D64f(0, 1, 0), rad);
+            //CvPoint3D64f to = CvEx.RotatePoint3D(slave, mat);
+            one.Y = 0;
+            two.Y = 0;
+            CvPoint3D64f norm = CvEx.Cross(two, one);
+            double cos = CvEx.Cos(two, one);
+            double rad = Math.Acos(cos);
+            if (norm.Y < 0)
+            {
+                rad = -1 * rad;
+            }            
+            return rad;
+        }
+
         /*
         /// <summary>
         /// DPマッチングのための座標, Point2D使って書き直すべき

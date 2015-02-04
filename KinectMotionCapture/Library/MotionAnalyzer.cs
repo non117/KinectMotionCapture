@@ -165,6 +165,47 @@ namespace KinectMotionCapture
             }
             return null;
         }
+        /// <summary>
+        /// 胴体中央の座標系に変換する
+        /// </summary>
+        public void TranslateToTorsoCoordinate()
+        {
+            Dictionary<JointType, CvPoint3D64f> newJoints = new Dictionary<JointType, CvPoint3D64f>();
+            foreach (JointType jointType in this.joints.Keys)
+            {
+                newJoints[jointType] = this.joints[jointType] - this.joints[JointType.SpineMid];
+            }
+            this.joints = newJoints;
+        }
+        /// <summary>
+        /// 胴体の方向を計算する
+        /// </summary>
+        /// <returns></returns>
+        public CvPoint3D64f GetBodyDirection()
+        {
+            CvPoint3D64f spine = joints[JointType.SpineShoulder] - joints[JointType.SpineMid];
+            CvPoint3D64f torsoToRightShoulder = joints[JointType.ShoulderRight] - joints[JointType.SpineMid];            
+            CvPoint3D64f rightbodyCross = CvEx.Cross(spine, torsoToRightShoulder);            
+            CvPoint3D64f torsoToLeftShoulder = joints[JointType.ShoulderLeft] - joints[JointType.SpineMid];
+            CvPoint3D64f leftbodyCross = CvEx.Cross(torsoToLeftShoulder, spine);
+            CvPoint3D64f rightDirection = CvEx.Normalize(rightbodyCross);
+            CvPoint3D64f leftDirection = CvEx.Normalize(leftbodyCross);
+            return CvEx.Normalize(rightDirection + leftDirection);
+        }
+        /// <summary>
+        /// Y軸まわりにradで回転させる
+        /// </summary>
+        /// <param name="rad"></param>
+        public void RotateToY(double rad)
+        {
+            Dictionary<JointType, CvPoint3D64f> newJoints = new Dictionary<JointType, CvPoint3D64f>();
+            CvMat mat = CvEx.GetRotation3D(new CvPoint3D64f(0, 1, 0), rad);
+            foreach (JointType jointType in this.joints.Keys)
+            {
+                newJoints[jointType] = CvEx.RotatePoint3D(this.joints[jointType], mat);
+            }
+            this.joints = newJoints;
+        }
     }
 
     /// <summary>
@@ -444,6 +485,8 @@ namespace KinectMotionCapture
                 Pose pose = new Pose(pair.joints, pair.time);
                 this.motionLog.Add(pose);
             }
+            // ここでTorso中心にして、肩をそろえる
+
             foreach (JointType jointType in Enum.GetValues(typeof(JointType)))
             {
                 List<CvPoint3D64f?> points = this.motionLog.Select(m => m.GetPoint(jointType)).ToList();
