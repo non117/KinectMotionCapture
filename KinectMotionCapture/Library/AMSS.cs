@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 using OpenCvSharp;
 
-namespace KinectMotionCapture.Library
+namespace KinectMotionCapture
 {
     class AMSS
     {
@@ -99,10 +99,9 @@ namespace KinectMotionCapture.Library
                 {
                     int nX = curNode.current.x + dirX[i];
                     int nY = curNode.current.y + dirY[i];
-                    double addCost = costFunc(modelSeq[nX], targetSeq[nY]);
-                    if (nX < m && nY < n && pathMatrix[nX, nY].cost > curNode.cost + addCost)
+                    if (nX < m && nY < n && pathMatrix[nX, nY].cost > curNode.cost + costFunc(modelSeq[nX], targetSeq[nY]))
                     {
-                        pathMatrix[nX, nY].cost = curNode.cost + addCost;
+                        pathMatrix[nX, nY].cost = curNode.cost + costFunc(modelSeq[nX], targetSeq[nY]);;
                         pathMatrix[nX, nY].prev = curNode.current;
                         priorityList.Add(new Node(pathMatrix[nX, nY].cost, curNode.current, new Point(nX, nY)));
                     }                    

@@ -87,6 +87,9 @@ namespace KinectMotionCapture
 
             string csvFilePath = @"C:\Users\non\Desktop\Filtered\CutTiming.csv";
             MotionAnalyzer ma = new MotionAnalyzer(csvFilePath);
+            ma.AjustBodyDirection("Student1");
+            ma.Slice();
+            ma.Test();
         }
     }
 }

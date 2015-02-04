@@ -108,7 +108,7 @@ namespace KinectMotionCapture
         /// <summary>
         /// csvに吐く
         /// </summary>
-        public void Dump()
+        public void Dump(string prefix)
         {
             List<List<string>> outputs = new List<List<string>>();
             DateTime start = this.times[0];
@@ -130,7 +130,8 @@ namespace KinectMotionCapture
                 }
                 outputs.Add(line);
             }
-            Utility.SaveToCsv(jointType.ToString() + ".csv", outputs);
+            string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), prefix + jointType.ToString() + ".csv");
+            Utility.SaveToCsv(path, outputs);
         }
     }
 
@@ -608,6 +609,27 @@ namespace KinectMotionCapture
             {
                 user.SliceData();
             }
+        }
+        /// <summary>
+        /// てすと
+        /// </summary>
+        public void Test()
+        {
+            SegmentedMotionData dataMaster = this.users[0].segmentedData.Where(s => s.jointType == JointType.KneeRight && s.stepName == "C1").First();
+            SegmentedMotionData dataSlave = this.users[1].segmentedData.Where(s => s.jointType == JointType.KneeRight && s.stepName == "C1").First();
+            dataMaster.pointSeqs.Dump("master");
+            dataSlave.pointSeqs.Dump("slave");
+            List<CvPoint3D64f> master = dataMaster.pointSeqs.points.Select(p => (CvPoint3D64f)p).ToList();
+            List<CvPoint3D64f> slave = dataSlave.pointSeqs.points.Select(p => (CvPoint3D64f)p).ToList();
+            List<DateTime> times = dataMaster.pointSeqs.times;
+            Tuple<double, int[]> res = AMSS.DPmatching(master, slave, AMSS.CvPointCostFunction);
+            List<CvPoint3D64f?> slave2 = new List<CvPoint3D64f?>();
+            foreach (int index in res.Item2)
+            {
+                slave2.Add((CvPoint3D64f?)slave[index]);
+            }
+            PointSequence ps = new PointSequence(slave2, times, JointType.KneeRight);
+            ps.Dump("slave2");
         }
         /// <summary>
         /// こんすとらくた
