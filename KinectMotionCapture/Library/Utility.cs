@@ -653,6 +653,11 @@ namespace KinectMotionCapture
             return res;
         }
 
+        /// <summary>
+        /// 中央値の骨の長さを得る
+        /// </summary>
+        /// <param name="stats"></param>
+        /// <returns></returns>
         public static double CalcMedianLength(List<BoneStatistics> stats)
         {
             List<double> minSqs = new List<double>();
@@ -691,6 +696,48 @@ namespace KinectMotionCapture
                 newJointsSeq.Add(newJoints);
             }
             return newJointsSeq;
+        }
+
+        /// <summary>
+        /// CvPointを時間で線形補間
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public static List<CvPoint3D64f?> LinearInterpolate(List<DateTime> times, List<CvPoint3D64f?> points)
+        {
+            List<CvPoint3D64f?> res = new List<CvPoint3D64f?>();
+            DateTime start = times.First();
+            double t0 = 0;
+            double t1 = (times.Last() - times.First()).TotalMilliseconds;
+            CvPoint3D64f p0 = (CvPoint3D64f)points.First();
+            CvPoint3D64f p1 = (CvPoint3D64f)points.Last();
+            res.Add(p0);
+            for (int i = 1; i < times.Count() - 1; i++)
+            {
+                DateTime now = times[i];
+                double t = (now - start).TotalMilliseconds;
+                double x = LinearInterpolate(t0, p0.X, t1, p1.X, t);
+                double y = LinearInterpolate(t0, p0.Y, t1, p1.Y, t);
+                double z = LinearInterpolate(t0, p0.Z, t1, p1.Z, t);
+                res.Add(new CvPoint3D64f(x, y, z));
+            }
+            res.Add(p1);
+            return res;
+        }
+
+        /// <summary>
+        /// 線形補間
+        /// </summary>
+        /// <param name="x0"></param>
+        /// <param name="y0"></param>
+        /// <param name="x1"></param>
+        /// <param name="y1"></param>
+        /// <param name="x"></param>
+        /// <returns></returns>
+        public static double LinearInterpolate(double x0, double y0, double x1, double y1, double x)
+        {
+            double alpha = (x - x0) / (x1 - x0);
+            return y0 + alpha * (y1 - y0);
         }
 
         /*

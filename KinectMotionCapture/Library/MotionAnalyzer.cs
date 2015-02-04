@@ -34,10 +34,72 @@ namespace KinectMotionCapture
             this.jointType = jointType;
         }
         /// <summary>
+        /// データを補完する
+        /// </summary>
+        public void Interpolate()
+        {
+            List<CvPoint3D64f?> filledPoints = new List<CvPoint3D64f?>();
+            List<CvPoint3D64f?> interpolatePoints = new List<CvPoint3D64f?>();
+            List<DateTime> interpolateTimes = new List<DateTime>();
+            bool isPrevNull = false;
+            // 連続するnullな領域を検出して、両端の値をもとに線形補間する
+            for (int index = 0; index < this.points.Count(); index++)
+            {
+                if (points[index] == null)
+                {
+                    // index 0の場合をアレ
+                    if (isPrevNull == false)
+                    {
+                        interpolatePoints.Add(points[index - 1]);
+                        interpolateTimes.Add(times[index - 1]);
+                        isPrevNull = true;
+                    }
+                    interpolatePoints.Add(points[index]);
+                    interpolateTimes.Add(times[index]);
+                }
+                else
+                {
+                    if (isPrevNull == true)
+                    {
+                        interpolatePoints.Add(points[index]);
+                        interpolateTimes.Add(times[index]);
+                        isPrevNull = false;
+                        // ここで補完はじめる
+                        List<CvPoint3D64f?> fixedPoints = new List<CvPoint3D64f?>();
+                        // 頭からの区間で補完できない場合は、代わりの点で埋める
+                        if (interpolatePoints.First() == null)
+                        {
+                            fixedPoints = interpolatePoints.Select(p => interpolatePoints.Last()).ToList();
+                        }
+                        else
+                        {
+                            fixedPoints = Utility.LinearInterpolate(interpolateTimes, interpolatePoints);
+                        }
+                        // 補正済みを追加
+                        filledPoints.AddRange(fixedPoints);
+                        // clear
+                        interpolatePoints.Clear();
+                        interpolatePoints.Clear();
+                    }
+                    filledPoints.Add(points[index]);
+                }
+            }
+            //　末尾の区間で補完できていない場合は代わりの点で埋める
+            if (interpolatePoints.Count() > 0)
+            {
+                List<CvPoint3D64f?> fixedPoints = interpolatePoints.Select(p => interpolatePoints.First()).ToList();
+                filledPoints.AddRange(fixedPoints);
+            }
+            // update
+            this.points = filledPoints;
+        }
+
+        /// <summary>
         /// 平滑化
         /// </summary>
         public void Smoothing(int n = 10)
         {
+            this.Interpolate();
             this.points = Utility.MovingMedianAverage(this.points, n);
         }
         /// <summary>

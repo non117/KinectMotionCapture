@@ -52,8 +52,8 @@ namespace KinectMotionCapture
 
         private void UtilityButton_Click(object sender, RoutedEventArgs e)
         {
-            string bodyData = @"C:\Users\non\Desktop\Data\1222\L1\Student2SelectedUserBody.dump";
-            string timeData = @"C:\Users\non\Desktop\Data\1222\L1\Student2TimeData.dump";
+            string bodyData = @"C:\Users\non\Desktop\Data\1222\L1\Student3SelectedUserBody.dump";
+            string timeData = @"C:\Users\non\Desktop\Data\1222\L1\Student3TimeData.dump";
             List<string> statData = new List<string>()
             {
                 @"C:\Users\non\Desktop\Data\1222\L1\L1StudentStatData.dump",
