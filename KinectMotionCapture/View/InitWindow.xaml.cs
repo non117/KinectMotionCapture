@@ -54,7 +54,7 @@ namespace KinectMotionCapture
         {
             string bodyData = @"C:\Users\non\Desktop\Data\1222\L5\Student22SelectedUserBody.dump";
             string timeData = @"C:\Users\non\Desktop\Data\1222\L5\Student22TimeData.dump";
-            string bodyFileName = System.IO.Path.GetFileName(bodyData);
+            string bodyFileName = System.IO.Path.GetFileName(bodyData).Replace("SelectedUser", "Filtered");
             string timeFileName = System.IO.Path.GetFileName(timeData);
             List<string> statData = new List<string>()
             {
