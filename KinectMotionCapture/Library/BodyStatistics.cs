@@ -92,14 +92,13 @@ namespace KinectMotionCapture
             foreach (Bone bone in this.bones)
             {
                 List<double> data = this.boneLengthSqLog[bone];
+                int skip = (int)(data.Count() * 0.3);
+                int take = data.Count() - skip * 2;
+                data.Sort();
+                // 上下30%を削除
+                data = data.Skip(skip).Take(take).ToList();
                 double median = CalcEx.GetMedian(data);
                 double average = data.Average();
-                double threshold = Math.Max(median, average);
-                // 中央値あるいは平均値の大きい方の2倍未満の区間に限定する
-                data = data.Where(d => d <= average * 2.1).ToList();
-                // 計算し直す
-                median = CalcEx.GetMedian(data);
-                average = data.Average();
                 double std = Math.Abs(Math.Sqrt(data.Select(d => Math.Pow(d - average, 2)).Sum() / (data.Count() - 1)));
                 double minLength = median - std * z;
                 double maxLength = median + std * z;
