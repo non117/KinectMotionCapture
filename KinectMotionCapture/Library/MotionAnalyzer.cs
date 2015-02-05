@@ -460,7 +460,7 @@ namespace KinectMotionCapture
     }
 
     /// <summary>
-    /// 最終的なデータ？　セグメントされたデータ
+    /// 最終的なデータ？セグメントされたトラジェクトリデータ
     /// </summary>
     public struct SegmentedMotionData
     {
@@ -469,13 +469,13 @@ namespace KinectMotionCapture
         public JointType jointType;
         public List<CvPoint3D64f> points;
         public List<DateTime> times;
-        public SegmentedMotionData(string stepName, string variableType, JointType jointType, List<Pose> motions)
+        public SegmentedMotionData(string stepName, string variableType, JointType jointType, List<CvPoint3D64f> points, List<DateTime> times)
         {
             this.stepName = stepName;
             this.variableType = variableType;
             this.jointType = jointType;
-            this.points = motions.Select(p => (CvPoint3D64f)p.GetPoint(jointType)).ToList();
-            this.times = motions.Select(p => p.timeStamp).ToList();
+            this.points = points;
+            this.times = times;
         }
     }
     
@@ -487,8 +487,11 @@ namespace KinectMotionCapture
         public string motionDataPath;
         public string timeDataPath;
         public List<Pose> motionLog;
+        public Dictionary<JointType, List<CvPoint3D64f>> positionVectors;
+        public Dictionary<JointType, List<CvPoint3D64f>> accelerationVectors;
+        public Dictionary<JointType[], List<CvPoint3D64f>> positionCrossCombinations;
+        public Dictionary<JointType[], List<CvPoint3D64f>> accelerationCrossCombinations;
         public Dictionary<string, Tuple<DateTime, DateTime>> timeSlices;
-        public List<SegmentedMotionData> segmentedData;
         /// <summary>
         /// こんすとらくた
         /// </summary>
@@ -569,39 +572,83 @@ namespace KinectMotionCapture
                 pose.RotateToY(rotate);
             }
         }
+
         /// <summary>
-        /// 足基準系、Torso加速度、Torso任意点外積、Torso加速度任意点外積、それぞれのトラジェクトリを生成
+        /// 指定された組み合わせのベクトルを生成
+        /// </summary>
+        /// <param name="combination"></param>
+        /// <param name="vectors"></param>
+        /// <returns></returns>
+        public List<CvPoint3D64f> GetCross(IList<JointType> combination, Dictionary<JointType, List<CvPoint3D64f>> vectors)
+        {
+            List<CvPoint3D64f> firsts = vectors[combination[0]];
+            List<CvPoint3D64f> seconds = vectors[combination[1]];
+            List<CvPoint3D64f> thirds = vectors[combination[2]];
+            List<CvPoint3D64f> res = new List<CvPoint3D64f>();
+            for (int index = 0; index < firsts.Count(); index++)
+            {
+                CvPoint3D64f vec = CvEx.Normalize(CvEx.Cross(seconds[index] - firsts[index], thirds[index] - firsts[index]));
+                res.Add(vec);
+            }
+            return res;
+        }
+
+        /// <summary>
+        /// Torso加速度、Torso任意点外積、Torso加速度任意点外積、それぞれのトラジェクトリを生成
         /// </summary>
         public void GenerateVaiables()
         {
-
+            // 使える関節を列挙
+            List<JointType> hands = Utility.Hands;
+            List<JointType> validJointTypes = Utility.RightBody.Concat(Utility.LeftBody).Concat(Utility.Spines).Where(j => !hands.Contains(j)).ToList();
+            this.positionVectors = new Dictionary<JointType, List<CvPoint3D64f>>();
+            this.accelerationVectors = new Dictionary<JointType, List<CvPoint3D64f>>();
+            foreach(JointType jointType in validJointTypes)
+            {
+                List<CvPoint3D64f> tempPoints = this.motionLog.Select(p => (CvPoint3D64f)p.GetPoint(jointType)).ToList();
+                this.positionVectors[jointType] = tempPoints;
+                this.accelerationVectors[jointType] = Utility.SecondaryDifferenceAndSmoothing(tempPoints, this.motionLog.Select(p => p.timeStamp).ToList());
+            }            
+            // 組み合わせを生成
+            this.positionCrossCombinations = new Dictionary<JointType[],List<CvPoint3D64f>>();
+            this.accelerationCrossCombinations = new Dictionary<JointType[],List<CvPoint3D64f>>();
+            foreach (IList<JointType> comb in new Combinations<JointType>(validJointTypes, 3))
+            {                
+                this.positionCrossCombinations[comb.ToArray()] = Utility.MakeTrajectory(this.GetCross(comb, this.positionVectors));
+                this.accelerationCrossCombinations[comb.ToArray()] = Utility.MakeTrajectory(this.GetCross(comb, this.accelerationVectors));
+            }
+            // トラジェクトリになってないやつを変換
+            this.positionVectors = this.positionVectors.ToDictionary(pair => pair.Key, pair => Utility.MakeTrajectory(pair.Value));
+            this.accelerationVectors = this.accelerationVectors.ToDictionary(pair => pair.Key, pair => Utility.MakeTrajectory(pair.Value));
         }
         /// <summary>
         /// データを時間に沿って切る
         /// </summary>
-        public void SliceData()
+        public List<SegmentedMotionData> GetSliceData()
         {
+            List<SegmentedMotionData> res = new List<SegmentedMotionData>();
+            List<DateTime> times = this.motionLog.Select(p => p.timeStamp).ToList();
             foreach (string stepName in this.timeSlices.Keys)
             {
                 DateTime start = this.timeSlices[stepName].Item1;
                 DateTime end = this.timeSlices[stepName].Item2;
-                List<Pose> sliced = this.motionLog.Where(p => start <= p.timeStamp && p.timeStamp <= end).ToList();
-                List<JointType> hands = Utility.Hands;
-                foreach (JointType jointType in Enum.GetValues(typeof(JointType)))
+                foreach (var pair in this.positionVectors)
                 {
-                    if (hands.Contains(jointType))
-                    {
-                        continue;
-                    }
-                    this.segmentedData.Add(new SegmentedMotionData(stepName, "Position", jointType, sliced));
+                    // pair.valueに対してzipしたのちslice, とれたデータをあれ
                 }
+
+                //List<Pose> sliced = this.motionLog.Where(p => start <= p.timeStamp && p.timeStamp <= end).ToList();
+                // うまいことスライスして segmentを作ってつめる
+                
             }
+            return res;
         }
     }
 
     public class MotionAnalyzer
     {
         List<User> users;
+        public List<SegmentedMotionData> segmentedData;
         /// <summary>
         /// 統計とって方向をそろえる
         /// </summary>
@@ -638,9 +685,11 @@ namespace KinectMotionCapture
         /// </summary>
         public void Slice()
         {
+            this.segmentedData = new List<SegmentedMotionData>();
             foreach (User user in this.users)
             {
-                user.SliceData();
+                user.GenerateVaiables();
+                this.segmentedData.AddRange(user.GetSliceData());
             }
         }
         /// <summary>
