@@ -250,7 +250,7 @@ namespace KinectMotionCapture
         /// <param name="points"></param>
         /// <param name="times"></param>
         /// <param name="filename"></param>
-        public static void SaveToCsv(List<CvPoint3D64f> points, List<DateTime> times, string filename)
+        public static void SaveToCsv(string filename, List<CvPoint3D64f> points, List<DateTime> times)
         {
             List<List<string>> outputs = new List<List<string>>();
             DateTime start = times[0];
@@ -555,6 +555,10 @@ namespace KinectMotionCapture
         // 下半身
         public static List<JointType> Legs = new List<JointType>() {JointType.HipRight, JointType.HipLeft, JointType.KneeRight, JointType.KneeLeft,
                                                                     JointType.AnkleRight, JointType.AnkleLeft, JointType.FootRight, JointType.FootLeft};
+
+        // 手
+        public static List<JointType> Hands = new List<JointType>(){JointType.HandRight, JointType.ThumbRight, JointType.HandTipRight,
+                                                                    JointType.HandLeft, JointType.ThumbLeft, JointType.HandTipLeft};
 
         /// <summary>
         /// JointTYpeを表す数値をJointTypeに変換する

@@ -586,8 +586,13 @@ namespace KinectMotionCapture
                 DateTime start = this.timeSlices[stepName].Item1;
                 DateTime end = this.timeSlices[stepName].Item2;
                 List<Pose> sliced = this.motionLog.Where(p => start <= p.timeStamp && p.timeStamp <= end).ToList();
+                List<JointType> hands = Utility.Hands;
                 foreach (JointType jointType in Enum.GetValues(typeof(JointType)))
                 {
+                    if (hands.Contains(jointType))
+                    {
+                        continue;
+                    }
                     this.segmentedData.Add(new SegmentedMotionData(stepName, "Position", jointType, sliced));
                 }
             }
@@ -603,7 +608,7 @@ namespace KinectMotionCapture
         /// <param name="masterName"></param>
         public void AjustBodyDirection(string masterName)
         {
-            List<double> rotateRadians = new List<double>();
+            Dictionary<User, double> rotateRadians = new Dictionary<User, double>();
             // 60% の区間同士で直積の平均とすべきかもしれない. しかし時間がない.
             User master = this.users.Where(u => u.userName == masterName).First();
             List<CvPoint3D64f> masterDirections = master.GetDirectionSamples();
@@ -616,12 +621,15 @@ namespace KinectMotionCapture
                 }
                 List<CvPoint3D64f> directions = user.GetDirectionSamples();
                 CvPoint3D64f avgDirection = Utility.CalcMedianAverage(directions);
-                rotateRadians.Add(Utility.GetVectorRadian(avgMasterDirection, avgDirection));
+                rotateRadians.Add(user, Utility.GetVectorRadian(avgMasterDirection, avgDirection));
             }
-            // ここおかしい 平均ではなくそれぞれに対してアレしないといけない
-            double rotate = rotateRadians.Average();
             foreach (User user in this.users)
             {
+                if (user == master)
+                {
+                    continue;
+                }
+                double rotate = rotateRadians[user];
                 user.RotateToY(rotate);
             }
         }
@@ -642,6 +650,11 @@ namespace KinectMotionCapture
         {
             SegmentedMotionData dataMaster = this.users[0].segmentedData.Where(s => s.jointType == JointType.KneeRight && s.stepName == "C1").First();
             SegmentedMotionData dataSlave = this.users[1].segmentedData.Where(s => s.jointType == JointType.KneeRight && s.stepName == "C1").First();
+            Utility.SaveToCsv("master", dataMaster.points, dataMaster.times);
+            var hoge = Utility.SecondaryDifferenceAndSmoothing(dataMaster.points, dataMaster.times);
+            Utility.SaveToCsv("masterA", hoge, dataMaster.times);
+            var fuga = Utility.MovingMedianAverage(Utility.Difference(dataMaster.points, dataMaster.times), 10);
+            Utility.SaveToCsv("masterV", fuga, dataMaster.times);
         }
         /// <summary>
         /// こんすとらくた
