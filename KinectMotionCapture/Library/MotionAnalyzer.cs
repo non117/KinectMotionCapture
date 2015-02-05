@@ -813,7 +813,7 @@ namespace KinectMotionCapture
                 }
             }
             string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "AllSimilarities" + ".dump");
-            Utility.SaveToBinary(path, result);
+            Utility.SaveToBinary(result, path);
 
         }
         /// <summary>
