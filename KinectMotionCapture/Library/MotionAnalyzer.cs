@@ -432,7 +432,17 @@ namespace KinectMotionCapture
             this.motionLog = new List<Pose>();
             foreach (var pair in jointsSeq.Zip(timeSeq, (joints, time) => new { joints, time }))
             {
-                Pose pose = new Pose(pair.joints, pair.time);
+                Dictionary<JointType, CvPoint3D64f> tmpjoints;
+                // 統合後のデータがnullの場合はSpineBaseのみ無限遠のダミーデータが入っているため
+                if (pair.joints.Values.Any(p => p.X > 1000))
+                {
+                    tmpjoints = new Dictionary<JointType, CvPoint3D64f>();
+                }
+                else
+                {
+                    tmpjoints = pair.joints;
+                }
+                Pose pose = new Pose(tmpjoints, pair.time);
                 this.motionLog.Add(pose);
             }
             // seqに詰め込む
