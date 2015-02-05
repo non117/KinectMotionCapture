@@ -80,12 +80,15 @@ namespace KinectMotionCapture
                             fixedPoints = Utility.LinearInterpolate(interpolateTimes, interpolatePoints);
                         }
                         // 補正済みを追加
-                        filledPoints.AddRange(fixedPoints);
+                        filledPoints.AddRange(fixedPoints.Skip(1));
                         // clear
                         interpolatePoints.Clear();
-                        interpolatePoints.Clear();
+                        interpolateTimes.Clear();
                     }
-                    filledPoints.Add(points[index]);
+                    else
+                    {
+                        filledPoints.Add(points[index]);
+                    }
                 }
             }
             //　末尾の区間で補完できていない場合は代わりの点で埋める
@@ -468,7 +471,7 @@ namespace KinectMotionCapture
     {
         public string stepName;
         // TODO 変数のタイプをつくる
-        public string variableType;
+        //public string variableType;
         public JointType jointType;
         public PointSequence pointSeqs;
         public SegmentedMotionData(string stepName, JointType jointType, List<Pose> motions)
@@ -620,6 +623,7 @@ namespace KinectMotionCapture
                 CvPoint3D64f avgDirection = Utility.CalcMedianAverage(directions);
                 rotateRadians.Add(Utility.GetVectorRadian(avgMasterDirection, avgDirection));
             }
+            // ここおかしい 平均ではなくそれぞれに対してアレしないといけない
             double rotate = rotateRadians.Average();
             foreach (User user in this.users)
             {
