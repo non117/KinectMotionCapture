@@ -148,6 +148,7 @@
     <Compile Include="Library\AMSS.cs" />
     <Compile Include="Library\BodyStatistics.cs" />
     <Compile Include="Library\CalcEx.cs" />
+    <Compile Include="Library\Combinations.cs" />
     <Compile Include="Library\JointCorrection.cs" />
     <Compile Include="Library\JointMirroredCorrection.cs" />
     <Compile Include="Library\MotionAnalyzer.cs" />

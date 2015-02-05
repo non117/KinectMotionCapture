@@ -861,6 +861,6 @@ namespace KinectMotionCapture
                 rad = -1 * rad;
             }            
             return rad;
-        } 
+        }
     }
 }
