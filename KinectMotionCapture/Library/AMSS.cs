@@ -41,7 +41,7 @@ namespace KinectMotionCapture
         /// <param name="a"></param>
         /// <param name="b"></param>
         /// <returns></returns>
-        public static double CvPointCostFunction(CvPoint3D64f a, CvPoint3D64f b)
+        public static double CvPointCostFunction(CvPoint3D32f a, CvPoint3D32f b)
         {
             double cos = CvEx.Cos(a, b);
             if (cos < 0)

@@ -462,18 +462,26 @@ namespace KinectMotionCapture
     /// <summary>
     /// 最終的なデータ？セグメントされたトラジェクトリデータ
     /// </summary>
+    [Serializable]
     public struct SegmentedMotionData
     {
         public string stepName;
         public string variableName;
         public List<CvPoint3D32f> points;
         public List<DateTime> times;
+        public List<double> similarities;
         public SegmentedMotionData(string stepName, string variableName, List<CvPoint3D64f> points, List<DateTime> times)
         {
             this.stepName = stepName;
             this.variableName = variableName;
             this.points = points.Select(p => (CvPoint3D32f)p).ToList();
             this.times = times;
+            this.similarities = new List<double>();
+        }
+        public void CalcSimilarity(SegmentedMotionData masterData)
+        {
+            Tuple<double, int[]> res = AMSS.DPmatching<CvPoint3D32f>(masterData.points, this.points, AMSS.CvPointCostFunction);
+            this.similarities.Add(res.Item1);
         }
     }
 
@@ -740,6 +748,14 @@ namespace KinectMotionCapture
                 user.GenerateVaiables();
                 user.Slice();
             }
+        }
+        /// <summary>
+        /// データをがっちゃんこ
+        /// </summary>
+        /// <param name="masterNames"></param>
+        public void JoinData(string[] masterNames)
+        {
+
         }
         /// <summary>
         /// てすと
