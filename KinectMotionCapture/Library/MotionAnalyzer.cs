@@ -539,6 +539,7 @@ namespace KinectMotionCapture
         public Dictionary<JointType[], List<CvPoint3D64f>> accelerationCrossCombinations;
         public List<SegmentedMotionData> segmentedData;
         public Dictionary<string, Tuple<DateTime, DateTime>> timeSlices;
+        public List<string> variableNames;
         /// <summary>
         /// こんすとらくた
         /// </summary>
@@ -673,6 +674,7 @@ namespace KinectMotionCapture
         /// </summary>
         public void Slice()
         {
+            this.variableNames = new List<string>();
             this.segmentedData = new List<SegmentedMotionData>();
             List<DateTime> times = this.motionLog.Select(p => p.timeStamp).ToList();
             string variableName;
@@ -681,24 +683,28 @@ namespace KinectMotionCapture
             {
                 pa = new PointsAndTime(this.positionVectors[jointType], times);
                 variableName = "Position_" + jointType.ToString();
+                this.variableNames.Add(variableName);
                 this.segmentedData.AddRange(pa.Slice(this.timeSlices, variableName));
             }
             foreach (JointType jointType in this.accelerationVectors.Keys)
             {
                 pa = new PointsAndTime(this.accelerationVectors[jointType], times);
                 variableName = "Acceleration_" + jointType.ToString();
+                this.variableNames.Add(variableName);
                 this.segmentedData.AddRange(pa.Slice(this.timeSlices, variableName));
             }
             foreach (IList<JointType> comb in this.positionCrossCombinations.Keys)
             {
                 pa = new PointsAndTime(this.accelerationCrossCombinations[comb.ToArray()], times);
                 variableName = "Cross_of_" + String.Join(" ", comb) + "Position";
+                this.variableNames.Add(variableName);
                 this.segmentedData.AddRange(pa.Slice(this.timeSlices, variableName));
             }
             foreach (IList<JointType> comb in this.accelerationCrossCombinations.Keys)
             {
                 pa = new PointsAndTime(this.accelerationCrossCombinations[comb.ToArray()], times);
                 variableName = "Cross_of_" + String.Join(" ", comb) + "Acceleration";
+                this.variableNames.Add(variableName);
                 this.segmentedData.AddRange(pa.Slice(this.timeSlices, variableName));
             }
         }
@@ -753,8 +759,40 @@ namespace KinectMotionCapture
         /// データをがっちゃんこ
         /// </summary>
         /// <param name="masterNames"></param>
-        public void JoinData(string[] masterNames)
+        public void JoinData(string[] teacherNames)
         {
+            User[] teachers = this.users.Where(u => teacherNames.Contains(u.userName)).ToArray();
+            User[] students = this.users.Where(u => !teacherNames.Contains(u.userName)).ToArray();
+            string[] variableNames = teachers[0].variableNames.ToArray();
+            string[] stepNames = new string[] { "A", "B1", "C1", "D1", "E", "B2", "C2", "D2", "F", "G1", "H1",
+                                                "I", "J", "G2", "H2", "K", "L"};
+            foreach (string variable in variableNames)
+            {
+                foreach (string step in stepNames)
+                {
+                    foreach (User teacher in teachers)
+                    {
+                        var teacherDatas = teacher.segmentedData.Where(s => s.variableName == variable && s.stepName == step);
+                        if (teacherDatas.Count() == 0)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            foreach (User student in students)
+                            {
+                                var studentDatas = student.segmentedData.Where(s => s.variableName == variable && s.stepName == step);
+                                if (studentDatas.Count() > 0)
+                                {
+                                    SegmentedMotionData studentData = studentDatas.First();
+                                    studentData.CalcSimilarity(teacherDatas.First());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
 
         }
         /// <summary>
