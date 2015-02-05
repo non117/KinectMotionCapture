@@ -465,17 +465,55 @@ namespace KinectMotionCapture
     public struct SegmentedMotionData
     {
         public string stepName;
-        public string variableType;
-        public JointType jointType;
-        public List<CvPoint3D64f> points;
+        public string variableName;
+        public List<CvPoint3D32f> points;
         public List<DateTime> times;
-        public SegmentedMotionData(string stepName, string variableType, JointType jointType, List<CvPoint3D64f> points, List<DateTime> times)
+        public SegmentedMotionData(string stepName, string variableName, List<CvPoint3D64f> points, List<DateTime> times)
         {
             this.stepName = stepName;
-            this.variableType = variableType;
-            this.jointType = jointType;
+            this.variableName = variableName;
+            this.points = points.Select(p => (CvPoint3D32f)p).ToList();
+            this.times = times;
+        }
+    }
+
+    public struct PointsAndTime
+    {
+        public List<CvPoint3D64f> points;
+        public List<DateTime> times;
+        public PointsAndTime(List<CvPoint3D64f> points, List<DateTime> times)
+        {
             this.points = points;
             this.times = times;
+        }
+        public List<SegmentedMotionData> Slice(Dictionary<string, Tuple<DateTime, DateTime>> timeSlices, string variableName)
+        {
+            List<SegmentedMotionData> res = new List<SegmentedMotionData>();
+            foreach (string stepName in timeSlices.Keys)
+            {
+                DateTime start = timeSlices[stepName].Item1;
+                DateTime end = timeSlices[stepName].Item2;
+                List<DateTime> tempTimes = new List<DateTime>();
+                List<CvPoint3D64f> tempPoints = new List<CvPoint3D64f>();
+                for (int index = 0; index < this.points.Count; index++)
+                {
+                    if (this.times[index] < start)
+                    {
+                        continue;
+                    }
+                    if (end < this.times[index])
+                    {
+                        break;
+                    }
+                    if (start <= this.times[index] && this.times[index] <= end)
+                    {
+                        tempTimes.Add(this.times[index]);
+                        tempPoints.Add(this.points[index]);
+                    }
+                    res.Add(new SegmentedMotionData(stepName, variableName, tempPoints, tempTimes));
+                }
+            }
+            return res;
         }
     }
     
@@ -491,6 +529,7 @@ namespace KinectMotionCapture
         public Dictionary<JointType, List<CvPoint3D64f>> accelerationVectors;
         public Dictionary<JointType[], List<CvPoint3D64f>> positionCrossCombinations;
         public Dictionary<JointType[], List<CvPoint3D64f>> accelerationCrossCombinations;
+        public List<SegmentedMotionData> segmentedData;
         public Dictionary<string, Tuple<DateTime, DateTime>> timeSlices;
         /// <summary>
         /// こんすとらくた
@@ -624,31 +663,42 @@ namespace KinectMotionCapture
         /// <summary>
         /// データを時間に沿って切る
         /// </summary>
-        public List<SegmentedMotionData> GetSliceData()
+        public void Slice()
         {
-            List<SegmentedMotionData> res = new List<SegmentedMotionData>();
+            this.segmentedData = new List<SegmentedMotionData>();
             List<DateTime> times = this.motionLog.Select(p => p.timeStamp).ToList();
-            foreach (string stepName in this.timeSlices.Keys)
+            string variableName;
+            PointsAndTime pa;
+            foreach (JointType jointType in this.positionVectors.Keys)
             {
-                DateTime start = this.timeSlices[stepName].Item1;
-                DateTime end = this.timeSlices[stepName].Item2;
-                foreach (var pair in this.positionVectors)
-                {
-                    // pair.valueに対してzipしたのちslice, とれたデータをあれ
-                }
-
-                //List<Pose> sliced = this.motionLog.Where(p => start <= p.timeStamp && p.timeStamp <= end).ToList();
-                // うまいことスライスして segmentを作ってつめる
-                
+                pa = new PointsAndTime(this.positionVectors[jointType], times);
+                variableName = "Position_" + jointType.ToString();
+                this.segmentedData.AddRange(pa.Slice(this.timeSlices, variableName));
             }
-            return res;
+            foreach (JointType jointType in this.accelerationVectors.Keys)
+            {
+                pa = new PointsAndTime(this.accelerationVectors[jointType], times);
+                variableName = "Acceleration_" + jointType.ToString();
+                this.segmentedData.AddRange(pa.Slice(this.timeSlices, variableName));
+            }
+            foreach (IList<JointType> comb in this.positionCrossCombinations.Keys)
+            {
+                pa = new PointsAndTime(this.accelerationCrossCombinations[comb.ToArray()], times);
+                variableName = "Cross_of_" + String.Join(" ", comb) + "Position";
+                this.segmentedData.AddRange(pa.Slice(this.timeSlices, variableName));
+            }
+            foreach (IList<JointType> comb in this.accelerationCrossCombinations.Keys)
+            {
+                pa = new PointsAndTime(this.accelerationCrossCombinations[comb.ToArray()], times);
+                variableName = "Cross_of_" + String.Join(" ", comb) + "Acceleration";
+                this.segmentedData.AddRange(pa.Slice(this.timeSlices, variableName));
+            }
         }
     }
 
     public class MotionAnalyzer
     {
         List<User> users;
-        public List<SegmentedMotionData> segmentedData;
         /// <summary>
         /// 統計とって方向をそろえる
         /// </summary>
@@ -685,11 +735,10 @@ namespace KinectMotionCapture
         /// </summary>
         public void Slice()
         {
-            this.segmentedData = new List<SegmentedMotionData>();
             foreach (User user in this.users)
             {
                 user.GenerateVaiables();
-                this.segmentedData.AddRange(user.GetSliceData());
+                user.Slice();
             }
         }
         /// <summary>
@@ -697,13 +746,8 @@ namespace KinectMotionCapture
         /// </summary>
         public void Test()
         {
-            SegmentedMotionData dataMaster = this.users[0].segmentedData.Where(s => s.jointType == JointType.KneeRight && s.stepName == "C1").First();
-            SegmentedMotionData dataSlave = this.users[1].segmentedData.Where(s => s.jointType == JointType.KneeRight && s.stepName == "C1").First();
-            Utility.SaveToCsv("master", dataMaster.points, dataMaster.times);
-            var hoge = Utility.SecondaryDifferenceAndSmoothing(dataMaster.points, dataMaster.times);
-            Utility.SaveToCsv("masterA", hoge, dataMaster.times);
-            var fuga = Utility.MovingMedianAverage(Utility.Difference(dataMaster.points, dataMaster.times), 10);
-            Utility.SaveToCsv("masterV", fuga, dataMaster.times);
+            //SegmentedMotionData dataMaster = this.users[0].segmentedData.Where(s => s.jointType == JointType.KneeRight && s.stepName == "C1").First();
+            //SegmentedMotionData dataSlave = this.users[1].segmentedData.Where(s => s.jointType == JointType.KneeRight && s.stepName == "C1").First();
         }
         /// <summary>
         /// こんすとらくた
