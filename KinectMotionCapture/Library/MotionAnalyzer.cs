@@ -465,13 +465,15 @@ namespace KinectMotionCapture
     [Serializable]
     public struct SegmentedMotionData
     {
+        public string userName;
         public string stepName;
         public string variableName;
         public List<CvPoint3D32f> points;
         public List<DateTime> times;
         public List<double> similarities;
-        public SegmentedMotionData(string stepName, string variableName, List<CvPoint3D64f> points, List<DateTime> times)
+        public SegmentedMotionData(string userName, string stepName, string variableName, List<CvPoint3D64f> points, List<DateTime> times)
         {
+            this.userName = userName;
             this.stepName = stepName;
             this.variableName = variableName;
             this.points = points.Select(p => (CvPoint3D32f)p).ToList();
@@ -494,7 +496,7 @@ namespace KinectMotionCapture
             this.points = points;
             this.times = times;
         }
-        public List<SegmentedMotionData> Slice(Dictionary<string, Tuple<DateTime, DateTime>> timeSlices, string variableName)
+        public List<SegmentedMotionData> Slice(Dictionary<string, Tuple<DateTime, DateTime>> timeSlices, string variableName, string userName)
         {
             List<SegmentedMotionData> res = new List<SegmentedMotionData>();
             foreach (string stepName in timeSlices.Keys)
@@ -518,7 +520,7 @@ namespace KinectMotionCapture
                         tempTimes.Add(this.times[index]);
                         tempPoints.Add(this.points[index]);
                     }
-                    res.Add(new SegmentedMotionData(stepName, variableName, tempPoints, tempTimes));
+                    res.Add(new SegmentedMotionData(userName, stepName, variableName, tempPoints, tempTimes));
                 }
             }
             return res;
@@ -684,28 +686,28 @@ namespace KinectMotionCapture
                 pa = new PointsAndTime(this.positionVectors[jointType], times);
                 variableName = "Position_" + jointType.ToString();
                 this.variableNames.Add(variableName);
-                this.segmentedData.AddRange(pa.Slice(this.timeSlices, variableName));
+                this.segmentedData.AddRange(pa.Slice(this.timeSlices, variableName, this.userName));
             }
             foreach (JointType jointType in this.accelerationVectors.Keys)
             {
                 pa = new PointsAndTime(this.accelerationVectors[jointType], times);
                 variableName = "Acceleration_" + jointType.ToString();
                 this.variableNames.Add(variableName);
-                this.segmentedData.AddRange(pa.Slice(this.timeSlices, variableName));
+                this.segmentedData.AddRange(pa.Slice(this.timeSlices, variableName, this.userName));
             }
             foreach (IList<JointType> comb in this.positionCrossCombinations.Keys)
             {
                 pa = new PointsAndTime(this.accelerationCrossCombinations[comb.ToArray()], times);
                 variableName = "Cross_of_" + String.Join(" ", comb) + "Position";
                 this.variableNames.Add(variableName);
-                this.segmentedData.AddRange(pa.Slice(this.timeSlices, variableName));
+                this.segmentedData.AddRange(pa.Slice(this.timeSlices, variableName, this.userName));
             }
             foreach (IList<JointType> comb in this.accelerationCrossCombinations.Keys)
             {
                 pa = new PointsAndTime(this.accelerationCrossCombinations[comb.ToArray()], times);
                 variableName = "Cross_of_" + String.Join(" ", comb) + "Acceleration";
                 this.variableNames.Add(variableName);
-                this.segmentedData.AddRange(pa.Slice(this.timeSlices, variableName));
+                this.segmentedData.AddRange(pa.Slice(this.timeSlices, variableName, this.userName));
             }
         }
     }
@@ -766,6 +768,7 @@ namespace KinectMotionCapture
             string[] variableNames = teachers[0].variableNames.ToArray();
             string[] stepNames = new string[] { "A", "B1", "C1", "D1", "E", "B2", "C2", "D2", "F", "G1", "H1",
                                                 "I", "J", "G2", "H2", "K", "L"};
+            // AMSSの計算
             foreach (string variable in variableNames)
             {
                 foreach (string step in stepNames)
@@ -792,7 +795,25 @@ namespace KinectMotionCapture
                     }
                 }
             }
-
+            List<SegmentedMotionData> result = new List<SegmentedMotionData>();
+            // 結果の出力
+            foreach (string variable in variableNames)
+            {
+                foreach (string step in stepNames)
+                {
+                    foreach (User student in students)
+                    {
+                        var studentDatas = student.segmentedData.Where(s => s.variableName == variable && s.stepName == step);
+                        if (studentDatas.Count() > 0)
+                        {
+                            SegmentedMotionData studentData = studentDatas.First();
+                            result.Add(studentData);
+                        }
+                    }
+                }
+            }
+            string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "AllSimilarities" + ".dump");
+            Utility.SaveToBinary(path, result);
 
         }
         /// <summary>
