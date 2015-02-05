@@ -74,13 +74,15 @@ namespace KinectMotionCapture
                         if (interpolatePoints.First() == null)
                         {
                             fixedPoints = interpolatePoints.Select(p => interpolatePoints.Last()).ToList();
+                            // 補正済みを追加 最初のポイントは拾えてないので追加して良い
+                            filledPoints.AddRange(fixedPoints);
                         }
                         else
                         {
                             fixedPoints = Utility.LinearInterpolate(interpolateTimes, interpolatePoints);
+                            // 補正済みを追加 補完する区間の最初はすでに追加済み
+                            filledPoints.AddRange(fixedPoints.Skip(1));
                         }
-                        // 補正済みを追加
-                        filledPoints.AddRange(fixedPoints.Skip(1));
                         // clear
                         interpolatePoints.Clear();
                         interpolateTimes.Clear();
@@ -95,7 +97,7 @@ namespace KinectMotionCapture
             if (interpolatePoints.Count() > 0)
             {
                 List<CvPoint3D64f?> fixedPoints = interpolatePoints.Select(p => interpolatePoints.First()).ToList();
-                filledPoints.AddRange(fixedPoints);
+                filledPoints.AddRange(fixedPoints.Take(fixedPoints.Count() - 1));
             }
             // update
             this.points = filledPoints;
