@@ -18,7 +18,6 @@ namespace KinectMotionCapture
     public class PointSequence
     {
         public List<CvPoint3D64f?> points;
-        public List<CvPoint3D64f> trajectory;
         public List<DateTime> times;
         public JointType jointType;
         
@@ -109,23 +108,7 @@ namespace KinectMotionCapture
         public void Smoothing(int n = 10)
         {
             this.Interpolate();
-            this.points = Utility.MovingMedianAverage(this.points, n);
-        }
-        /// <summary>
-        /// トラジェクトリをつくる
-        /// </summary>
-        public void MakeTrajectory()
-        {
-            List<CvPoint3D64f> res = new List<CvPoint3D64f>();
-            for (int index = 0; index < this.points.Count() - 1; index++)
-            {
-                double x = this.points[index + 1].Value.X - this.points[index].Value.X;
-                double y = this.points[index + 1].Value.Y - this.points[index].Value.Y;
-                double z = this.points[index + 1].Value.Z - this.points[index].Value.Z;
-                res.Add(new CvPoint3D64f(x, y, z));
-            }
-            res.Add(res.Last());
-            this.trajectory = res;
+            this.points = Utility.MovingMedianAverage(this.points.Select(p => (CvPoint3D64f)p).ToList(), n).Select(p => (CvPoint3D64f?)p).ToList();
         }
         /// <summary>
         /// csvに吐く
@@ -482,17 +465,17 @@ namespace KinectMotionCapture
     public struct SegmentedMotionData
     {
         public string stepName;
-        // TODO 変数のタイプをつくる
-        //public string variableType;
+        public string variableType;
         public JointType jointType;
-        public PointSequence pointSeqs;
-        public SegmentedMotionData(string stepName, JointType jointType, List<Pose> motions)
+        public List<CvPoint3D64f> points;
+        public List<DateTime> times;
+        public SegmentedMotionData(string stepName, string variableType, JointType jointType, List<Pose> motions)
         {
             this.stepName = stepName;
+            this.variableType = variableType;
             this.jointType = jointType;
-            List<CvPoint3D64f?> points = motions.Select(p => p.GetPoint(jointType)).ToList();
-            List<DateTime> times = motions.Select(p => p.timeStamp).ToList();
-            this.pointSeqs = new PointSequence(points, times, jointType);
+            this.points = motions.Select(p => (CvPoint3D64f)p.GetPoint(jointType)).ToList();
+            this.times = motions.Select(p => p.timeStamp).ToList();
         }
     }
     
@@ -605,7 +588,7 @@ namespace KinectMotionCapture
                 List<Pose> sliced = this.motionLog.Where(p => start <= p.timeStamp && p.timeStamp <= end).ToList();
                 foreach (JointType jointType in Enum.GetValues(typeof(JointType)))
                 {
-                    this.segmentedData.Add(new SegmentedMotionData(stepName, jointType, sliced));
+                    this.segmentedData.Add(new SegmentedMotionData(stepName, "Position", jointType, sliced));
                 }
             }
         }
@@ -659,19 +642,6 @@ namespace KinectMotionCapture
         {
             SegmentedMotionData dataMaster = this.users[0].segmentedData.Where(s => s.jointType == JointType.KneeRight && s.stepName == "C1").First();
             SegmentedMotionData dataSlave = this.users[1].segmentedData.Where(s => s.jointType == JointType.KneeRight && s.stepName == "C1").First();
-            dataMaster.pointSeqs.Dump("master");
-            dataSlave.pointSeqs.Dump("slave");
-            List<CvPoint3D64f> master = dataMaster.pointSeqs.points.Select(p => (CvPoint3D64f)p).ToList();
-            List<CvPoint3D64f> slave = dataSlave.pointSeqs.points.Select(p => (CvPoint3D64f)p).ToList();
-            List<DateTime> times = dataMaster.pointSeqs.times;
-            Tuple<double, int[]> res = AMSS.DPmatching(master, slave, AMSS.CvPointCostFunction);
-            List<CvPoint3D64f?> slave2 = new List<CvPoint3D64f?>();
-            foreach (int index in res.Item2)
-            {
-                slave2.Add((CvPoint3D64f?)slave[index]);
-            }
-            PointSequence ps = new PointSequence(slave2, times, JointType.KneeRight);
-            ps.Dump("slave2");
         }
         /// <summary>
         /// こんすとらくた

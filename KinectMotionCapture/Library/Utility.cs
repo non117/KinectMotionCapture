@@ -658,9 +658,9 @@ namespace KinectMotionCapture
         /// <param name="sequence"></param>
         /// <param name="windowSize"></param>
         /// <returns></returns>
-        public static List<CvPoint3D64f?> MovingMedianAverage(List<CvPoint3D64f?> sequence, int windowSize)
+        public static List<CvPoint3D64f> MovingMedianAverage(List<CvPoint3D64f> sequence, int windowSize)
         {
-            List<CvPoint3D64f?> res = new List<CvPoint3D64f?>();
+            List<CvPoint3D64f> res = new List<CvPoint3D64f>();
             int length = sequence.Count();
             // 現在のフレームから前後に探索する窓を定義
             List<int> window = new List<int>();
@@ -676,11 +676,11 @@ namespace KinectMotionCapture
                 foreach (int i in window)
                 {
                     int index = frameNo + i;
-                    if (index < 0 || index >= length || sequence[index] == null)
+                    if (index < 0 || index >= length)
                         continue;
-                    xs.Add(sequence[index].Value.X);
-                    ys.Add(sequence[index].Value.Y);
-                    zs.Add(sequence[index].Value.Z);
+                    xs.Add(sequence[index].X);
+                    ys.Add(sequence[index].Y);
+                    zs.Add(sequence[index].Z);
                 }
                 double x = CalcMedianAverage(xs);
                 double y = CalcMedianAverage(ys);
@@ -688,6 +688,62 @@ namespace KinectMotionCapture
                 res.Add(new CvPoint3D64f(x, y, z));
             }
             return res;
+        }
+
+        /// <summary>
+        /// トラジェクトリを生成する
+        /// </summary>
+        /// <param name="sequence"></param>
+        /// <returns></returns>
+        public static List<CvPoint3D64f> MakeTrajectory(List<CvPoint3D64f> sequence)
+        {
+            List<CvPoint3D64f> res = new List<CvPoint3D64f>();
+            for (int index = 0; index < sequence.Count() - 1; index++)
+            {
+                double x = sequence[index + 1].X - sequence[index].X;
+                double y = sequence[index + 1].Y - sequence[index].Y;
+                double z = sequence[index + 1].Z - sequence[index].Z;
+                res.Add(new CvPoint3D64f(x, y, z));
+            }
+            res.Add(res.Last());
+            return res;
+        }
+
+        /// <summary>
+        /// 微分する. 無理やり値を突っ込むことで長さを変えない
+        /// </summary>
+        /// <param name="sequence"></param>
+        /// <param name="times"></param>
+        /// <returns></returns>
+        public static List<CvPoint3D64f> Difference(List<CvPoint3D64f> sequence, List<DateTime> times)
+        {
+            List<CvPoint3D64f> res = new List<CvPoint3D64f>();
+            for (int index = 1; index < sequence.Count() - 1; index++)
+            {
+                double h = 2 * (times[index + 1] - times[index - 1]).TotalSeconds;
+                CvPoint3D64f prev = sequence[index - 1];
+                CvPoint3D64f next = sequence[index + 1];
+                double x = (next.X - prev.X) / h;
+                double y = (next.Y - prev.Y) / h;
+                double z = (next.Z - prev.Z) / h;
+                res.Add(new CvPoint3D64f(x, y, z));
+            }
+            res.Insert(0, res.First());
+            res.Add(res.Last());
+            return res;
+        }
+
+        /// <summary>
+        /// スムージング有りの二次微分
+        /// </summary>
+        /// <param name="sequence"></param>
+        /// <param name="times"></param>
+        /// <returns></returns>
+        public static List<CvPoint3D64f> SecondaryDifferenceAndSmoothing(List<CvPoint3D64f> sequence, List<DateTime> times)
+        {
+            List<CvPoint3D64f> firstDiff = MovingMedianAverage(Difference(sequence, times), 10);
+            List<CvPoint3D64f> secondDiff = MovingMedianAverage(Difference(firstDiff, times), 10);
+            return secondDiff;
         }
 
         /// <summary>
