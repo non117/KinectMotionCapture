@@ -268,6 +268,29 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
+        /// Vectorをcsvファイルとして出力する
+        /// </summary>
+        /// <param name="points"></param>
+        /// <param name="times"></param>
+        /// <param name="filename"></param>
+        public static void SaveToCsv(string filename, List<CvPoint3D32f> points, List<DateTime> times)
+        {
+            List<List<string>> outputs = new List<List<string>>();
+            DateTime start = times[0];
+            foreach (var pair in times.Zip(points, (time, point) => new { time, point }))
+            {
+                List<string> line = new List<string>();
+                line.Add((pair.time - start).TotalSeconds.ToString());
+                line.Add(pair.point.X.ToString());
+                line.Add(pair.point.Y.ToString());
+                line.Add(pair.point.Z.ToString());
+                outputs.Add(line);
+            }
+            string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), filename + ".csv");
+            Utility.SaveToCsv(path, outputs);
+        }
+
+        /// <summary>
         /// csvファイルを読み込む
         /// </summary>
         /// <param name="path"></param>

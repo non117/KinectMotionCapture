@@ -520,8 +520,8 @@ namespace KinectMotionCapture
                         tempTimes.Add(this.times[index]);
                         tempPoints.Add(this.points[index]);
                     }
-                    res.Add(new SegmentedMotionData(userName, stepName, variableName, tempPoints, tempTimes));
                 }
+                res.Add(new SegmentedMotionData(userName, stepName, variableName, tempPoints, tempTimes));
             }
             return res;
         }
@@ -646,24 +646,31 @@ namespace KinectMotionCapture
         /// <summary>
         /// Torso加速度、Torso任意点外積、Torso加速度任意点外積、それぞれのトラジェクトリを生成
         /// </summary>
-        public void GenerateVaiables()
+        public void GenerateVaiables(bool legMode = false)
         {
             // 使える関節を列挙
-            List<JointType> hands = Utility.Hands;
-            List<JointType> validJointTypes = Utility.RightBody.Concat(Utility.LeftBody).Concat(Utility.Spines).Where(j => !hands.Contains(j)).ToList();
+            List<JointType> invalidJoints = Utility.Hands;
+            invalidJoints.Add(JointType.FootRight);
+            invalidJoints.Add(JointType.FootLeft);
+            // 手を教えてもらっていない場合
+            if (legMode)
+            {
+                invalidJoints.AddRange(new JointType[] { JointType.ElbowLeft, JointType.ElbowRight, JointType.WristRight, JointType.WristLeft });
+            }
+            List<JointType> validJointTypes = Utility.RightBody.Concat(Utility.LeftBody).Concat(Utility.Spines).Where(j => !invalidJoints.Contains(j)).ToList();
             this.positionVectors = new Dictionary<JointType, List<CvPoint3D64f>>();
             this.accelerationVectors = new Dictionary<JointType, List<CvPoint3D64f>>();
-            foreach(JointType jointType in validJointTypes)
+            foreach (JointType jointType in validJointTypes)
             {
                 List<CvPoint3D64f> tempPoints = this.motionLog.Select(p => (CvPoint3D64f)p.GetPoint(jointType)).ToList();
                 this.positionVectors[jointType] = tempPoints;
                 this.accelerationVectors[jointType] = Utility.SecondaryDifferenceAndSmoothing(tempPoints, this.motionLog.Select(p => p.timeStamp).ToList());
-            }            
+            }
             // 組み合わせを生成
-            this.positionCrossCombinations = new Dictionary<JointType[],List<CvPoint3D64f>>();
-            this.accelerationCrossCombinations = new Dictionary<JointType[],List<CvPoint3D64f>>();
+            this.positionCrossCombinations = new Dictionary<JointType[], List<CvPoint3D64f>>();
+            this.accelerationCrossCombinations = new Dictionary<JointType[], List<CvPoint3D64f>>();
             foreach (IList<JointType> comb in new Combinations<JointType>(validJointTypes, 3))
-            {                
+            {
                 this.positionCrossCombinations[comb.ToArray()] = Utility.MakeTrajectory(this.GetCross(comb, this.positionVectors));
                 this.accelerationCrossCombinations[comb.ToArray()] = Utility.MakeTrajectory(this.GetCross(comb, this.accelerationVectors));
             }
@@ -695,16 +702,16 @@ namespace KinectMotionCapture
                 this.variableNames.Add(variableName);
                 this.segmentedData.AddRange(pa.Slice(this.timeSlices, variableName, this.userName));
             }
-            foreach (IList<JointType> comb in this.positionCrossCombinations.Keys)
+            foreach (JointType[] comb in this.positionCrossCombinations.Keys)
             {
-                pa = new PointsAndTime(this.accelerationCrossCombinations[comb.ToArray()], times);
+                pa = new PointsAndTime(this.positionCrossCombinations[comb], times);
                 variableName = "Cross_of_" + String.Join(" ", comb) + "Position";
                 this.variableNames.Add(variableName);
                 this.segmentedData.AddRange(pa.Slice(this.timeSlices, variableName, this.userName));
             }
-            foreach (IList<JointType> comb in this.accelerationCrossCombinations.Keys)
+            foreach (JointType[] comb in this.accelerationCrossCombinations.Keys)
             {
-                pa = new PointsAndTime(this.accelerationCrossCombinations[comb.ToArray()], times);
+                pa = new PointsAndTime(this.accelerationCrossCombinations[comb], times);
                 variableName = "Cross_of_" + String.Join(" ", comb) + "Acceleration";
                 this.variableNames.Add(variableName);
                 this.segmentedData.AddRange(pa.Slice(this.timeSlices, variableName, this.userName));
@@ -749,11 +756,11 @@ namespace KinectMotionCapture
         /// <summary>
         /// すらいす
         /// </summary>
-        public void Slice()
+        public void Slice(bool legMode = false)
         {
             foreach (User user in this.users)
             {
-                user.GenerateVaiables();
+                user.GenerateVaiables(legMode);
                 user.Slice();
             }
         }
