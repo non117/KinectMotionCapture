@@ -52,8 +52,10 @@ namespace KinectMotionCapture
 
         private void UtilityButton_Click(object sender, RoutedEventArgs e)
         {
-            string bodyData = @"C:\Users\non\Desktop\Data\1222\L5\Student22SelectedUserBody.dump";
-            string timeData = @"C:\Users\non\Desktop\Data\1222\L5\Student22TimeData.dump";
+            string bodyData = @"C:\Users\non\Desktop\Data\1224\L5\Student32SelectedUserBody.dump";
+            string timeData = @"C:\Users\non\Desktop\Data\1224\L5\Student32TimeData.dump";
+            //string bodyData = @"C:\Users\non\Desktop\Data\1225\Teacher\Teacher7SelectedUserBody.dump";
+            //string timeData = @"C:\Users\non\Desktop\Data\1225\Teacher\Teacher7TimeData.dump";
             string bodyFileName = System.IO.Path.GetFileName(bodyData).Replace("SelectedUser", "Filtered");
             string timeFileName = System.IO.Path.GetFileName(timeData);
             List<string> statData = new List<string>()
@@ -63,7 +65,19 @@ namespace KinectMotionCapture
                 @"C:\Users\non\Desktop\Data\1222\L3\L3StudentStatData.dump",
                 @"C:\Users\non\Desktop\Data\1222\L4\L4StudentStatData.dump",
                 @"C:\Users\non\Desktop\Data\1222\L5\L5StudentStatData.dump",
+                @"C:\Users\non\Desktop\Data\1224\L1\L1StudentStatData.dump",
+                @"C:\Users\non\Desktop\Data\1224\L2\L2StudentStatData.dump",
+                @"C:\Users\non\Desktop\Data\1224\L3\L3StudentStatData.dump",
+                @"C:\Users\non\Desktop\Data\1224\L4\L4StudentStatData.dump",
+                @"C:\Users\non\Desktop\Data\1224\L5\L5StudentStatData.dump",
             };
+            //List<string> statData = new List<string>()
+            //{
+            //    @"C:\Users\non\Desktop\Data\1222\L1\L1TeacherStatData.dump",
+            //    @"C:\Users\non\Desktop\Data\1222\Teacher\TeacherStatData.dump",
+            //    @"C:\Users\non\Desktop\Data\1224\Teacher\TeacherStatData.dump",
+            //    @"C:\Users\non\Desktop\Data\1225\Teacher\TeacherStatData.dump",
+            //};
             List<Dictionary<JointType, CvPoint3D64f>> jointsSeq = Utility.ConvertToCvPoint((List<Dictionary<int, float[]>>)Utility.LoadFromBinary(bodyData));
             List<DateTime> timeSeq = (List<DateTime>)Utility.LoadFromBinary(timeData);
             List<Dictionary<Bone, BoneStatistics>> boneStats = statData.Select(s => (Dictionary<Bone, BoneStatistics>)Utility.LoadFromBinary(s)).ToList();

@@ -67,25 +67,25 @@ namespace KinectMotionCapture
         private void LoadFrames()
         {
             string[] datadir = new string[] {
-                                                    @"C:\Users\non\Desktop\1222\1222_kinect1\master",  
-                                                    @"C:\Users\non\Desktop\1222\1222_kinect2\master", 
-                                                    @"C:\Users\non\Desktop\1222\1222_kinect3\master", 
-                                                    @"C:\Users\non\Desktop\1222\1222_kinect4\master", 
-                                                    @"C:\Users\non\Desktop\1222\1222_kinect5\master", 
+                                                    @"C:\Users\non\Desktop\1226\1226_kinect1\master",  
+                                                    @"C:\Users\non\Desktop\1226\1226_kinect2\master", 
+                                                    @"C:\Users\non\Desktop\1226\1226_kinect3\master", 
+                                                    @"C:\Users\non\Desktop\1226\1226_kinect4\master", 
+                                                    @"C:\Users\non\Desktop\1226\1226_kinect5\master", 
             };
             List<string> mapdir = new List<string>() {
-                                                    @"E:\kinect1\coordmap.dump",  
-                                                    @"E:\kinect2\coordmap.dump", 
-                                                    @"E:\kinect3\coordmap.dump", 
-                                                    @"E:\kinect4\coordmap.dump", 
-                                                    @"E:\kinect5\coordmap.dump", 
+                                                    @"C:\Users\non\Desktop\1226\1226_kinect1\coordmap.dump",  
+                                                    @"C:\Users\non\Desktop\1226\1226_kinect2\coordmap.dump", 
+                                                    @"C:\Users\non\Desktop\1226\1226_kinect3\coordmap.dump", 
+                                                    @"C:\Users\non\Desktop\1226\1226_kinect4\coordmap.dump", 
+                                                    @"C:\Users\non\Desktop\1226\1226_kinect5\coordmap.dump", 
             };
             List<string> cameradir = new List<string>() {
-                                                    @"E:\kinect1\CameraInfo.dump",  
-                                                    @"E:\kinect2\CameraInfo.dump", 
-                                                    @"E:\kinect3\CameraInfo.dump", 
-                                                    @"E:\kinect4\CameraInfo.dump", 
-                                                    @"E:\kinect5\CameraInfo.dump", 
+                                                    @"C:\Users\non\Desktop\1226\1226_kinect1\CameraInfo.dump",  
+                                                    @"C:\Users\non\Desktop\1226\1226_kinect2\CameraInfo.dump", 
+                                                    @"C:\Users\non\Desktop\1226\1226_kinect3\CameraInfo.dump", 
+                                                    @"C:\Users\non\Desktop\1226\1226_kinect4\CameraInfo.dump", 
+                                                    @"C:\Users\non\Desktop\1226\1226_kinect5\CameraInfo.dump", 
             };
             this.frameSequence = new FrameSequence(datadir);
             this.frameSequence.LocalCoordinateMappers = mapdir.Select(s => (LocalCoordinateMapper)Utility.LoadFromBinary(s)).ToList();
@@ -583,8 +583,11 @@ namespace KinectMotionCapture
                 int id = this.frameSequence.selecteedIntegretedIdList[0];
                 if (this.frameSequence.selecteedIntegretedIdList.All(i => i == id))
                 {
-                    Utility.SaveBodySequence(res.Item1[id], path);
-                    Utility.SaveToBinary(res.Item2[id], System.IO.Path.Combine(Environment.CurrentDirectory, @"TimeData.dump"));
+                    if (res.Item1.Keys.Contains(id))
+                    {
+                        Utility.SaveBodySequence(res.Item1[id], path);
+                        Utility.SaveToBinary(res.Item2[id], System.IO.Path.Combine(Environment.CurrentDirectory, @"TimeData.dump"));
+                    }
                 }
             }
         }

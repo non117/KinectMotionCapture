@@ -62,6 +62,7 @@ namespace KinectMotionCapture
         public int[] selecteedIntegretedIdList;
         public List<List<ulong>> userIdList;
         public List<TrustData> trustData;
+        public Dictionary<ulong, int> userMapping;
 
         public double[] offsets = new double[] { 0, 0, 0, 0, 0};
         
@@ -80,16 +81,17 @@ namespace KinectMotionCapture
             set
             {
                 this.segms = value;
-                Dictionary<ulong, int> mapping = this.UserMapping;
+                this.userMapping = this.UserMapping;
                 foreach (Frame frame in this.Frames)
                 {
-                    frame.SetIntegratedId(mapping);
+                    frame.SetIntegratedId(this.userMapping);
                 }
             }
         }
 
         /// <summary>
         /// オリジナルのTrackingIdとセグメンテーションによって振り直したidの対応
+        /// 毎フレーム呼ばれててゴミ
         /// </summary>
         public Dictionary<ulong, int> UserMapping
         {
@@ -400,6 +402,9 @@ namespace KinectMotionCapture
                 string metaDataFilePath = Path.Combine(dataDir, this.bodyInfoFilename);
                 // ここでソートしてる
                 List<MotionData> mdList = this.GetMotionDataFromFile(metaDataFilePath).OrderBy(md => md.TimeStamp).ToList();
+                // とりあえず軽くするために
+                //mdList = mdList.Where(md => md.TimeStamp.Minute >= 15).ToList();
+
                 // 画像のパスを修正する
                 foreach (MotionData md in mdList)
                 {
