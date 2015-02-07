@@ -93,6 +93,19 @@ namespace KinectMotionCapture
 
         private void MotionAnalyzeButton_Click(object sender, RoutedEventArgs e)
         {
+            List<CvPoint3D32f> master = (List<CvPoint3D32f>)Utility.LoadFromBinary("master.dump");
+            List<CvPoint3D32f>slave = (List<CvPoint3D32f>)Utility.LoadFromBinary("slave.dump");
+            var res = AMSS.DPmatching(master, slave, AMSS.CvPointCostFunction);
+            var res2 = AMSS.DPmatching2(master, slave, AMSS.CvPointCostFunction);
+            List<CvPoint3D32f> slave2 = new List<CvPoint3D32f>();
+            List<DateTime> times = new List<DateTime>();
+            foreach (int index in res2.Item2)
+            {
+                slave2.Add(slave[index]);
+                times.Add(DateTime.Now);
+            }
+            //Utility.SaveToCsv("AMSSed", slave2, times);
+
             string csvFilePath = @"C:\Users\non\Desktop\Filtered\CutTiming.csv";
             MotionAnalyzer ma = new MotionAnalyzer(csvFilePath);
             ma.AjustBodyDirection("Teacher6");

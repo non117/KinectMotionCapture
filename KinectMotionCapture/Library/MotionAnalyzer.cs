@@ -459,10 +459,29 @@ namespace KinectMotionCapture
         }
     }
 
+    [Serializable]
+    public struct Result
+    {
+        public string userName;
+        public string stepName;
+        public string variableName;
+        public DateTime start;
+        public DateTime end;
+        public float[] similarities;
+        public Result(string user, string step, string variable, DateTime start, DateTime end, float[] sims)
+        {
+            this.userName = user;
+            this.stepName = step;
+            this.variableName = variable;
+            this.start = start;
+            this.end = end;
+            this.similarities = sims;
+        }
+    }
+
     /// <summary>
     /// 最終的なデータ？セグメントされたトラジェクトリデータ
     /// </summary>
-    [Serializable]
     public struct SegmentedMotionData
     {
         public string userName;
@@ -470,7 +489,7 @@ namespace KinectMotionCapture
         public string variableName;
         public List<CvPoint3D32f> points;
         public List<DateTime> times;
-        public List<double> similarities;
+        public List<float> similarities;
         public SegmentedMotionData(string userName, string stepName, string variableName, List<CvPoint3D64f> points, List<DateTime> times)
         {
             this.userName = userName;
@@ -478,12 +497,19 @@ namespace KinectMotionCapture
             this.variableName = variableName;
             this.points = points.Select(p => (CvPoint3D32f)p).ToList();
             this.times = times;
-            this.similarities = new List<double>();
+            this.similarities = new List<float>();
         }
         public void CalcSimilarity(SegmentedMotionData masterData)
         {
-            Tuple<double, int[]> res = AMSS.DPmatching<CvPoint3D32f>(masterData.points, this.points, AMSS.CvPointCostFunction);
-            this.similarities.Add(res.Item1);
+            float res = AMSS.DPmatching<CvPoint3D32f>(masterData.points, this.points, AMSS.CvPointCostFunction);
+            this.similarities.Add(res);
+        }
+        public Result MakeResult()
+        {
+            Result res = new Result(this.userName, this.stepName, this.variableName, this.times.First(), this.times.Last(), this.similarities.ToArray());
+            this.points.Clear();
+            this.times.Clear();
+            return res;
         }
     }
 
@@ -671,12 +697,14 @@ namespace KinectMotionCapture
             this.accelerationCrossCombinations = new Dictionary<JointType[], List<CvPoint3D64f>>();
             foreach (IList<JointType> comb in new Combinations<JointType>(validJointTypes, 3))
             {
-                this.positionCrossCombinations[comb.ToArray()] = Utility.MakeTrajectory(this.GetCross(comb, this.positionVectors));
-                this.accelerationCrossCombinations[comb.ToArray()] = Utility.MakeTrajectory(this.GetCross(comb, this.accelerationVectors));
+                this.positionCrossCombinations[comb.ToArray()] = Utility.MovingMedianAverage(Utility.MakeTrajectory(this.GetCross(comb, this.positionVectors)), 7);
+                this.accelerationCrossCombinations[comb.ToArray()] = Utility.MovingMedianAverage(Utility.MakeTrajectory(this.GetCross(comb, this.accelerationVectors)), 7);
             }
             // トラジェクトリになってないやつを変換
-            this.positionVectors = this.positionVectors.ToDictionary(pair => pair.Key, pair => Utility.MakeTrajectory(pair.Value));
-            this.accelerationVectors = this.accelerationVectors.ToDictionary(pair => pair.Key, pair => Utility.MakeTrajectory(pair.Value));
+            this.positionVectors = this.positionVectors.ToDictionary(pair => pair.Key, pair =>
+                Utility.MovingMedianAverage(Utility.MakeTrajectory(pair.Value), 7));
+            this.accelerationVectors = this.accelerationVectors.ToDictionary(pair => pair.Key, pair =>
+                Utility.MovingMedianAverage(Utility.MakeTrajectory(pair.Value), 7));
         }
         /// <summary>
         /// データを時間に沿って切る
@@ -795,14 +823,14 @@ namespace KinectMotionCapture
                                 if (studentDatas.Count() > 0)
                                 {
                                     SegmentedMotionData studentData = studentDatas.First();
-                                    studentData.CalcSimilarity(teacherDatas.First());
+                                    Task.Run(() => studentData.CalcSimilarity(teacherDatas.First()));
                                 }
                             }
                         }
                     }
                 }
             }
-            List<SegmentedMotionData> result = new List<SegmentedMotionData>();
+            List<Result> result = new List<Result>();
             // 結果の出力
             foreach (string variable in variableNames)
             {
@@ -814,7 +842,7 @@ namespace KinectMotionCapture
                         if (studentDatas.Count() > 0)
                         {
                             SegmentedMotionData studentData = studentDatas.First();
-                            result.Add(studentData);
+                            result.Add(studentData.MakeResult());
                         }
                     }
                 }
