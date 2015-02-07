@@ -190,6 +190,14 @@ namespace KinectMotionCapture
                     MotionData md = (MotionData)formatter.Deserialize(fs);
                     md.isValid = true;
                     res.Add(md);
+                    //if (md.TimeStamp.Minute < 20)
+                    //{
+                    //    res.Add(md);
+                    //}
+                    //if (md.TimeStamp.Hour == 11 && md.TimeStamp.Minute >= 20)
+                    //{
+                    //    break;
+                    //}
                 }
             }
             return res;

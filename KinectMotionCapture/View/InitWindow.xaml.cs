@@ -99,7 +99,7 @@ namespace KinectMotionCapture
             string csvFilePath = @"C:\Users\non\Desktop\Filtered\CutTiming2.csv";
             MotionAnalyzer ma = new MotionAnalyzer(csvFilePath);
             ma.AjustBodyDirection("Teacher6");
-            bool legMode = false;
+            bool legMode = true;
             ma.Slice(legMode);
             string[] teachers = new string[] { "Teacher0", "Teacher4", "Teacher5", "Teacher6", "Teacher7" };
             ma.JoinData(teachers);
@@ -107,11 +107,15 @@ namespace KinectMotionCapture
 
         private void SimilaritySort_Click(object sender, RoutedEventArgs e)
         {
-            string filePath = @"C:\Users\non\Desktop\Data\AllSimilaritiesTillDay2.dump";
+            string filePath = @"C:\Users\non\Desktop\Data\AllSimilaritiesDay3.dump";
+            //string filePath = @"C:\Users\non\Desktop\Data\AllSimilaritiesTillDay2.dump";
             bool legMode = true;
-            SimilarityAnalyzer sa = new SimilarityAnalyzer(filePath, legMode);
-            string[] students = Enumerable.Range(1, 32).Select(i => "Student" + i.ToString()).ToArray();
-            sa.CalcSpecificStepSimilarities("G1", students, 20);
+            //bool legMode = false;
+            SimilarityAnalyzer sa = new SimilarityAnalyzer();
+            //string[] students = Enumerable.Range(1, 32).Select(i => "Student" + i.ToString()).ToArray();
+            //string[] students = Enumerable.Range(33, 8).Select(i => "Student" + i.ToString()).ToArray();
+            //sa.CalcSpecificStepSimilarities("G1", students, 30);
+            sa.DayVariableVariance();
         }
     }
 }

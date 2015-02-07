@@ -468,7 +468,8 @@ namespace KinectMotionCapture
         public DateTime start;
         public DateTime end;
         public float[] similarities;
-        public Result(string user, string step, string variable, DateTime start, DateTime end, float[] sims)
+        public string[] teacherNames;
+        public Result(string user, string step, string variable, DateTime start, DateTime end, float[] sims, string[] teachers)
         {
             this.userName = user;
             this.stepName = step;
@@ -476,6 +477,7 @@ namespace KinectMotionCapture
             this.start = start;
             this.end = end;
             this.similarities = sims;
+            this.teacherNames = teachers;
         }
     }
 
@@ -490,6 +492,7 @@ namespace KinectMotionCapture
         public List<CvPoint3D32f> points;
         public List<DateTime> times;
         public List<float> similarities;
+        public List<string> teacherNames;
         public SegmentedMotionData(string userName, string stepName, string variableName, List<CvPoint3D64f> points, List<DateTime> times)
         {
             this.userName = userName;
@@ -498,15 +501,18 @@ namespace KinectMotionCapture
             this.points = points.Select(p => (CvPoint3D32f)p).ToList();
             this.times = times;
             this.similarities = new List<float>();
+            this.teacherNames = new List<string>();
         }
         public void CalcSimilarity(SegmentedMotionData masterData)
         {
             float res = AMSS.DPmatching<CvPoint3D32f>(masterData.points, this.points, AMSS.CvPointCostFunction);
             this.similarities.Add(res);
+            this.teacherNames.Add(masterData.userName);
         }
         public Result MakeResult()
         {
-            Result res = new Result(this.userName, this.stepName, this.variableName, this.times.First(), this.times.Last(), this.similarities.ToArray());
+            Result res = new Result(this.userName, this.stepName, this.variableName, this.times.First(), this.times.Last(), 
+                this.similarities.ToArray(), this.teacherNames.ToArray());
             this.points.Clear();
             this.times.Clear();
             return res;
@@ -801,6 +807,9 @@ namespace KinectMotionCapture
             User[] teachers = this.users.Where(u => teacherNames.Contains(u.userName)).ToArray();
             User[] students = this.users.Where(u => !teacherNames.Contains(u.userName)).ToArray();
             string[] variableNames = teachers[0].variableNames.ToArray();
+
+            Utility.SaveToBinary(variableNames, @"C:\Users\non\Desktop\LegVariableNames.dump");
+
             string[] stepNames = new string[] { "A", "B1", "C1", "D1", "E", "B2", "C2", "D2", "F", "G1", "H1",
                                                 "I", "J", "G2", "H2", "K", "L"};
             // AMSSの計算
