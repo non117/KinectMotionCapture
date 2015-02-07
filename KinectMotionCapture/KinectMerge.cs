@@ -402,8 +402,6 @@ namespace KinectMotionCapture
                 string metaDataFilePath = Path.Combine(dataDir, this.bodyInfoFilename);
                 // ここでソートしてる
                 List<MotionData> mdList = this.GetMotionDataFromFile(metaDataFilePath).OrderBy(md => md.TimeStamp).ToList();
-                // とりあえず軽くするために
-                //mdList = mdList.Where(md => md.TimeStamp.Minute >= 15).ToList();
 
                 // 画像のパスを修正する
                 foreach (MotionData md in mdList)
