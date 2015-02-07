@@ -99,6 +99,7 @@ namespace KinectMotionCapture
             return false;
         }
 
+        [Serializable]
         public struct VarAndVariance
         {
             public string variable;
@@ -160,8 +161,81 @@ namespace KinectMotionCapture
                 line.Add(v.var3.ToString());
                 outputs.Add(line);
             }
-            string path =  System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "variances.csv");
+            string path =  System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "variances.dump");
+            //Utility.SaveToCsv(path, outputs);
+            Utility.SaveToBinary(temp, path);
+        }
+
+        public void ThirdDayLessonVariableVariance()
+        {
+            string[] stepNames = new string[] { "A", "B1", "C1", "D1", "E", "B2", "C2", "D2", "F", "G1", "H1",
+                                                "I", "J", "G2", "H2", "K", "L"};
+            string[] lesson1Students = Enumerable.Range(33, 3).Select(i => "Student" + i.ToString()).ToArray();
+            string[] lesson2Students = Enumerable.Range(36, 3).Select(i => "Student" + i.ToString()).ToArray();
+            string[] lesson3Students = Enumerable.Range(39, 2).Select(i => "Student" + i.ToString()).ToArray();
+            List<VarAndVariance> temp = new List<VarAndVariance>();
+            foreach (string stepName in stepNames)
+            {
+                foreach (string variable in this.legVars)
+                {
+                    IEnumerable<Result> tempResults = this.results.Where(r => r.variableName == variable && r.stepName == stepName);
+                    var l1 = tempResults.Where(r => lesson1Students.Contains(r.userName));
+                    var l2 = tempResults.Where(r => lesson2Students.Contains(r.userName));
+                    var l3 = tempResults.Where(r => lesson3Students.Contains(r.userName));
+
+                    if (l1.Count() == 0 || l2.Count() == 0 || l3.Count() == 0)
+                        continue;
+
+                    double day1Variance = CalcEx.GetStdDev(l1.Select(r => (double)r.similarities.ToList().Average()));
+                    double day2Variance = CalcEx.GetStdDev(l2.Select(r => (double)r.similarities.ToList().Average()));
+                    double day3Variance = CalcEx.GetStdDev(l3.Select(r => (double)r.similarities.ToList().Average()));
+                    if (this.IsDecrease(day1Variance, day2Variance, day3Variance))
+                    {
+                        temp.Add(new VarAndVariance(variable, stepName, day1Variance, day2Variance, day3Variance));
+                    }
+                }
+            }
+            temp = temp.OrderBy(v => v.decreaseScore).ToList();
+            List<List<string>> outputs = new List<List<string>>();
+            foreach (VarAndVariance v in temp)
+            {
+                List<string> line = new List<string>();
+                line.Add(this.SwapLR(v.variable));
+                line.Add(v.step);
+                line.Add(v.var1.ToString());
+                line.Add(v.var2.ToString());
+                line.Add(v.var3.ToString());
+                outputs.Add(line);
+            }
+            string dumppath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "Day3ArmVariances.dump");
+            string csvpath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "Day3ArmVariances.csv");
+            Utility.SaveToCsv(csvpath, outputs);
+            Utility.SaveToBinary(temp, dumppath);
+        }
+        public void DumpAllDecreasedCsvs(string varianceFile, string outputFolder)
+        {
+            List<VarAndVariance> temp = (List<VarAndVariance>)Utility.LoadFromBinary(varianceFile);
+            foreach (VarAndVariance vv in temp)
+            {
+                this.DumpSpecificVariableSimLog(vv.variable, vv.step, outputFolder);
+            }
+        }
+
+        public void DumpSpecificVariableSimLog(string variableName, string stepName, string outputFolder)
+        {
+            IEnumerable<Result> tempResults = this.results.Where(r => r.variableName == variableName && r.stepName == stepName);
+            tempResults = tempResults.OrderBy(r => r.end);
+            List<List<string>> outputs = new List<List<string>>();
+            foreach(Result res in tempResults)
+            {
+                List<string> line = new List<string>();
+                line.Add(res.end.ToString());
+                line.Add(res.similarities.Average().ToString());
+                outputs.Add(line);
+            }
+            string path = System.IO.Path.Combine(outputFolder, this.SwapLR(variableName) + "_" + stepName + ".csv");
             Utility.SaveToCsv(path, outputs);
         }
+
     }
 }

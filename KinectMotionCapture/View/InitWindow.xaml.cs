@@ -115,7 +115,11 @@ namespace KinectMotionCapture
             //string[] students = Enumerable.Range(1, 32).Select(i => "Student" + i.ToString()).ToArray();
             //string[] students = Enumerable.Range(33, 8).Select(i => "Student" + i.ToString()).ToArray();
             //sa.CalcSpecificStepSimilarities("G1", students, 30);
-            sa.DayVariableVariance();
+            //sa.DayVariableVariance();
+            //sa.DumpSpecificVariableSimLog();
+            sa.ThirdDayLessonVariableVariance();
+            sa.DumpAllDecreasedCsvs(@"C:\Users\non\Desktop\Data\variancesLeg.dump", @"C:\Users\non\Desktop\LegCsv");
+            sa.DumpAllDecreasedCsvs(@"C:\Users\non\Desktop\Day3ArmVariances.dump", @"C:\Users\non\Desktop\ArmCsv");
         }
     }
 }
