@@ -275,14 +275,27 @@ namespace KinectMotionCapture
         public void StepSpecificCsvExporter()
         {
             string stepName = "G1";
-            IEnumerable<Result> temp = this.results.Where(r => r.stepName == stepName && r.variableName.Contains("Position")).OrderBy(r => r.start);
+            IEnumerable<Result> temp = this.results.Where(r => r.stepName == stepName && r.variableName.Contains("Position"));
+            IEnumerable<string> variables = temp.Select(r => r.variableName).Distinct();
             List<List<string>> outputs = new List<List<string>>();
-            foreach (Result res in temp)
+            foreach (string variable in variables)
             {
                 List<string> line = new List<string>();
-                line.Add(this.SwapLR(res.variableName));
-                line.Add(res.userName);
-                line.Add(res.similarities.Average().ToString());
+                line.Add(this.SwapLR(variable));
+                IEnumerable<Result> hoge = temp.Where(r => r.variableName == variable);
+                foreach (string userName in Enumerable.Range(1, 40).Select(i => "Student" + i.ToString()))
+                {
+                    IEnumerable<Result> pue = hoge.Where(r => r.userName == userName);
+                    // データがあったら突っ込む。なかったら-1をエラー値とする。
+                    if (pue.Count() == 1)
+                    {
+                        line.Add(pue.First().similarities.Average().ToString());
+                    }
+                    else
+                    {
+                        line.Add("-1");
+                    }
+                }
                 outputs.Add(line);
             }
             string csvpath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), stepName + "Sims.csv");
