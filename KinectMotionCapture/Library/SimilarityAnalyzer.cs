@@ -17,10 +17,20 @@ namespace KinectMotionCapture
 
         public SimilarityAnalyzer()
         {
-            string path0 = @"C:\Users\non\Desktop\Data\AllSimilaritiesTillDay2.dump";
-            string path1 = @"C:\Users\non\Desktop\Data\AllSimilaritiesDay3.dump";
-            this.results = (List<Result>)Utility.LoadFromBinary(path0);
-            this.results.AddRange((List<Result>)Utility.LoadFromBinary(path1));
+            string tempData = @"tempSimData.dump";
+            if (System.IO.File.Exists(tempData))
+            {
+                this.results = (List<Result>)Utility.LoadFromBinary(tempData);
+            }
+            else
+            {
+                string path0 = @"C:\Users\non\Desktop\Data\AllSimilaritiesTillDay2.dump";
+                string path1 = @"C:\Users\non\Desktop\Data\AllSimilaritiesDay3.dump";
+                this.results = (List<Result>)Utility.LoadFromBinary(path0);
+                this.results.AddRange((List<Result>)Utility.LoadFromBinary(path1));
+                Utility.SaveToBinary(this.results, tempData);
+            }
+
             this.armVars = (string[])Utility.LoadFromBinary(@"C:\Users\non\Desktop\Data\ArmVariableNames.dump");
             this.legVars = (string[])Utility.LoadFromBinary(@"C:\Users\non\Desktop\Data\LegVariableNames.dump");
             this.validJoints = new List<JointType>();
@@ -92,7 +102,7 @@ namespace KinectMotionCapture
 
         public bool IsDecrease(double one, double two, double three)
         {
-            if (one >= two && two >= three)
+            if (one >= two)
             {
                 return true;
             }
@@ -162,7 +172,8 @@ namespace KinectMotionCapture
                 outputs.Add(line);
             }
             string path =  System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "variances.dump");
-            //Utility.SaveToCsv(path, outputs);
+            string csvpath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "variances.csv");
+            Utility.SaveToCsv(csvpath, outputs);
             Utility.SaveToBinary(temp, path);
         }
 
@@ -176,7 +187,7 @@ namespace KinectMotionCapture
             List<VarAndVariance> temp = new List<VarAndVariance>();
             foreach (string stepName in stepNames)
             {
-                foreach (string variable in this.legVars)
+                foreach (string variable in this.armVars)
                 {
                     IEnumerable<Result> tempResults = this.results.Where(r => r.variableName == variable && r.stepName == stepName);
                     var l1 = tempResults.Where(r => lesson1Students.Contains(r.userName));
@@ -212,6 +223,26 @@ namespace KinectMotionCapture
             Utility.SaveToCsv(csvpath, outputs);
             Utility.SaveToBinary(temp, dumppath);
         }
+
+        public void SortVarianceFile(string varianceFile)
+        {
+            List<VarAndVariance> temp = (List<VarAndVariance>)Utility.LoadFromBinary(varianceFile);
+            temp = temp.OrderBy(v => v.decreaseScore).OrderBy(v => v.var3).ToList();
+            List<List<string>> outputs = new List<List<string>>();
+            foreach (VarAndVariance v in temp)
+            {
+                List<string> line = new List<string>();
+                line.Add(this.SwapLR(v.variable));
+                line.Add(v.step);
+                line.Add(v.var1.ToString());
+                line.Add(v.var2.ToString());
+                line.Add(v.var3.ToString());
+                outputs.Add(line);
+            }
+            string path = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "variances.csv");
+            Utility.SaveToCsv(path, outputs);
+        }
+
         public void DumpAllDecreasedCsvs(string varianceFile, string outputFolder)
         {
             List<VarAndVariance> temp = (List<VarAndVariance>)Utility.LoadFromBinary(varianceFile);

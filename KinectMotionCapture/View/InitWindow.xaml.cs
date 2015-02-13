@@ -117,9 +117,11 @@ namespace KinectMotionCapture
             //sa.CalcSpecificStepSimilarities("G1", students, 30);
             //sa.DayVariableVariance();
             //sa.DumpSpecificVariableSimLog();
-            sa.ThirdDayLessonVariableVariance();
-            sa.DumpAllDecreasedCsvs(@"C:\Users\non\Desktop\Data\variancesLeg.dump", @"C:\Users\non\Desktop\LegCsv");
-            sa.DumpAllDecreasedCsvs(@"C:\Users\non\Desktop\Day3ArmVariances.dump", @"C:\Users\non\Desktop\ArmCsv");
+            //sa.ThirdDayLessonVariableVariance();
+            //sa.DumpAllDecreasedCsvs(@"C:\Users\non\Desktop\Data\variancesLeg.dump", @"C:\Users\non\Desktop\LegCsv");
+            //sa.DumpAllDecreasedCsvs(@"C:\Users\non\Desktop\Day3ArmVariances.dump", @"C:\Users\non\Desktop\ArmCsv2");
+            //sa.SortVarianceFile(@"C:\Users\non\Desktop\Data\Day3ArmVariances.dump");
+            sa.DayVariableVariance();
         }
     }
 }
