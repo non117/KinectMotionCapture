@@ -30,6 +30,7 @@ namespace KinectMotionCapture
                 this.results.AddRange((List<Result>)Utility.LoadFromBinary(path1));
                 Utility.SaveToBinary(this.results, tempData);
             }
+            this.results = this.results.Where(r => r.variableName != "Position_SpineMid").ToList();
 
             this.armVars = (string[])Utility.LoadFromBinary(@"C:\Users\non\Desktop\Data\ArmVariableNames.dump");
             this.legVars = (string[])Utility.LoadFromBinary(@"C:\Users\non\Desktop\Data\LegVariableNames.dump");
@@ -266,6 +267,26 @@ namespace KinectMotionCapture
             }
             string path = System.IO.Path.Combine(outputFolder, this.SwapLR(variableName) + "_" + stepName + ".csv");
             Utility.SaveToCsv(path, outputs);
+        }
+
+        /// <summary>
+        /// あるステップの類似度を全て出力する -> csv
+        /// </summary>
+        public void StepSpecificCsvExporter()
+        {
+            string stepName = "G1";
+            IEnumerable<Result> temp = this.results.Where(r => r.stepName == stepName && r.variableName.Contains("Position")).OrderBy(r => r.start);
+            List<List<string>> outputs = new List<List<string>>();
+            foreach (Result res in temp)
+            {
+                List<string> line = new List<string>();
+                line.Add(this.SwapLR(res.variableName));
+                line.Add(res.userName);
+                line.Add(res.similarities.Average().ToString());
+                outputs.Add(line);
+            }
+            string csvpath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), stepName + "Sims.csv");
+            Utility.SaveToCsv(csvpath, outputs);
         }
 
     }

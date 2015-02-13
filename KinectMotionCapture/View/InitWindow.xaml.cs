@@ -121,7 +121,8 @@ namespace KinectMotionCapture
             //sa.DumpAllDecreasedCsvs(@"C:\Users\non\Desktop\Data\variancesLeg.dump", @"C:\Users\non\Desktop\LegCsv");
             //sa.DumpAllDecreasedCsvs(@"C:\Users\non\Desktop\Day3ArmVariances.dump", @"C:\Users\non\Desktop\ArmCsv2");
             //sa.SortVarianceFile(@"C:\Users\non\Desktop\Data\Day3ArmVariances.dump");
-            sa.DayVariableVariance();
+            //sa.DayVariableVariance();
+            sa.StepSpecificCsvExporter();
         }
     }
 }
