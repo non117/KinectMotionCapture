@@ -107,6 +107,7 @@ namespace KinectMotionCapture
 
         private void SimilaritySort_Click(object sender, RoutedEventArgs e)
         {
+            MemorySavingLeastSquare.Test();
             string filePath = @"C:\Users\non\Desktop\Data\AllSimilaritiesDay3.dump";
             //string filePath = @"C:\Users\non\Desktop\Data\AllSimilaritiesTillDay2.dump";
             bool legMode = true;

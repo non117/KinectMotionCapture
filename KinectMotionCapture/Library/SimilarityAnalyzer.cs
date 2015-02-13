@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using MathNet.Numerics;
 using Microsoft.Kinect;
 
 namespace KinectMotionCapture
@@ -300,6 +301,137 @@ namespace KinectMotionCapture
             }
             string csvpath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), stepName + "Sims.csv");
             Utility.SaveToCsv(csvpath, outputs);
+        }
+
+        /// <summary>
+        /// xsがwindowSizeでthreshold以下で連続する区間があるかどうか
+        /// </summary>
+        /// <param name="xs"></param>
+        /// <param name="windowSize"></param>
+        /// <param name="threshold"></param>
+        /// <returns></returns>
+        public bool IsSeqDetermine(double[] xs, int windowSize = 3, double threshold = 0.05)
+        {
+            int[] windows = Enumerable.Range(0, windowSize).ToArray();
+            List<bool> flags = new List<bool>();
+            for (int index = 0; index <= xs.Length - windowSize; index++)
+            {
+                double[] vals = new double[windowSize];
+                // window sizeぶんのデータをつっこむ
+                foreach (int offset in windows)
+                {
+                    vals[offset] = xs[index + offset];
+                }
+                // エラー値があればfalse
+                if (vals.Any(d => d > 1))
+                {
+                    flags.Add(false);
+                }
+                // エラー値がない場合
+                else
+                {
+                    bool seqFlag = true;
+                    foreach (int offset in windows.Take(windowSize - 1))
+                    {
+                        // 今と次の値の差が閾値より大きいかどうか
+                        if (Math.Abs(vals[offset] - vals[offset + 1]) > threshold)
+                        {
+                            seqFlag = false;
+                        }
+                    }
+                    flags.Add(seqFlag);
+                }
+            }
+            // どっかにあればtrue
+            return flags.Any(b => b == true);
+        }
+
+        /// <summary>
+        /// あるステップ・変数のグラフいっこ
+        /// </summary>
+        public struct SimSeq
+        {
+            public string stepName;
+            public string varName;
+            public double[] times;
+            public double[] sims;
+            public List<double> estimates;
+            public SimSeq(string stepName, string varName, int[] times, float[] sims)
+            {
+                this.stepName = stepName;
+                this.varName = varName;
+                this.times = times.Select(i => (double)i).ToArray();
+                this.sims = sims.Select(f => (double)f).ToArray();
+                // 線を引いてその値を求める
+                var res = Fit.Line(this.times, this.sims);
+                this.estimates = new List<double>();
+                foreach (double t in this.times)
+                {
+                    this.estimates.Add(res.Item1 * t + res.Item2);
+                }
+            }
+            /// <summary>
+            /// 推定値より上の群をフィルタして返す。10埋め
+            /// </summary>
+            /// <returns></returns>
+            public double[] GetUpper(double offset = 0.05)
+            {
+                double[] res = new double[this.times.Length];
+                for (int index = 0; index < this.times.Length; index++)
+                {
+                    double real = this.sims[index];
+                    double est = this.estimates[index];
+                    if (real > est + offset)
+                    {
+                        res[index] = real;
+                    }
+                    else
+                    {
+                        res[index] = 10;
+                    }
+                }
+                return res;
+            }
+            /// <summary>
+            /// 推定値より下の群をフィルタして返す。10埋め
+            /// </summary>
+            /// <param name="offset"></param>
+            /// <returns></returns>
+            public double[] GetDowner(double offset = 0.05)
+            {
+                double[] res = new double[this.times.Length];
+                for (int index = 0; index < this.times.Length; index++)
+                {
+                    double real = this.sims[index];
+                    double est = this.estimates[index];
+                    if (real + offset < est)
+                    {
+                        res[index] = real;
+                    }
+                    else
+                    {
+                        res[index] = 10;
+                    }
+                }
+                return res;
+            }
+        }
+
+        /// <summary>
+        /// simが連続して下がってた領域を探索し、csvで吐き出す
+        /// </summary>
+        public void SearchImprovedRange()
+        {
+            IEnumerable<string> variables = this.legVars.Where(s => s.Contains("Position"));
+            string[] stepNames = new string[] { "A", "B1", "C1", "D1", "E", "B2", "C2", "D2", "F", "G1", "H1",
+                                                "I", "J", "G2", "H2", "K", "L"};
+            foreach (string variable in variables)
+            {
+                foreach (string stepName in stepNames)
+                {
+                    IEnumerable<Result> tempResults = this.results.Where(r => r.variableName == variable && r.stepName == stepName).OrderBy(r => r.start);
+                }
+            }
         }
 
     }
