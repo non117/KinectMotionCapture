@@ -107,10 +107,9 @@ namespace KinectMotionCapture
 
         private void SimilaritySort_Click(object sender, RoutedEventArgs e)
         {
-            MemorySavingLeastSquare.Test();
-            string filePath = @"C:\Users\non\Desktop\Data\AllSimilaritiesDay3.dump";
+            //string filePath = @"C:\Users\non\Desktop\Data\AllSimilaritiesDay3.dump";
             //string filePath = @"C:\Users\non\Desktop\Data\AllSimilaritiesTillDay2.dump";
-            bool legMode = true;
+            //bool legMode = true;
             //bool legMode = false;
             SimilarityAnalyzer sa = new SimilarityAnalyzer();
             //string[] students = Enumerable.Range(1, 32).Select(i => "Student" + i.ToString()).ToArray();
@@ -123,7 +122,8 @@ namespace KinectMotionCapture
             //sa.DumpAllDecreasedCsvs(@"C:\Users\non\Desktop\Day3ArmVariances.dump", @"C:\Users\non\Desktop\ArmCsv2");
             //sa.SortVarianceFile(@"C:\Users\non\Desktop\Data\Day3ArmVariances.dump");
             //sa.DayVariableVariance();
-            sa.StepSpecificCsvExporter();
+            //sa.StepSpecificCsvExporter();
+            sa.SearchImprovedRange();
         }
     }
 }

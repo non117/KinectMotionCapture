@@ -371,6 +371,30 @@ namespace KinectMotionCapture
                 }
             }
             /// <summary>
+            /// もじれつ～
+            /// </summary>
+            /// <returns></returns>
+            public List<string> ToString()
+            {
+                List<string> res = new List<string>();
+                foreach (int dataNo in Enumerable.Range(1, 40))
+                {
+                    // データ番号と合致するやつがあるかどうか
+                    var hoge = this.times.Select((d, i) => new { d, i }).Where(pair => (int)pair.d == dataNo);
+                    if (hoge.Count() > 0)
+                    {
+                        int index = hoge.ToList()[0].i;
+                        res.Add(sims[index].ToString());
+                    }
+                    else
+                    {
+                        res.Add("-1");
+                    }
+                }
+                return res;
+            }
+
+            /// <summary>
             /// 推定値より上の群をフィルタして返す。10埋め
             /// </summary>
             /// <returns></returns>
@@ -417,6 +441,18 @@ namespace KinectMotionCapture
             }
         }
 
+        public void Hoge(ref List<SimSeq> res, string variable, string stepName)
+        {
+            IEnumerable<Result> tempResults = this.results.Where(r => r.variableName == variable && r.stepName == stepName).OrderBy(r => r.start);
+            int[] times = tempResults.Select(r => int.Parse(r.userName.Replace("Student", ""))).ToArray();
+            SimSeq s = new SimSeq(stepName, variable, times, tempResults.Select(r => r.similarities.Average()).ToArray());
+            lock (res)
+            {
+                res.Add(s);
+            }
+
+        }
+
         /// <summary>
         /// simが連続して下がってた領域を探索し、csvで吐き出す
         /// </summary>
@@ -425,14 +461,27 @@ namespace KinectMotionCapture
             IEnumerable<string> variables = this.legVars.Where(s => s.Contains("Position"));
             string[] stepNames = new string[] { "A", "B1", "C1", "D1", "E", "B2", "C2", "D2", "F", "G1", "H1",
                                                 "I", "J", "G2", "H2", "K", "L"};
+            List<SimSeq> simSeqs = new List<SimSeq>();
+
             foreach (string variable in variables)
             {
                 foreach (string stepName in stepNames)
                 {
-                    IEnumerable<Result> tempResults = this.results.Where(r => r.variableName == variable && r.stepName == stepName).OrderBy(r => r.start);
+                    Task.Run(() => this.Hoge(ref simSeqs, variable, stepName));
                 }
             }
+            simSeqs = simSeqs.Where(s => this.IsSeqDetermine(s.GetDowner())).ToList();
+            List<List<string>> outputs = new List<List<string>>();
+            foreach (SimSeq sim in simSeqs)
+            {
+                List<string> line = new List<string>();
+                line.Add(sim.varName);
+                line.Add(sim.stepName);
+                line.AddRange(sim.ToString());
+                outputs.Add(line);
+            }
+            string csvpath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "DownerSims.csv");
+            Utility.SaveToCsv(csvpath, outputs);
         }
-
     }
 }
