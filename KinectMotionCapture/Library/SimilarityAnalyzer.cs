@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -347,8 +348,54 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
+        /// 条件のindexをとってくる. indexは0-origin
+        /// </summary>
+        /// <param name="xs"></param>
+        /// <param name="windowSize"></param>
+        /// <param name="threshold"></param>
+        /// <returns></returns>
+        public List<int> FindSeq(double[] xs, int windowSize = 3, double threshold = 0.05)
+        {
+            int[] windows = Enumerable.Range(0, windowSize).ToArray();
+            List<int> indexes = new List<int>();
+            for (int index = 0; index <= xs.Length - windowSize; index++)
+            {
+                double[] vals = new double[windowSize];
+                // window sizeぶんのデータをつっこむ
+                foreach (int offset in windows)
+                {
+                    vals[offset] = xs[index + offset];
+                }
+                // エラー値がある
+                if (vals.Any(d => d > 1))
+                {
+                    continue;
+                }
+                // エラー値がない場合
+                else
+                {
+                    bool seqFlag = true;
+                    foreach (int offset in windows.Take(windowSize - 1))
+                    {
+                        // 今と次の値の差が閾値より大きいかどうか
+                        if (Math.Abs(vals[offset] - vals[offset + 1]) > threshold)
+                        {
+                            seqFlag = false;
+                        }
+                    }
+                    if (seqFlag)
+                    {
+                        indexes.AddRange(windows.Select(i => i + index));
+                    }
+                }
+            }
+            return indexes;
+        }
+
+        /// <summary>
         /// あるステップ・変数のグラフいっこ
         /// </summary>
+        [Serializable]
         public struct SimSeq
         {
             public string stepName;
@@ -360,14 +407,32 @@ namespace KinectMotionCapture
             {
                 this.stepName = stepName;
                 this.varName = varName;
-                this.times = times.Select(i => (double)i).ToArray();
-                this.sims = sims.Select(f => (double)f).ToArray();
+                this.times =  new double[41];
+                this.sims = new double[41];
+
+                foreach (int dataNo in Enumerable.Range(1, 40))
+                {
+                    // データ番号と合致するやつがあるかどうか
+                    var hoge = this.times.Select((d, i) => new { d, i }).Where(pair => (int)pair.d == dataNo);
+                    if (hoge.Count() > 0)
+                    {
+                        int index = hoge.ToList()[0].i;
+                        this.times[dataNo] = times[index];
+                        this.sims[dataNo] = sims[index];
+                    }
+                    else
+                    {
+                        this.times[dataNo] = dataNo;
+                        this.sims[dataNo] = 1000;
+                    }
+                }
+
                 // 線を引いてその値を求める
                 var res = Fit.Line(this.times, this.sims);
                 this.estimates = new List<double>();
-                foreach (double t in this.times)
+                foreach (int dataNo in Enumerable.Range(1, 40))
                 {
-                    this.estimates.Add(res.Item1 * t + res.Item2);
+                    this.estimates.Add(res.Item2 * (double)dataNo + res.Item1);
                 }
             }
             /// <summary>
@@ -377,6 +442,7 @@ namespace KinectMotionCapture
             public List<string> ToString()
             {
                 List<string> res = new List<string>();
+
                 foreach (int dataNo in Enumerable.Range(1, 40))
                 {
                     // データ番号と合致するやつがあるかどうか
@@ -411,7 +477,7 @@ namespace KinectMotionCapture
                     }
                     else
                     {
-                        res[index] = 10;
+                        res[index] = -10;
                     }
                 }
                 return res;
@@ -445,12 +511,23 @@ namespace KinectMotionCapture
         {
             IEnumerable<Result> tempResults = this.results.Where(r => r.variableName == variable && r.stepName == stepName).OrderBy(r => r.start);
             int[] times = tempResults.Select(r => int.Parse(r.userName.Replace("Student", ""))).ToArray();
-            SimSeq s = new SimSeq(stepName, variable, times, tempResults.Select(r => r.similarities.Average()).ToArray());
-            lock (res)
+            float[] sims = new float[tempResults.Count()];
+            try
             {
-                res.Add(s);
+                sims = tempResults.Select(r => r.similarities.Average()).ToArray();
             }
-
+            catch (Exception e)
+            {
+                sims = new float[0];
+            }
+            if (sims.Length > 0)
+            {
+                SimSeq s = new SimSeq(stepName, variable, times, sims);
+                lock (res)
+                {
+                    res.Add(s);
+                }
+            }
         }
 
         /// <summary>
@@ -467,12 +544,76 @@ namespace KinectMotionCapture
             {
                 foreach (string stepName in stepNames)
                 {
-                    Task.Run(() => this.Hoge(ref simSeqs, variable, stepName));
+                    this.Hoge(ref simSeqs, variable, stepName);
                 }
             }
+
+            Utility.SaveToBinary(simSeqs, "SimilaritySequenceList.dump");
             simSeqs = simSeqs.Where(s => this.IsSeqDetermine(s.GetDowner())).ToList();
             List<List<string>> outputs = new List<List<string>>();
             foreach (SimSeq sim in simSeqs)
+            {
+                List<string> line = new List<string>();
+                line.Add(sim.varName);
+                line.Add(sim.stepName);
+                line.AddRange(sim.ToString());
+                outputs.Add(line);
+            }
+            string csvpath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "DownerSims.csv");
+            Utility.SaveToCsv(csvpath, outputs);
+        }
+
+        public void SearchImprovedRange2()
+        {
+            List<SimSeq> simSeqs = (List<SimSeq>)Utility.LoadFromBinary("SimilaritySequenceList.dump");
+            double offset = 0.1;
+            double plus = 0.01;
+            while (simSeqs.Count() != 0)
+            {
+                Debug.WriteLine(offset);
+                simSeqs = simSeqs.Where(s => this.IsSeqDetermine(s.GetDowner(offset))).ToList();
+                if (simSeqs.Count() < 30 && simSeqs.Count() >= 5)
+                {
+                    break;
+                }
+                offset += plus;
+            }
+            List<List<string>> outputs = new List<List<string>>();
+            foreach (SimSeq sim in simSeqs)
+            {
+                List<string> line = new List<string>();
+                line.Add(sim.varName);
+                line.Add(sim.stepName);
+                line.AddRange(sim.ToString());
+                outputs.Add(line);
+            }
+            string csvpath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "DownerSims.csv");
+            Utility.SaveToCsv(csvpath, outputs);
+        }
+
+        public void SearchImprovedRange3()
+        {
+            List<SimSeq> simSeqs = (List<SimSeq>)Utility.LoadFromBinary("SimilaritySequenceList.dump");
+            List<int> indexRange = new List<int>() { 29, 30, 31, 32 };
+            simSeqs = simSeqs.Where(s => this.IsSeqDetermine(s.GetDowner(0.1))).ToList();
+            List<List<int>> fuge = simSeqs.Where(s => s.stepName == "G1" || s.stepName == "I").Select(s => this.FindSeq(s.GetDowner(0.11), 3, 0.1)).ToList();
+            List<SimSeq> res = new List<SimSeq>();
+            int[] indexHoge = new int[41];
+            foreach (SimSeq s in simSeqs)
+            {
+                List<int> indexes = this.FindSeq(s.GetDowner(0.11), 3, 0.05);
+                foreach (int index in indexes.Distinct())
+                {
+                    indexHoge[index]++;
+                }
+                if (indexes.Contains(26))
+                {
+                    res.Add(s);
+                }
+            }
+            
+            List<List<string>> outputs = new List<List<string>>();
+            foreach (SimSeq sim in res)
             {
                 List<string> line = new List<string>();
                 line.Add(sim.varName);
