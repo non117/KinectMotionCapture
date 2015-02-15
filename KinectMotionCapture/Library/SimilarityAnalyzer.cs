@@ -596,5 +596,29 @@ namespace KinectMotionCapture
             string csvpath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "DownerSims.csv");
             Utility.SaveToCsv(csvpath, outputs);
         }
+
+        public void Random()
+        {
+            List<SimSeq> simSeqs = (List<SimSeq>)Utility.LoadFromBinary("SimilaritySequenceList.dump");
+            Random rnd = new System.Random(Environment.TickCount);
+            List<SimSeq> res = new List<SimSeq>();
+            foreach (int i in Enumerable.Range(0, 20))
+            {
+                int no = rnd.Next(0, simSeqs.Count());
+                res.Add(simSeqs[no]);
+            }
+
+            List<List<string>> outputs = new List<List<string>>();
+            foreach (SimSeq sim in res)
+            {
+                List<string> line = new List<string>();
+                line.Add(this.SwapLR(sim.varName));
+                line.Add(sim.stepName);
+                line.AddRange(sim.ToString());
+                outputs.Add(line);
+            }
+            string csvpath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "DownerSims.csv");
+            Utility.SaveToCsv(csvpath, outputs);
+        }
     }
 }

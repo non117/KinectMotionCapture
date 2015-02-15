@@ -123,7 +123,7 @@ namespace KinectMotionCapture
             //sa.SortVarianceFile(@"C:\Users\non\Desktop\Data\Day3ArmVariances.dump");
             //sa.DayVariableVariance();
             //sa.StepSpecificCsvExporter();
-            sa.SearchSpecific();
+            sa.Random();
         }
     }
 }
