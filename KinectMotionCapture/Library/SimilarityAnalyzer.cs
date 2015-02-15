@@ -305,49 +305,6 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
-        /// xsがwindowSizeでthreshold以下で連続する区間があるかどうか
-        /// </summary>
-        /// <param name="xs"></param>
-        /// <param name="windowSize"></param>
-        /// <param name="threshold"></param>
-        /// <returns></returns>
-        public bool IsSeqDetermine(double[] xs, int windowSize = 3, double threshold = 0.05)
-        {
-            int[] windows = Enumerable.Range(0, windowSize).ToArray();
-            List<bool> flags = new List<bool>();
-            for (int index = 0; index <= xs.Length - windowSize; index++)
-            {
-                double[] vals = new double[windowSize];
-                // window sizeぶんのデータをつっこむ
-                foreach (int offset in windows)
-                {
-                    vals[offset] = xs[index + offset];
-                }
-                // エラー値があればfalse
-                if (vals.Any(d => d > 1))
-                {
-                    flags.Add(false);
-                }
-                // エラー値がない場合
-                else
-                {
-                    bool seqFlag = true;
-                    foreach (int offset in windows.Take(windowSize - 1))
-                    {
-                        // 今と次の値の差が閾値より大きいかどうか
-                        if (Math.Abs(vals[offset] - vals[offset + 1]) > threshold)
-                        {
-                            seqFlag = false;
-                        }
-                    }
-                    flags.Add(seqFlag);
-                }
-            }
-            // どっかにあればtrue
-            return flags.Any(b => b == true);
-        }
-
-        /// <summary>
         /// 条件のindexをとってくる. indexは0-origin
         /// </summary>
         /// <param name="xs"></param>
@@ -389,7 +346,7 @@ namespace KinectMotionCapture
                     }
                 }
             }
-            return indexes;
+            return indexes.Distinct().ToList();
         }
 
         /// <summary>
@@ -409,11 +366,11 @@ namespace KinectMotionCapture
                 this.varName = varName;
                 this.times =  new double[41];
                 this.sims = new double[41];
-
+                // データを40個になるようにつめる
                 foreach (int dataNo in Enumerable.Range(1, 40))
                 {
                     // データ番号と合致するやつがあるかどうか
-                    var hoge = this.times.Select((d, i) => new { d, i }).Where(pair => (int)pair.d == dataNo);
+                    var hoge = times.Select((d, i) => new { d, i }).Where(pair => (int)pair.d == dataNo);
                     if (hoge.Count() > 0)
                     {
                         int index = hoge.ToList()[0].i;
@@ -428,7 +385,7 @@ namespace KinectMotionCapture
                 }
 
                 // 線を引いてその値を求める
-                var res = Fit.Line(this.times, this.sims);
+                var res = Fit.Line(times.Select(i => (double)i).ToArray(), sims.Select(f => (double)f).ToArray());
                 this.estimates = new List<double>();
                 foreach (int dataNo in Enumerable.Range(1, 40))
                 {
@@ -442,19 +399,15 @@ namespace KinectMotionCapture
             public List<string> ToString()
             {
                 List<string> res = new List<string>();
-
-                foreach (int dataNo in Enumerable.Range(1, 40))
+                foreach (double d in this.sims.Skip(1))
                 {
-                    // データ番号と合致するやつがあるかどうか
-                    var hoge = this.times.Select((d, i) => new { d, i }).Where(pair => (int)pair.d == dataNo);
-                    if (hoge.Count() > 0)
+                    if (d == 1000)
                     {
-                        int index = hoge.ToList()[0].i;
-                        res.Add(sims[index].ToString());
+                        res.Add("-1");
                     }
                     else
                     {
-                        res.Add("-1");
+                        res.Add(d.ToString());
                     }
                 }
                 return res;
@@ -464,46 +417,46 @@ namespace KinectMotionCapture
             /// 推定値より上の群をフィルタして返す。10埋め
             /// </summary>
             /// <returns></returns>
-            public double[] GetUpper(double offset = 0.05)
+            public double[] GetUpper(double offset = 0.1)
             {
                 double[] res = new double[this.times.Length];
-                for (int index = 0; index < this.times.Length; index++)
+                foreach (int dataNo in Enumerable.Range(1, 40))
                 {
-                    double real = this.sims[index];
-                    double est = this.estimates[index];
+                    double real = this.sims[dataNo];
+                    double est = this.estimates[dataNo - 1];
                     if (real > est + offset)
                     {
-                        res[index] = real;
+                        res[dataNo] = real;
                     }
                     else
                     {
-                        res[index] = -10;
+                        res[dataNo] = 1000;
                     }
                 }
-                return res;
+                return res.Skip(1).ToArray();
             }
             /// <summary>
             /// 推定値より下の群をフィルタして返す。10埋め
             /// </summary>
             /// <param name="offset"></param>
             /// <returns></returns>
-            public double[] GetDowner(double offset = 0.05)
+            public double[] GetDowner(double offset = 0.1)
             {
                 double[] res = new double[this.times.Length];
-                for (int index = 0; index < this.times.Length; index++)
+                foreach (int dataNo in Enumerable.Range(1, 40))
                 {
-                    double real = this.sims[index];
-                    double est = this.estimates[index];
+                    double real = this.sims[dataNo];
+                    double est = this.estimates[dataNo - 1];
                     if (real + offset < est)
                     {
-                        res[index] = real;
+                        res[dataNo] = real;
                     }
                     else
                     {
-                        res[index] = 10;
+                        res[dataNo] = 1000;
                     }
                 }
-                return res;
+                return res.Skip(1).ToArray();
             }
         }
 
@@ -549,12 +502,14 @@ namespace KinectMotionCapture
             }
 
             Utility.SaveToBinary(simSeqs, "SimilaritySequenceList.dump");
-            simSeqs = simSeqs.Where(s => this.IsSeqDetermine(s.GetDowner())).ToList();
+
+
+            simSeqs = simSeqs.Where(s => this.FindSeq(s.GetDowner()).Count() > 0).ToList();
             List<List<string>> outputs = new List<List<string>>();
             foreach (SimSeq sim in simSeqs)
             {
                 List<string> line = new List<string>();
-                line.Add(sim.varName);
+                line.Add(this.SwapLR(sim.varName));
                 line.Add(sim.stepName);
                 line.AddRange(sim.ToString());
                 outputs.Add(line);
@@ -571,7 +526,7 @@ namespace KinectMotionCapture
             while (simSeqs.Count() != 0)
             {
                 Debug.WriteLine(offset);
-                simSeqs = simSeqs.Where(s => this.IsSeqDetermine(s.GetDowner(offset))).ToList();
+                simSeqs = simSeqs.Where(s => this.FindSeq(s.GetDowner(offset)).Count() > 0).ToList();
                 if (simSeqs.Count() < 30 && simSeqs.Count() >= 5)
                 {
                     break;
@@ -582,7 +537,7 @@ namespace KinectMotionCapture
             foreach (SimSeq sim in simSeqs)
             {
                 List<string> line = new List<string>();
-                line.Add(sim.varName);
+                line.Add(this.SwapLR(sim.varName));
                 line.Add(sim.stepName);
                 line.AddRange(sim.ToString());
                 outputs.Add(line);
@@ -594,19 +549,17 @@ namespace KinectMotionCapture
         public void SearchImprovedRange3()
         {
             List<SimSeq> simSeqs = (List<SimSeq>)Utility.LoadFromBinary("SimilaritySequenceList.dump");
-            List<int> indexRange = new List<int>() { 29, 30, 31, 32 };
-            simSeqs = simSeqs.Where(s => this.IsSeqDetermine(s.GetDowner(0.1))).ToList();
-            List<List<int>> fuge = simSeqs.Where(s => s.stepName == "G1" || s.stepName == "I").Select(s => this.FindSeq(s.GetDowner(0.11), 3, 0.1)).ToList();
+            simSeqs = simSeqs.Where(s => this.FindSeq(s.GetDowner(0.1)).Count() > 0).ToList();
             List<SimSeq> res = new List<SimSeq>();
             int[] indexHoge = new int[41];
             foreach (SimSeq s in simSeqs)
             {
                 List<int> indexes = this.FindSeq(s.GetDowner(0.11), 3, 0.05);
-                foreach (int index in indexes.Distinct())
+                foreach (int index in indexes)
                 {
                     indexHoge[index]++;
                 }
-                if (indexes.Contains(26))
+                if (indexes.Contains(9))
                 {
                     res.Add(s);
                 }
@@ -616,7 +569,7 @@ namespace KinectMotionCapture
             foreach (SimSeq sim in res)
             {
                 List<string> line = new List<string>();
-                line.Add(sim.varName);
+                line.Add(this.SwapLR(sim.varName));
                 line.Add(sim.stepName);
                 line.AddRange(sim.ToString());
                 outputs.Add(line);
