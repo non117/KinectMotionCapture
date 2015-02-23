@@ -15,7 +15,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
-using MsgPack.Serialization;
 using Microsoft.Kinect;
 using OpenCvSharp;
 using OpenCvSharp.Extensions;

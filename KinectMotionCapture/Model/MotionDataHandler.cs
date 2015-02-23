@@ -13,7 +13,6 @@ using System.Windows;
 using System.Windows.Media.Media3D;
 using Microsoft.Kinect;
 
-using MsgPack.Serialization;
 using OpenCvSharp;
 
 namespace KinectMotionCapture
@@ -66,32 +65,6 @@ namespace KinectMotionCapture
             this.worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(this.worker_Completed);
         }
 
-        /// <summary>
-        /// 記録が存在するときのコンストラクタ
-        /// </summary>
-        /// <param name="dataDir"></param>
-        public MotionDataHandler(string dataDir)
-        {
-            this.LoadAndSetData(dataDir);
-        }
-
-        /// <summary>
-        /// データを破棄して既存のデータをロードします。
-        /// </summary>
-        /// <param name="dataDir"></param>
-        public void LoadAndSetData(string dataDir)
-        {
-            this.dataDir = dataDir;
-            this.recordPath = Path.Combine(dataDir, bodyInfoFilename);
-
-            this.motionDataList = this.GetMotionDataFromFile(this.recordPath);
-            MotionData md = this.motionDataList[0];
-            this.colorWidth = md.ColorWidth;
-            this.colorHeight = md.ColorHeight;
-            this.depthWidth = md.DepthUserWidth;
-            this.depthHeight = md.DepthUserHeight;
-        }
-
         public string DataDir
         {
             get{ return this.dataDir; }
@@ -112,21 +85,6 @@ namespace KinectMotionCapture
         }
 
         public PointF[] DepthLUT { get; set; }
-
-        /// <summary>
-        /// ファイルからBodyデータをデシリアライズする
-        /// #TODO メモリを食べ過ぎる問題があるため、リアルタイムにBinarySerializeするように変更する。優先度は低。
-        /// </summary>
-        /// <param name="filepath"></param>
-        /// <returns></returns>
-        private List<MotionData> GetMotionDataFromFile(string filepath)
-        {
-            var serializer = MessagePackSerializer.Get<List<MotionData>>();
-            using (FileStream fs = File.Open(filepath, FileMode.Open))
-            {
-                return serializer.Unpack(fs);
-            }
-        }
 
         /// <summary>
         /// ディレクトリが上書きになってないかチェックしてかぶってたら新しいの作る。ついでにファイルを開く。

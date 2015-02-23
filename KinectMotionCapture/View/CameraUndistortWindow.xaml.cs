@@ -282,7 +282,7 @@ namespace KinectMotionCapture
             Properties.Settings.Default.Save();
             try
             {
-                handler = new MotionDataHandler(_dialogOpenTrackImage.SelectedPath);
+                //handler = new MotionDataHandler(_dialogOpenTrackImage.SelectedPath);
                 path = _dialogOpenTrackImage.SelectedPath;
             }
             catch (NotImplementedException ex)

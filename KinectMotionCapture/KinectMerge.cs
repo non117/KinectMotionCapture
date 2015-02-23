@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using System.Windows;
 
 using Microsoft.Kinect;
-using MsgPack.Serialization;
 using OpenCvSharp;
 
 namespace KinectMotionCapture
@@ -189,15 +188,7 @@ namespace KinectMotionCapture
         private List<MotionData> GetMotionDataFromFile(string filepath)
         {
             string ext = Path.GetExtension(filepath);
-            if (ext == ".mpac")
-            {
-                var serializer = MessagePackSerializer.Get<List<MotionData>>();
-                using (FileStream fs = File.Open(filepath, FileMode.Open))
-                {
-                    return serializer.Unpack(fs);
-                }
-            }
-            else if (ext == ".dump")
+            if (ext == ".dump")
             {
                 return Utility.LoadFromSequentialBinary(filepath).Select(o => (MotionData)o).ToList();
             }
