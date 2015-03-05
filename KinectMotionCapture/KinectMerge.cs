@@ -159,15 +159,6 @@ namespace KinectMotionCapture
             {
                 this.convList = value;
             }
-        }
-
-        /// <summary>
-        /// 各レコードのキャリブレーションデータ
-        /// </summary>
-        public List<KinectUndistortion> UndistortionDataList
-        {
-            get;
-            set;
         }        
 
         public void SetUserID(int recordIndex, ulong bodyId)

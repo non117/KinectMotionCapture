@@ -401,122 +401,9 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
-        /// 深度映像から周辺ピクセルを見て面の法線を計算する。計算できない場合には0,0,0を返す
-        /// </summary>
-        /// <param name="depthMat"></param>
-        /// <param name="point"></param>
-        /// <param name="undist"></param>
-        /// <param name="windowSize"></param>
-        /// <returns></returns>
-        public static CvPoint3D64f GetNormalOfDepthMat(CvMat depthMat, CvPoint2D32f point, KinectUndistortion undist, int windowSize)
-        {
-            CvSize depthImageSize = new CvSize(depthMat.Cols, depthMat.Rows);
-            int windowOffset = windowSize / 2;
-            if (windowOffset * 2 + 1 != windowSize)
-            {
-                throw new ArgumentException("windowSize must be odd");
-            }
-            double? depth = CvEx.Get2DSubPixel(depthMat, point, 0);
-
-            if (!depth.HasValue)
-            {
-                return new CvPoint3D64f();
-            }
-            CvPoint3D64f pos1 = undist.GetRealFromScreenPos(point.X, point.Y, depth.Value, depthImageSize);
-            // 周辺ピクセルをみて平面の傾きを求める。平面は対象の点(pos1)を通るようにする = -pos1だけ平行移動してpos1が原点になるようにして計算
-            // ax+by=d
-            List<double[]> left = new List<double[]>();
-            List<double> right = new List<double>();
-            for (int dx = -windowOffset; dx <= windowOffset; dx++)
-            {
-                for (int dy = -windowOffset; dy <= windowOffset; dy++)
-                {
-                    CvPoint2D32f point2 = point + new CvPoint2D32f(dx, dy);
-                    double? depth2 = CvEx.Get2DSubPixel(depthMat, point2, 0);
-                    if (depth2.HasValue)
-                    {
-                        CvPoint3D64f pos2 = undist.GetRealFromScreenPos(point2.X, point2.Y, depth2.Value, depthImageSize);
-                        left.Add(new double[] { pos2.X - pos1.X, pos2.Y - pos1.Y });
-                        right.Add(pos2.Z - pos1.Z);
-                    }
-                }
-            }
-            if (left.Count < 3)
-                return new CvPoint3D64f();
-            double[] slope = CvEx.Solve(left, right, InvertMethod.Svd);
-            // 傾きから法線を出す
-            CvPoint3D64f pos10 = new CvPoint3D64f(1, 0, slope[0]);
-            CvPoint3D64f pos01 = new CvPoint3D64f(0, 1, slope[1]);
-            CvPoint3D64f posNormal = CvEx.Cross(pos10, pos01);
-            return CvEx.Normalize(posNormal);
-        }
-
-        /// <summary>
         /// OpenNIの深度値の間隔の係数。深度dに対して間隔は (d/581)^2
         /// </summary>
         public const double IntervalDivAtOpenNI = 581;
-
-        public static CvPoint2D64f? GetSlopeOfDepthMat(CvMat depthMat, CameraMatrix cameraMatrix)
-        {
-            return GetSlopeOfDepthMat(depthMat, cameraMatrix, null);
-        }
-        /// <summary>
-        /// 深度映像の全体の傾き係数A,Bを求めます (Z=A(x-cx)+B(y-cy)+cz), Z:結果の深度値, c(x,y,z): 主点のスクリーン座標と深度値
-        /// </summary>
-        /// <param name="depthMat">深度マップ</param>
-        /// <param name="cameraMatrix">カメラ情報</param>
-        /// <param name="undist">ゆがみ補正係数</param>
-        /// <returns></returns>
-        public static CvPoint2D64f? GetSlopeOfDepthMat(CvMat depthMat, CameraMatrix cameraMatrix, KinectUndistortion undist)
-        {
-            CvSize size = new CvSize(depthMat.Cols, depthMat.Rows);
-
-            unsafe
-            {
-                // 平面化
-                List<double[]> left = new List<double[]>(size.Width * size.Height);
-                List<double> right = new List<double>(size.Width * size.Height);
-
-                short* depthArr = depthMat.DataInt16;
-                double pX = cameraMatrix.PrincipalX;
-                double pY = cameraMatrix.PrincipalY;
-                double fX = cameraMatrix.FocalX;
-                double fY = cameraMatrix.FocalY;
-                double? pDepth = CvEx.Get2DSubPixel(depthMat, new CvPoint2D32f(pX, pY), 0);
-
-                if (pDepth.HasValue)
-                {
-                    if (undist != null)
-                    {
-                        pDepth = undist.UndistortDepth(new CvPoint3D64f(pX, pY, pDepth.Value), size);
-                    }
-                    for (int y = 0; y < size.Height; y++)
-                    {
-                        int iOffset = y * size.Width;
-                        double dy = (y + 0.5 - pY) / (fY / 2);
-                        for (int x = 0; x < size.Width; x++)
-                        {
-                            double dx = (x + 0.5 - pX) / (fX / 2);
-                            if (dx * dx + dy * dy >= 1)
-                                continue;
-                            double depth = depthArr[iOffset + x];
-                            if (depth != 0)
-                            {
-                                if (undist != null)
-                                {
-                                    depth = undist.UndistortDepth(new CvPoint3D64f(x, y, depth), size);
-                                }
-                                left.Add(new double[] { x - pX, y - pY });
-                                right.Add(depth - pDepth.Value);
-                            }
-                        }
-                    }
-                    double[] ans = CvEx.Solve(left, right, InvertMethod.Svd);
-                    return new CvPoint2D64f(ans[0], ans[1]);
-                }
-            }
-            return null;
-        }
 
         /// <summary>
         /// センサから深度が飛び飛びの値で得られるので隣接した値の間を滑らかにする
@@ -1740,42 +1627,6 @@ namespace KinectMotionCapture
             s16lapFill.Erode(s16lap, null, 1);
             src.Mul(s16lap, dest);
             dest.Mul(s16bin, dest);
-        }
-
-        public static List<CvPoint3D64f> GetRealPointsFromDepthMat(CvMat depthMat, KinectUndistortion undist, int pixelSkip, CvMat conversion)
-        {
-            List<CvPoint3D64f> ret = new List<CvPoint3D64f>();
-            unsafe
-            {
-                short* depthArr = depthMat.DataInt16;
-                CvSize size = new CvSize(depthMat.Cols, depthMat.Rows);
-                Parallel.For(0, size.Height / pixelSkip, (yTemp) =>
-                {
-                    int y = yTemp * pixelSkip;
-                    int offset = y * depthMat.Cols;
-                    for (int x = 0; x < depthMat.Cols; x += pixelSkip)
-                    {
-                        short depth = depthArr[offset + x];
-                        if (depth != 0)
-                        {
-                            CvPoint3D64f pos = undist.GetRealFromScreenPos(x, y, depth, size);
-                            if (conversion != null)
-                            {
-                                pos = CvEx.ConvertPoint3D(pos, conversion);
-                            }
-                            lock (ret)
-                            {
-                                ret.Add(pos);
-                            }
-                        }
-                    }
-                });
-            }
-            return ret;
-        }
-        public static List<CvPoint3D64f> GetRealPointsFromDepthMat(CvMat depthMat, KinectUndistortion undist, int pixelSkip)
-        {
-            return GetRealPointsFromDepthMat(depthMat, undist, pixelSkip, null);
         }
 
         public static List<CvPoint3D64f> GetScreenPoints(CvMat depthMat, int pixelSkip)

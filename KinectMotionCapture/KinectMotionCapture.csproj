@@ -142,6 +142,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="DataConverter.cs" />
     <Compile Include="Library\BodyStatistics.cs" />
     <Compile Include="Library\CalcEx.cs" />
     <Compile Include="Library\JointCorrection.cs" />
@@ -149,9 +150,6 @@
     <Compile Include="Library\SkeletonInterpolator.cs" />
     <Compile Include="Library\UserSegmentation.cs" />
     <Compile Include="Model\IdentificationSet.cs" />
-    <Compile Include="View\CameraUndistortWindow.xaml.cs">
-      <DependentUpon>CameraUndistortWindow.xaml</DependentUpon>
-    </Compile>
     <Compile Include="ColoredIterativePointMatching.cs" />
     <Compile Include="Model\LocalCoordinateMapper.cs" />
     <Compile Include="CoordRotTransConversion.cs" />
@@ -161,7 +159,6 @@
       <DependentUpon>InitWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="KinectMerge.cs" />
-    <Compile Include="KinectUndistortion.cs" />
     <Compile Include="Library\ListEx.cs" />
     <Compile Include="MemorySavingLeastSquare.cs" />
     <Compile Include="View\MergeRecordWindow.xaml.cs">
@@ -174,10 +171,6 @@
     </Compile>
     <Compile Include="Model\SerializableCvMat.cs" />
     <Compile Include="Library\Utility.cs" />
-    <Page Include="View\CameraUndistortWindow.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="View\InitWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
