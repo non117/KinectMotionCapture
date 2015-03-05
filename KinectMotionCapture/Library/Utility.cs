@@ -97,6 +97,28 @@ namespace KinectMotionCapture
             return mat;
         }
 
+        /// <summary>
+        /// depthとuserIndexをまとめて保存する
+        /// </summary>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <param name="user"></param>
+        /// <param name="depthes"></param>
+        /// <returns></returns>
+        public static CvMat MergeDepthAndUserMat(int width, int height, ushort[] depthes, byte[] bodyIndexes)
+        {
+            CvMat dst = Cv.CreateMat(height, width, MatrixType.U16C3);
+            CvMat depthMat = new CvMat(height, width, MatrixType.U16C1, depthes);
+            ushort[] userIndexes = new ushort[bodyIndexes.Length];
+            for (int i = 0; i < bodyIndexes.Length; i++)
+            {
+                userIndexes[i] = (ushort)BitConverter.ToInt16(new byte[] { bodyIndexes[i], 0 }, 0);
+            }
+            CvMat userMat = new CvMat(height, width, MatrixType.U16C1, userIndexes);
+            Cv.Merge(depthMat, userMat, null, null, dst);
+            return dst;
+        }
+
 
         /// <summary>
         /// WritableBitmapをfileName.pngに保存する
