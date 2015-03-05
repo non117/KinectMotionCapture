@@ -114,13 +114,15 @@ namespace KinectMotionCapture
         {
             string path = Path.Combine(this.dataDir, frameNo.ToString());
             CvMat colorOrigMat = Utility.ColorArrayToCvMat(this.colorWidth, this.colorHeight, ref colorPixels);
-            CvMat depthMat = Utility.DpethArrayToCvMat(this.depthWidth, this.depthHeight, ref depthBuffer);
-            CvMat bodyIndexMat = Utility.BodyIndexArrayToCvMat(this.depthWidth, this.depthHeight, ref bodyIndexBuffer);
+            //CvMat depthMat = Utility.DpethArrayToCvMat(this.depthWidth, this.depthHeight, ref depthBuffer);
+            //CvMat bodyIndexMat = Utility.BodyIndexArrayToCvMat(this.depthWidth, this.depthHeight, ref bodyIndexBuffer);
+            CvMat mergedMat = Utility.MergeDepthAndUserMat(this.depthWidth, this.depthHeight, depthBuffer, bodyIndexBuffer);
             CvMat colorMat = new CvMat(this.colorHeight / 2, this.colorWidth / 2, MatrixType.U8C4);
             Cv.Resize(colorOrigMat, colorMat, Interpolation.NearestNeighbor); // THIS IS A BOTTLENECK!!!
             Task.Run(() => colorMat.SaveImage(path + "_color.jpg", new ImageEncodingParam(ImageEncodingID.JpegQuality, 85)));
-            Task.Run(() => depthMat.SaveImage(path + "_depth.png", new ImageEncodingParam(ImageEncodingID.PngCompression, 5)));
-            Task.Run(() => bodyIndexMat.SaveImage(path + "_user.png", new ImageEncodingParam(ImageEncodingID.PngCompression, 5)));
+            //Task.Run(() => depthMat.SaveImage(path + "_depth.png", new ImageEncodingParam(ImageEncodingID.PngCompression, 5)));
+            //Task.Run(() => bodyIndexMat.SaveImage(path + "_user.png", new ImageEncodingParam(ImageEncodingID.PngCompression, 5)));
+            Task.Run(() => mergedMat.SaveImage(path + "_depth.png", new ImageEncodingParam(ImageEncodingID.PngCompression, 5)));
         }
 
         /// <summary>
