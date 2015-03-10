@@ -733,22 +733,22 @@ namespace KinectMotionCapture
         /// <param name="e"></param>
         private void ExportFrameRangePointClouds_Click(object sender, RoutedEventArgs e)
         {
-            List<Frame> frames = frameSequence.Slice(startIndex, endIndex);
+            //List<Frame> frames = frameSequence.Slice(startIndex, endIndex);
             
-            for (int i = 0; i < frameSequence.recordNum; i++)
-            {
-                List<float[]>[] pointsSequence = new List<float[]>[frames.Count()];
-                string path = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), i.ToString() + "_PointsCloud.dump");
-                for (int frameNo = 0; frameNo < frames.Count(); frameNo++)
-                {
-                    Frame frame = frames[frameNo];
-                    List<Tuple<CvPoint3D64f, CvColor>> colors = frameSequence.LocalCoordinateMappers[i].DepthColorMatToRealPoints(frame.DepthMatList[i], frame.ColorMatList[i]);
-                    colors = colors.Select(t => Tuple.Create(CvEx.ConvertPoint3D(t.Item1, frameSequence.ToWorldConversions[i]), t.Item2)).ToList();
-                    List<float[]> dumpColors = colors.Select(t => new float[] { (float)t.Item1.X, (float)t.Item1.Y, (float)t.Item1.Z, t.Item2.R, t.Item2.G, t.Item2.B }).ToList();
-                    pointsSequence[frameNo] = dumpColors;
-                }
-                Utility.SaveToBinary(pointsSequence, path);
-            }
+            //for (int i = 0; i < frameSequence.recordNum; i++)
+            //{
+            //    List<float[]>[] pointsSequence = new List<float[]>[frames.Count()];
+            //    string path = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), i.ToString() + "_PointsCloud.dump");
+            //    for (int frameNo = 0; frameNo < frames.Count(); frameNo++)
+            //    {
+            //        Frame frame = frames[frameNo];
+            //        List<Tuple<CvPoint3D64f, CvColor>> colors = frameSequence.LocalCoordinateMappers[i].DepthColorMatToRealPoints(frame.DepthMatList[i], frame.ColorMatList[i]);
+            //        colors = colors.Select(t => Tuple.Create(CvEx.ConvertPoint3D(t.Item1, frameSequence.ToWorldConversions[i]), t.Item2)).ToList();
+            //        List<float[]> dumpColors = colors.Select(t => new float[] { (float)t.Item1.X, (float)t.Item1.Y, (float)t.Item1.Z, t.Item2.R, t.Item2.G, t.Item2.B }).ToList();
+            //        pointsSequence[frameNo] = dumpColors;
+            //    }
+            //    Utility.SaveToBinary(pointsSequence, path);
+            //}
         }
 
         /// <summary>
@@ -758,27 +758,27 @@ namespace KinectMotionCapture
         /// <param name="e"></param>
         private void ExportFrameRangeUserPointClouds_Click(object sender, RoutedEventArgs e)
         {
-            List<Frame> frames = frameSequence.Slice(startIndex, endIndex);
+            //List<Frame> frames = frameSequence.Slice(startIndex, endIndex);
             
-            for (int i = 0; i < frameSequence.recordNum; i++)
-            {
-                List<List<float[]>> pointsSequence = new List<List<float[]>>();
-                string path = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), i.ToString() + "_UserPointsCloud.dump");
-                for (int frameNo = 0; frameNo < frames.Count(); frameNo++)
-                {
-                    // フレームレート半分
-                    if (frameNo % 2 == 0)
-                        continue;
-                    Frame frame = frames[frameNo];
-                    List<Tuple<CvPoint3D64f, CvColor>> colors = frameSequence.LocalCoordinateMappers[i].GetUserColorPoints(frame.DepthMatList[i], frame.ColorMatList[i], frame.UserMatList[i]);
-                    colors = colors.Select(t => Tuple.Create(CvEx.ConvertPoint3D(t.Item1, frameSequence.ToWorldConversions[i]), t.Item2)).ToList();
-                    List<float[]> dumpColors = colors.Select(t => new float[] { (float)t.Item1.X, (float)t.Item1.Y, (float)t.Item1.Z, t.Item2.R, t.Item2.G, t.Item2.B }).ToList();
-                    // 点の数1/10
-                    dumpColors = dumpColors.Where((fs, index) => index % 10 == 0).ToList();
-                    pointsSequence.Add(dumpColors);
-                }
-                Utility.SaveToBinary(pointsSequence.ToArray(), path);
-            }
+            //for (int i = 0; i < frameSequence.recordNum; i++)
+            //{
+            //    List<List<float[]>> pointsSequence = new List<List<float[]>>();
+            //    string path = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), i.ToString() + "_UserPointsCloud.dump");
+            //    for (int frameNo = 0; frameNo < frames.Count(); frameNo++)
+            //    {
+            //        // フレームレート半分
+            //        if (frameNo % 2 == 0)
+            //            continue;
+            //        Frame frame = frames[frameNo];
+            //        List<Tuple<CvPoint3D64f, CvColor>> colors = frameSequence.LocalCoordinateMappers[i].GetUserColorPoints(frame.DepthMatList[i], frame.ColorMatList[i], frame.UserMatList[i]);
+            //        colors = colors.Select(t => Tuple.Create(CvEx.ConvertPoint3D(t.Item1, frameSequence.ToWorldConversions[i]), t.Item2)).ToList();
+            //        List<float[]> dumpColors = colors.Select(t => new float[] { (float)t.Item1.X, (float)t.Item1.Y, (float)t.Item1.Z, t.Item2.R, t.Item2.G, t.Item2.B }).ToList();
+            //        // 点の数1/10
+            //        dumpColors = dumpColors.Where((fs, index) => index % 10 == 0).ToList();
+            //        pointsSequence.Add(dumpColors);
+            //    }
+            //    Utility.SaveToBinary(pointsSequence.ToArray(), path);
+            //}
         }
 
         /// <summary>
@@ -788,19 +788,19 @@ namespace KinectMotionCapture
         /// <param name="e"></param>
         private void ExportFrameUserPointClouds_Click(object sender, RoutedEventArgs e)
         {
-            Frame frame = frameSequence.Frames[playingIndex];
-            for (int i = 0; i < frameSequence.recordNum; i++)
-            {
-                List<List<float[]>> pointsSequence = new List<List<float[]>>();
-                string path = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), i.ToString() + "_UserPointsCloud.dump");
+            //Frame frame = frameSequence.Frames[playingIndex];
+            //for (int i = 0; i < frameSequence.recordNum; i++)
+            //{
+            //    List<List<float[]>> pointsSequence = new List<List<float[]>>();
+            //    string path = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), i.ToString() + "_UserPointsCloud.dump");
 
-                List<Tuple<CvPoint3D64f, CvColor>> colors = frameSequence.LocalCoordinateMappers[i].GetUserColorPoints(frame.DepthMatList[i], frame.ColorMatList[i], frame.UserMatList[i]);
-                colors = colors.Select(t => Tuple.Create(CvEx.ConvertPoint3D(t.Item1, frameSequence.ToWorldConversions[i]), t.Item2)).ToList();
-                List<float[]> dumpColors = colors.Select(t => new float[] { (float)t.Item1.X, (float)t.Item1.Y, (float)t.Item1.Z, t.Item2.R, t.Item2.G, t.Item2.B }).ToList();
-                dumpColors = dumpColors.Where((fs, index) => index % 2 == 0).ToList();
-                pointsSequence.Add(dumpColors);
-                Utility.SaveToBinary(pointsSequence.ToArray(), path);
-            }
+            //    List<Tuple<CvPoint3D64f, CvColor>> colors = frameSequence.LocalCoordinateMappers[i].GetUserColorPoints(frame.DepthMatList[i], frame.ColorMatList[i], frame.UserMatList[i]);
+            //    colors = colors.Select(t => Tuple.Create(CvEx.ConvertPoint3D(t.Item1, frameSequence.ToWorldConversions[i]), t.Item2)).ToList();
+            //    List<float[]> dumpColors = colors.Select(t => new float[] { (float)t.Item1.X, (float)t.Item1.Y, (float)t.Item1.Z, t.Item2.R, t.Item2.G, t.Item2.B }).ToList();
+            //    dumpColors = dumpColors.Where((fs, index) => index % 2 == 0).ToList();
+            //    pointsSequence.Add(dumpColors);
+            //    Utility.SaveToBinary(pointsSequence.ToArray(), path);
+            //}
         }
 
         /// <summary>
