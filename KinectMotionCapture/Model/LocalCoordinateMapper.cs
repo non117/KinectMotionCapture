@@ -124,9 +124,9 @@ namespace KinectMotionCapture
             return this.MapDepthPointToColorSpace(new DepthSpacePoint() { X = x, Y = y }, depth, colorWidth, colorHeight);
         }
 
-        public List<Tuple<CvPoint3D64f, CvColor>> GetUserColorPoints(CvMat depthMat, CvMat colorMat, CvMat userMat)
+        public List<Tuple<CvPoint3D64f, CvColor>> GetUserColorPoints(CvMat colorMat, CvMat depthMat, CvMat userMat)
         {
-            Dictionary<int, List<Tuple<CvPoint3D64f, CvColor>>> eachUserColorPoints = this.GetEachUserColorPoints(depthMat, colorMat, userMat);
+            Dictionary<int, List<Tuple<CvPoint3D64f, CvColor>>> eachUserColorPoints = this.GetEachUserColorPoints(colorMat, depthMat, userMat);
             return eachUserColorPoints.Values.SelectMany(l => l).ToList();
         }
 
@@ -138,7 +138,7 @@ namespace KinectMotionCapture
         /// <param name="bodyIndexFrameData"></param>
         /// <param name="colorSize"></param>
         /// <returns></returns>
-        public Dictionary<int, List<Tuple<CvPoint3D64f, CvColor>>> GetEachUserColorPoints(CvMat depthMat, CvMat colorMat, CvMat userMat)
+        public Dictionary<int, List<Tuple<CvPoint3D64f, CvColor>>> GetEachUserColorPoints(CvMat colorMat, CvMat depthMat, CvMat userMat)
         {
             Dictionary<int, List<Tuple<CvPoint3D64f, CvColor>>> res = new Dictionary<int, List<Tuple<CvPoint3D64f, CvColor>>>();
             List<Tuple<CvPoint3D64f, CvColor>> lis;
@@ -146,17 +146,18 @@ namespace KinectMotionCapture
             CvSize colorSize = colorMat.GetSize();
             unsafe
             {
-                short* depthArr = depthMat.DataInt16;
                 byte* colorArr = colorMat.DataByte;
-                byte* userArr = userMat.DataByte;
+                short* depthArr = depthMat.DataInt16;                
+                short* userArr = userMat.DataInt16;
 
                 for (int y = 0; y < depthHeight; ++y)
                 {
                     for (int x = 0; x < depthWidth; ++x)
                     {                        
                         int depthIndex = (y * depthWidth) + x;
-                        byte player = userArr[depthIndex];
-                        if (player != 0xff)
+                        short player = userArr[depthIndex];
+                        // TODO : check
+                        if (player != 255)
                         {
                             ushort depthVal = (ushort)depthArr[depthIndex];
                             ColorSpacePoint colorPoint = this.MapDepthPointToColorSpace(x, y, depthVal, colorSize.Width, colorSize.Height);
@@ -193,7 +194,7 @@ namespace KinectMotionCapture
         /// <param name="colorFrameData"></param>
         /// <param name="colorSize"></param>
         /// <returns></returns>
-        public List<Tuple<CvPoint3D64f, CvColor>> DepthColorMatToRealPoints(CvMat depthMat, CvMat colorMat)
+        public List<Tuple<CvPoint3D64f, CvColor>> DepthColorMatToRealPoints(CvMat colorMat, CvMat depthMat)
         {
             List<Tuple<CvPoint3D64f, CvColor>> res = new List<Tuple<CvPoint3D64f, CvColor>>();
             int bytesPerPixel = colorMat.ElemChannels;
