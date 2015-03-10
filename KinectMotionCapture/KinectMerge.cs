@@ -434,21 +434,6 @@ namespace KinectMotionCapture
             get { return this.records.Select((m) => m.ImagePath).ToList(); }
         }
 
-        public List<CvMat> ColorMatList
-        {
-            get { return this.records.Select((m) => CvMat.LoadImageM(m.ImagePath, LoadMode.Unchanged)).ToList(); }
-        }
-        
-        public List<CvMat> DepthMatList
-        {
-            get { return this.records.Select((m) => CvMat.LoadImageM(m.DepthPath, LoadMode.Unchanged)).ToList(); }
-        }
-
-        public List<CvMat> UserMatList
-        {
-            get { return this.records.Select((m) => CvMat.LoadImageM(m.UserPath, LoadMode.Unchanged)).ToList(); }
-        }
-
         public List<CvSize> ColorSize
         {
             get { return this.records.Select((m) => new CvSize(m.ColorWidth, m.ColorHeight)).ToList(); }
@@ -457,6 +442,16 @@ namespace KinectMotionCapture
         public List<CvSize> DepthUserSize
         {
             get { return this.records.Select((m) => new CvSize(m.DepthUserWidth, m.DepthUserHeight)).ToList(); }
+        }
+
+        /// <summary>
+        /// 指定されたレコードのCvMatを配列で返す
+        /// </summary>
+        /// <param name="recordNo"></param>
+        /// <returns></returns>
+        public CvMat[] GetCvMat(int recordNo)
+        {
+            return this.records[recordNo].GetCvMat();
         }
 
         /// <summary>
