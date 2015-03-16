@@ -61,7 +61,6 @@ namespace KinectMotionCapture
         /// <param name="imagePaths"></param>
         private static void MoveImages(string destDir, IEnumerable<string> imagePaths)
         {
-            Utility.CreateDirectories(destDir);
             foreach (string oldImage in imagePaths)
             {
                 string newImage = Path.Combine(destDir, Path.GetFileName(oldImage));
@@ -69,16 +68,43 @@ namespace KinectMotionCapture
             }
         }
 
+        /// <summary>
+        /// 画像をマージする
+        /// </summary>
+        /// <param name="destDir"></param>
+        /// <param name="mds"></param>
+        private static void MergeImages(string destDir, IEnumerable<OldMotionData> mds)
+        {
+            foreach (OldMotionData md in mds)
+            {
+                CvMat depth = CvMat.LoadImageM(md.DepthPath, LoadMode.Unchanged);
+                CvMat user = CvMat.LoadImageM(md.UserPath, LoadMode.Unchanged);
+                CvMat user2 = Cv.CreateMat(depth.Rows, depth.Cols, MatrixType.U16C1);
+                user.Convert(user2);
+                CvMat merged = Cv.CreateMat(depth.Rows, depth.Cols, MatrixType.U16C3);
+                Cv.Merge(depth, user2, null, null, merged);
+                string newImagePath = Path.Combine(destDir, Path.GetFileName(md.DepthPath));
+                merged.SaveImage(newImagePath);
+            }
+        }
+
+        /// <summary>
+        /// 外部に公開する変換ツール
+        /// </summary>
+        /// <param name="srcDir"></param>
+        /// <param name="destDir"></param>
         public static void Convert(string srcDir, string destDir)
         {
             string metaDataFilePath = Path.Combine(srcDir, bodyInfoFilename);
-            IEnumerable<MotionData> mdList = GetMotionDataFromFile(metaDataFilePath).Select(ConvertData);
-            foreach (MotionData md in mdList)
+            IEnumerable<OldMotionData> oldMdList = GetMotionDataFromFile(metaDataFilePath);
+            foreach (OldMotionData md in oldMdList)
             {
                 md.ReConstructPaths(srcDir);
             }
+            IEnumerable<MotionData> mdList = oldMdList.Select(ConvertData);
+            Utility.CreateDirectories(destDir);
             MoveImages(destDir, mdList.Select(md => md.ImagePath));
-            // TODO : 画像の変換と移動処理
+            MergeImages(destDir, oldMdList);
         }
     }
 
