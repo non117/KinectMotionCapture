@@ -54,6 +54,12 @@ namespace KinectMotionCapture
             return md;
         }
 
+        public static void Convert(string dataDir)
+        {
+            string metaDataFilePath = Path.Combine(dataDir, bodyInfoFilename);
+            IEnumerable<MotionData> mdList = GetMotionDataFromFile(metaDataFilePath).Select(ConvertData);
+            // TODO : 画像の変換と移動処理
+        }
     }
 
     /// <summary>
