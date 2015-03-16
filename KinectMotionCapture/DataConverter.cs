@@ -33,6 +33,27 @@ namespace KinectMotionCapture
             return new List<OldMotionData>();
         }
 
+        /// <summary>
+        /// 旧から新へ変換する
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        private static MotionData ConvertData(OldMotionData data)
+        {
+            MotionData md = new MotionData();
+            md.bodies = data.bodies;
+            md.ColorHeight = data.ColorHeight;
+            md.ColorWidth = data.ColorWidth;
+            md.depthLUT = data.depthLUT;
+            md.DepthUserHeight = data.DepthUserHeight;
+            md.DepthUserWidth = data.DepthUserWidth;
+            md.DepthUserPath = data.DepthPath;
+            md.FrameNo = data.FrameNo;
+            md.ImagePath = data.ImagePath;
+            md.TimeStamp = data.TimeStamp;
+            return md;
+        }
+
     }
 
     /// <summary>
