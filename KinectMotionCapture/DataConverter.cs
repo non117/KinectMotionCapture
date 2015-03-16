@@ -54,10 +54,30 @@ namespace KinectMotionCapture
             return md;
         }
 
-        public static void Convert(string dataDir)
+        /// <summary>
+        /// カラー画像をコピーする
+        /// </summary>
+        /// <param name="destDir"></param>
+        /// <param name="imagePaths"></param>
+        private static void MoveImages(string destDir, IEnumerable<string> imagePaths)
         {
-            string metaDataFilePath = Path.Combine(dataDir, bodyInfoFilename);
+            Utility.CreateDirectories(destDir);
+            foreach (string oldImage in imagePaths)
+            {
+                string newImage = Path.Combine(destDir, Path.GetFileName(oldImage));
+                File.Copy(oldImage, newImage);
+            }
+        }
+
+        public static void Convert(string srcDir, string destDir)
+        {
+            string metaDataFilePath = Path.Combine(srcDir, bodyInfoFilename);
             IEnumerable<MotionData> mdList = GetMotionDataFromFile(metaDataFilePath).Select(ConvertData);
+            foreach (MotionData md in mdList)
+            {
+                md.ReConstructPaths(srcDir);
+            }
+            MoveImages(destDir, mdList.Select(md => md.ImagePath));
             // TODO : 画像の変換と移動処理
         }
     }
