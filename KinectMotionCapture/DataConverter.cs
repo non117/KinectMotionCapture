@@ -16,6 +16,23 @@ namespace KinectMotionCapture
 
     class DataConverter
     {
+        private static string bodyInfoFilename = @"BodyInfo.dump";
+
+        /// <summary>
+        /// レコードのメタデータをデシリアライズしてくる
+        /// </summary>
+        /// <param name="filepath"></param>
+        /// <returns></returns>
+        private static IEnumerable<OldMotionData> GetMotionDataFromFile(string filepath)
+        {
+            string ext = Path.GetExtension(filepath);
+            if (ext == ".dump")
+            {
+                return Utility.LoadFromSequentialBinary(filepath).Select(o => (OldMotionData)o);
+            }
+            return new List<OldMotionData>();
+        }
+
     }
 
     /// <summary>
