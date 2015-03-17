@@ -59,13 +59,13 @@ namespace KinectMotionCapture
         {
         }
 
-        public static UserSegmentation Segment(IEnumerable<MotionData> recordData, TimeSpan segmentTimeSpan)
+        public static UserSegmentation Segment(IEnumerable<MotionMetaData> recordData, TimeSpan segmentTimeSpan)
         {
             int numUser = 0;
             UserSegmentation segm = new UserSegmentation();
             Dictionary<ulong, Tuple<int, DateTime>> currentConversions = new Dictionary<ulong, Tuple<int, DateTime>>();
             int frameIndex = 0;
-            foreach (MotionData md in recordData)
+            foreach (MotionMetaData md in recordData)
             {
                 bool changed = false;
                 foreach (ulong user in md.bodies.ToList().Select(b => b.TrackingId))
@@ -225,9 +225,9 @@ namespace KinectMotionCapture
 
             for (int recordNo = 0; recordNo < frameseq.recordNum; recordNo++)
             {
-                IEnumerable<MotionData> record = frameseq.GetMotionDataSequence(recordNo);
+                IEnumerable<MotionMetaData> record = frameseq.GetMotionDataSequence(recordNo);
                 int frameIndex = 0;
-                foreach (MotionData motionData in record)
+                foreach (MotionMetaData motionData in record)
                 {
                     IList<ulong> users = motionData.bodies.ToList().Select(b => b.TrackingId).ToList();
                     foreach (var tuple in users.SelectMany(u => users.Select(v => new Tuple<RecordAndUser, RecordAndUser>(new RecordAndUser(recordNo, u), new RecordAndUser(recordNo, v)))))

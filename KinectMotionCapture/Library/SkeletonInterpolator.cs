@@ -32,7 +32,7 @@ namespace KinectMotionCapture
         /// <param name="time"></param>
         /// <param name="user"></param>
         /// <returns></returns>
-        public double GetVarianceWeight(MotionData prevFrame, MotionData nextFrame, Dictionary<JointType, Joint> prevJoints, Dictionary<JointType, Joint> nextJoints, DateTime time)
+        public double GetVarianceWeight(MotionMetaData prevFrame, MotionMetaData nextFrame, Dictionary<JointType, Joint> prevJoints, Dictionary<JointType, Joint> nextJoints, DateTime time)
         {
             if (prevJoints == null || prevJoints.Count == 0)
                 return 0;
@@ -50,7 +50,7 @@ namespace KinectMotionCapture
         /// <param name="time"></param>
         /// <param name="user"></param>
         /// <returns></returns>
-        public double GetSkeletonReliability(MotionData prevFrame, MotionData nextFrame, Dictionary<JointType, Joint> prevJoints, Dictionary<JointType, Joint> nextJoints, DateTime time, 
+        public double GetSkeletonReliability(MotionMetaData prevFrame, MotionMetaData nextFrame, Dictionary<JointType, Joint> prevJoints, Dictionary<JointType, Joint> nextJoints, DateTime time, 
             CameraIntrinsics cameraInfo)
         {
             double periodAfter = (time - prevFrame.TimeStamp).TotalSeconds;
@@ -88,7 +88,7 @@ namespace KinectMotionCapture
             _omitWhenDataLack = omitWhenDataLack;
         }
 
-        public Dictionary<JointType, CvPoint3D64f> InterpolateSkeleton(MotionData prevFrame, MotionData nextFrame, Dictionary<JointType, Joint> prevJoints, Dictionary<JointType, Joint> nextJoints,
+        public Dictionary<JointType, CvPoint3D64f> InterpolateSkeleton(MotionMetaData prevFrame, MotionMetaData nextFrame, Dictionary<JointType, Joint> prevJoints, Dictionary<JointType, Joint> nextJoints,
             DateTime time, CvMat ToWorldConversion)
         {
             double prevWeight;
@@ -175,8 +175,8 @@ namespace KinectMotionCapture
 
             for (int recordNo = 0; recordNo < frameSeq.recordNum; recordNo++)
             {
-                MotionData prevData = frameSeq.GetPrevData(recordNo, time);
-                MotionData nextData = frameSeq.GetNextData(recordNo, time);
+                MotionMetaData prevData = frameSeq.GetPrevData(recordNo, time);
+                MotionMetaData nextData = frameSeq.GetNextData(recordNo, time);
 
                 if (prevData == null || nextData == null || prevData.bodies.Length * nextData.bodies.Length == 0 || !prevData.isValid || !nextData.isValid)
                 {

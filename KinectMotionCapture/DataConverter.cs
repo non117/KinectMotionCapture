@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -23,14 +25,24 @@ namespace KinectMotionCapture
         /// </summary>
         /// <param name="filepath"></param>
         /// <returns></returns>
-        private static IEnumerable<OldMotionData> GetMotionDataFromFile(string filepath)
+        private static IEnumerable<MotionData> GetMotionDataFromFile(string filepath)
         {
             string ext = Path.GetExtension(filepath);
             if (ext == ".dump")
             {
-                return Utility.LoadFromSequentialBinary(filepath).Select(o => (OldMotionData)o);
+                IFormatter formatter = new BinaryFormatter();
+                List<MotionData> res = new List<MotionData>();
+                using (FileStream fs = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.None))
+                {
+                    while (fs.Length != fs.Position)
+                    {
+                        MotionData md = (MotionData)formatter.Deserialize(fs);
+                        res.Add(md);
+                    }
+                }
+                return res;
             }
-            return new List<OldMotionData>();
+            return new List<MotionData>();
         }
 
         /// <summary>
@@ -38,9 +50,9 @@ namespace KinectMotionCapture
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        private static MotionData ConvertData(OldMotionData data)
+        private static MotionMetaData ConvertData(MotionData data)
         {
-            MotionData md = new MotionData();
+            MotionMetaData md = new MotionMetaData();
             md.bodies = data.bodies;
             md.ColorHeight = data.ColorHeight;
             md.ColorWidth = data.ColorWidth;
@@ -73,9 +85,9 @@ namespace KinectMotionCapture
         /// </summary>
         /// <param name="destDir"></param>
         /// <param name="mds"></param>
-        private static void MergeImages(string destDir, IEnumerable<OldMotionData> mds)
+        private static void MergeImages(string destDir, IEnumerable<MotionData> mds)
         {
-            foreach (OldMotionData md in mds)
+            foreach (MotionData md in mds)
             {
                 CvMat depth = CvMat.LoadImageM(md.DepthPath, LoadMode.Unchanged);
                 CvMat user = CvMat.LoadImageM(md.UserPath, LoadMode.Unchanged);
@@ -96,15 +108,16 @@ namespace KinectMotionCapture
         public static void Convert(string srcDir, string destDir)
         {
             string metaDataFilePath = Path.Combine(srcDir, bodyInfoFilename);
-            IEnumerable<OldMotionData> oldMdList = GetMotionDataFromFile(metaDataFilePath);
-            foreach (OldMotionData md in oldMdList)
+            IEnumerable<MotionData> oldMdList = GetMotionDataFromFile(metaDataFilePath);
+            foreach (MotionData md in oldMdList)
             {
                 md.ReConstructPaths(srcDir);
             }
-            IEnumerable<MotionData> mdList = oldMdList.Select(ConvertData);
+            IEnumerable<MotionMetaData> mdList = oldMdList.Select(ConvertData);
             Utility.CreateDirectories(destDir);
             MoveImages(destDir, mdList.Select(md => md.ImagePath));
             MergeImages(destDir, oldMdList);
+            // TODO. 並列化．metadata自身の保存
         }
     }
 
@@ -112,12 +125,12 @@ namespace KinectMotionCapture
     /// 動作のメタデータと骨格座標とかのモデルクラス
     /// </summary>
     [Serializable]
-    public class OldMotionData
+    public class MotionData
     {
         /// <summary>
         /// for MsgPack
         /// </summary>
-        public OldMotionData() { }
+        public MotionData() { }
 
         /// <summary>
         /// コンストラクタ
@@ -126,7 +139,7 @@ namespace KinectMotionCapture
         /// <param name="dataDir"></param>
         /// <param name="timeStamp"></param>
         /// <param name="bodies"></param>
-        public OldMotionData(int frameNo, string dataDir, DateTime timeStamp, Body[] bodies, Dictionary<ulong, PointsPair> pointPairs)
+        public MotionData(int frameNo, string dataDir, DateTime timeStamp, Body[] bodies, Dictionary<ulong, PointsPair> pointPairs)
         {
             this.FrameNo = frameNo;
             this.ImagePath = Path.Combine(dataDir, frameNo.ToString() + "_color.jpg");

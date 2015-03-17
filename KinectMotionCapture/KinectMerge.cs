@@ -50,7 +50,7 @@ namespace KinectMotionCapture
         private string bodyInfoFilename = @"BodyInfo.dump";
         private TimeSpan timePeriod;
         private List<UserSegmentation> segms;
-        private List<List<MotionData>> originalRecords;
+        private List<List<MotionMetaData>> originalRecords;
         private List<Tuple<List<DateTime>, int[]>> timeInfos;
 
         public int recordNum;
@@ -176,14 +176,14 @@ namespace KinectMotionCapture
         /// </summary>
         /// <param name="filepath"></param>
         /// <returns></returns>
-        private List<MotionData> GetMotionDataFromFile(string filepath)
+        private List<MotionMetaData> GetMotionDataFromFile(string filepath)
         {
             string ext = Path.GetExtension(filepath);
             if (ext == ".dump")
             {
-                return Utility.LoadFromSequentialBinary(filepath).Select(o => (MotionData)o).ToList();
+                return Utility.LoadFromSequentialBinary(filepath).Select(o => (MotionMetaData)o).ToList();
             }
-            return new List<MotionData>();
+            return new List<MotionMetaData>();
         }
 
         /// <summary>
@@ -193,12 +193,12 @@ namespace KinectMotionCapture
         /// <param name="minTime"></param>
         /// <param name="maxTime"></param>
         /// <returns></returns>
-        private List<List<MotionData>> SliceFrames(List<List<MotionData>> records, DateTime minTime, DateTime maxTime)
+        private List<List<MotionMetaData>> SliceFrames(List<List<MotionMetaData>> records, DateTime minTime, DateTime maxTime)
         {
-            List<List<MotionData>> newRecords = new List<List<MotionData>>();
-            foreach (List<MotionData> record in records)
+            List<List<MotionMetaData>> newRecords = new List<List<MotionMetaData>>();
+            foreach (List<MotionMetaData> record in records)
             {
-                List<MotionData> newRecord = record.Where((r) => minTime <= r.TimeStamp && r.TimeStamp <= maxTime).OrderBy(m => m.TimeStamp).ToList();
+                List<MotionMetaData> newRecord = record.Where((r) => minTime <= r.TimeStamp && r.TimeStamp <= maxTime).OrderBy(m => m.TimeStamp).ToList();
                 newRecords.Add(newRecord);
             }
             return newRecords;
@@ -209,11 +209,11 @@ namespace KinectMotionCapture
         /// </summary>
         /// <param name="records"></param>
         /// <returns></returns>
-        private List<List<MotionData>> SearchDupFrames(List<List<MotionData>> records)
+        private List<List<MotionMetaData>> SearchDupFrames(List<List<MotionMetaData>> records)
         {
             DateTime minTime = DateTime.MinValue;
             DateTime maxTime = DateTime.MaxValue;
-            foreach (List<MotionData> record in records)
+            foreach (List<MotionMetaData> record in records)
             {
                 if (record.First().TimeStamp > minTime)
                 {
@@ -234,11 +234,11 @@ namespace KinectMotionCapture
         /// </summary>
         /// <param name="records"></param>
         /// <returns></returns>
-        private List<List<MotionData>> ApplyOffset(List<List<MotionData>> records)
+        private List<List<MotionMetaData>> ApplyOffset(List<List<MotionMetaData>> records)
         {
             for (int recordNo = 0; recordNo < recordNum; recordNo++)
             {
-                foreach (MotionData md in records[recordNo])
+                foreach (MotionMetaData md in records[recordNo])
                 {
                     TimeSpan offset = new TimeSpan(0, 0, 0, (int)Math.Truncate(offsets[recordNo]), (int)(offsets[recordNo] % 1.0));
                     md.TimeStamp += offset;
@@ -256,7 +256,7 @@ namespace KinectMotionCapture
         {
             List<Frame> frames = new List<Frame>();
             List<Tuple<List<DateTime>, int[]>> timeInfos = new List<Tuple<List<DateTime>, int[]>>();
-            foreach (List<MotionData> record in this.originalRecords)
+            foreach (List<MotionMetaData> record in this.originalRecords)
             {
                 DateTime[] dateTimes = record.Select(m => m.TimeStamp).ToArray();
                 int[] indexes = record.Select((m, i) => i).ToArray();
@@ -269,11 +269,11 @@ namespace KinectMotionCapture
 
             {
                 // 同時刻のフレーム集合. Kinectの数だけ入るはず.
-                List<MotionData> currentRecords = new List<MotionData>();
-                List<MotionData> nextRecords = new List<MotionData>();
+                List<MotionMetaData> currentRecords = new List<MotionMetaData>();
+                List<MotionMetaData> nextRecords = new List<MotionMetaData>();
                 for (int i = 0; i < this.recordNum; i++)
                 {
-                    List<MotionData> record = this.originalRecords[i];
+                    List<MotionMetaData> record = this.originalRecords[i];
                     List<DateTime> dateTimes = timeInfos[i].Item1;
                     int[] indexes = timeInfos[i].Item2;
                     int frameIndex = ListEx.GetMaxLessEqualIndexFromBinarySearch(dateTimes.BinarySearch(time));
@@ -325,7 +325,7 @@ namespace KinectMotionCapture
         /// </summary>
         /// <param name="recordNo"></param>
         /// <returns></returns>
-        public IEnumerable<MotionData> GetMotionDataSequence(int recordNo)
+        public IEnumerable<MotionMetaData> GetMotionDataSequence(int recordNo)
         {
             return this.Frames.Select(f => f.GetMotionData(recordNo));
         }
@@ -336,9 +336,9 @@ namespace KinectMotionCapture
         /// <param name="recordNo"></param>
         /// <param name="time"></param>
         /// <returns></returns>
-        public MotionData GetPrevData(int recordNo, DateTime time)
+        public MotionMetaData GetPrevData(int recordNo, DateTime time)
         {
-            List<MotionData> record = this.originalRecords[recordNo];
+            List<MotionMetaData> record = this.originalRecords[recordNo];
             List<DateTime> dateTimes = timeInfos[recordNo].Item1;
             int[] indexes = timeInfos[recordNo].Item2;
             int prevIndex = ListEx.GetMaxLessEqualIndexFromBinarySearch(dateTimes.BinarySearch(time));
@@ -353,9 +353,9 @@ namespace KinectMotionCapture
         /// <param name="recordNo"></param>
         /// <param name="time"></param>
         /// <returns></returns>
-        public MotionData GetNextData(int recordNo, DateTime time)
+        public MotionMetaData GetNextData(int recordNo, DateTime time)
         {
-            List<MotionData> record = this.originalRecords[recordNo];
+            List<MotionMetaData> record = this.originalRecords[recordNo];
             List<DateTime> dateTimes = timeInfos[recordNo].Item1;
             int[] indexes = timeInfos[recordNo].Item2;
             int nextIndex = ListEx.GetMinGreaterEqualIndexFromBinarySearch(dateTimes.BinarySearch(time));
@@ -378,15 +378,15 @@ namespace KinectMotionCapture
             
             this.dataDirs = dataDirs;
             // 外側がKinectの数だけあるレコード、内側がフレーム数分
-            List<List<MotionData>> records = new List<List<MotionData>>();
+            List<List<MotionMetaData>> records = new List<List<MotionMetaData>>();
             foreach (string dataDir in dataDirs)
             {
                 string metaDataFilePath = Path.Combine(dataDir, this.bodyInfoFilename);
                 // ここでソートしてる
-                List<MotionData> mdList = this.GetMotionDataFromFile(metaDataFilePath).OrderBy(md => md.TimeStamp).ToList();
+                List<MotionMetaData> mdList = this.GetMotionDataFromFile(metaDataFilePath).OrderBy(md => md.TimeStamp).ToList();
 
                 // 画像のパスを修正する
-                foreach (MotionData md in mdList)
+                foreach (MotionMetaData md in mdList)
                 {
                     md.ReConstructPaths(dataDir);
                 }
@@ -397,17 +397,17 @@ namespace KinectMotionCapture
             this.originalRecords = records;
 
             // いちばん短いレコードに合わせて単位時刻を決定する
-            int shortestRecordLength = records.Select((List<MotionData> record) => record.Count()).Min();
+            int shortestRecordLength = records.Select((List<MotionMetaData> record) => record.Count()).Min();
             this.timePeriod = new TimeSpan((this.endTime - this.startTime).Ticks / shortestRecordLength);
 
             this.Frames = this.GenerateFrames();
 
             // レコードごとに含まれるidを列挙する
             this.userIdList = new List<List<ulong>>();
-            foreach (List<MotionData> record in records)
+            foreach (List<MotionMetaData> record in records)
             {
                 List<ulong> idList = new List<ulong>();
-                foreach(MotionData md in record)
+                foreach(MotionMetaData md in record)
                 {
                     idList.AddRange(new List<SerializableBody>(md.bodies).Select((SerializableBody body) => body.TrackingId));
                 }
@@ -425,8 +425,8 @@ namespace KinectMotionCapture
     public class Frame
     {
         public int recordNum;
-        private List<MotionData> records;
-        private List<MotionData> nextRecords;
+        private List<MotionMetaData> records;
+        private List<MotionMetaData> nextRecords;
         public DateTime Time { get; set; }
 
         public List<string> ColorImagePathList
@@ -459,7 +459,7 @@ namespace KinectMotionCapture
         /// </summary>
         /// <param name="recordNo"></param>
         /// <returns></returns>
-        public MotionData GetMotionData(int recordNo)
+        public MotionMetaData GetMotionData(int recordNo)
         {
             return this.records[recordNo];
         }
@@ -469,7 +469,7 @@ namespace KinectMotionCapture
         /// </summary>
         /// <param name="recordNo"></param>
         /// <returns></returns>
-        public MotionData GetNextMotionData(int recordNo)
+        public MotionMetaData GetNextMotionData(int recordNo)
         {
             return this.nextRecords[recordNo];
         }
@@ -522,7 +522,7 @@ namespace KinectMotionCapture
         /// <returns></returns>
         public List<Tuple<ulong, Point>> GetIdAndPosition(int recordNo)
         {
-            MotionData md = this.records[recordNo];
+            MotionMetaData md = this.records[recordNo];
             List<Tuple<ulong, Point>> ret = new List<Tuple<ulong, Point>>();
             foreach (SerializableBody body in md.bodies)
             {
@@ -544,7 +544,7 @@ namespace KinectMotionCapture
         /// <param name="mapping"></param>
         public void SetIntegratedId(Dictionary<ulong, int> mapping)
         {
-            foreach (MotionData md in this.records)
+            foreach (MotionMetaData md in this.records)
             {
                 foreach (SerializableBody body in md.bodies)
                 {
@@ -552,7 +552,7 @@ namespace KinectMotionCapture
                     body.integratedId = integratedId;
                 }
             }
-            foreach (MotionData md in this.nextRecords)
+            foreach (MotionMetaData md in this.nextRecords)
             {
                 foreach (SerializableBody body in md.bodies)
                 {
@@ -645,7 +645,7 @@ namespace KinectMotionCapture
         /// <param name="UserIds"></param>
         public void InverseBody(int recordNo, int integratedId = -1, ulong originalId = 0)
         {
-            MotionData md = this.records[recordNo];
+            MotionMetaData md = this.records[recordNo];
             foreach (SerializableBody body in md.bodies)
             {
                 if (integratedId != -1 && body.integratedId == integratedId)
@@ -663,7 +663,7 @@ namespace KinectMotionCapture
 
         public void DeleteBody(int recordNo, int integratedId = -1, ulong originalId = 0)
         {
-            MotionData md = this.records[recordNo];
+            MotionMetaData md = this.records[recordNo];
             for (int i = 0; i < md.bodies.Length; i++)
             {
                 SerializableBody body = md.bodies[i];
@@ -684,7 +684,7 @@ namespace KinectMotionCapture
         /// </summary>
         public void ResetInversedBody()
         {
-            foreach (MotionData md in this.records)
+            foreach (MotionMetaData md in this.records)
             {
                 foreach (SerializableBody body in md.bodies)
                 {
@@ -702,7 +702,7 @@ namespace KinectMotionCapture
         /// <param name="recordNo"></param>
         public void SetDataNotValid(int recordNo)
         {
-            MotionData md = this.records[recordNo];
+            MotionMetaData md = this.records[recordNo];
             md.isValid = false;
         }
 
@@ -711,7 +711,7 @@ namespace KinectMotionCapture
         /// </summary>
         public void ResetAllValidFlags()
         {
-            foreach (MotionData md in this.records)
+            foreach (MotionMetaData md in this.records)
             {
                 md.isValid = true;
             }
@@ -721,7 +721,7 @@ namespace KinectMotionCapture
         /// こんすとらくたん
         /// </summary>
         /// <param name="records"></param>
-        public Frame(List<MotionData> records, List<MotionData> nextrecords)
+        public Frame(List<MotionMetaData> records, List<MotionMetaData> nextrecords)
         {
             this.recordNum = records.Count();
             this.records = records;

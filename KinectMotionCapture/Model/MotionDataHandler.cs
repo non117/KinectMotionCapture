@@ -35,11 +35,11 @@ namespace KinectMotionCapture
         private int depthHeight = 0;
 
         private FileStream fileStream = null;
-        private Queue<MotionData> motioDataQueue = null;
+        private Queue<MotionMetaData> motioDataQueue = null;
         private BackgroundWorker worker = null;
 
         // キャリブレーションが無くなったらいらない可能性が高い
-        public List<MotionData> motionDataList { get; set; }
+        public List<MotionMetaData> motionDataList { get; set; }
 
         /// <summary>
         /// Kinect記録用のコンストラクタ
@@ -52,13 +52,13 @@ namespace KinectMotionCapture
         {
             this.CheckRecordExistsAndCreateOpen(dataDir);
             
-            this.motionDataList = new List<MotionData>();
+            this.motionDataList = new List<MotionMetaData>();
             this.colorWidth = colorWidth;
             this.colorHeight = colorHeight;
             this.depthWidth = depthWidth;
             this.depthHeight = depthHeight;
 
-            this.motioDataQueue = new Queue<MotionData>();
+            this.motioDataQueue = new Queue<MotionMetaData>();
             this.worker = new BackgroundWorker();
             this.worker.WorkerSupportsCancellation = true;
             this.worker.DoWork += new DoWorkEventHandler(this.worker_DoWork);
@@ -151,7 +151,7 @@ namespace KinectMotionCapture
         public void AddData(int frameNo, DateTime dateTime, Body[] bodies, ref byte[] colorPixels, ref ushort[] depthBuffer, ref byte[] bodyIndexBuffer, Dictionary<ulong, PointsPair> pointPairs)
         {
             this.SaveImages(frameNo, ref colorPixels, ref depthBuffer, ref bodyIndexBuffer);
-            MotionData motionData = new MotionData(frameNo, this.dataDir, dateTime, bodies, pointPairs);
+            MotionMetaData motionData = new MotionMetaData(frameNo, this.dataDir, dateTime, bodies, pointPairs);
             motionData.ColorWidth = this.colorWidth;
             motionData.ColorHeight = this.colorHeight;
             motionData.DepthUserWidth = this.depthWidth;
@@ -177,7 +177,7 @@ namespace KinectMotionCapture
             BackgroundWorker bw = sender as BackgroundWorker;
             int interval = (int)(1000 / 40);
             IFormatter formatter = new BinaryFormatter();
-            MotionData motionData;
+            MotionMetaData motionData;
 
             while (true)
             {
@@ -232,12 +232,12 @@ namespace KinectMotionCapture
     /// 動作のメタデータと骨格座標とかのモデルクラス
     /// </summary>
     [Serializable]
-    public class MotionData
+    public class MotionMetaData
     {
         /// <summary>
         /// for MsgPack
         /// </summary>
-        public MotionData() { }
+        public MotionMetaData() { }
 
         /// <summary>
         /// コンストラクタ
@@ -246,7 +246,7 @@ namespace KinectMotionCapture
         /// <param name="dataDir"></param>
         /// <param name="timeStamp"></param>
         /// <param name="bodies"></param>
-        public MotionData(int frameNo, string dataDir, DateTime timeStamp, Body[] bodies, Dictionary<ulong, PointsPair> pointPairs)
+        public MotionMetaData(int frameNo, string dataDir, DateTime timeStamp, Body[] bodies, Dictionary<ulong, PointsPair> pointPairs)
         {
             this.FrameNo = frameNo;
             this.ImagePath = Path.Combine(dataDir, frameNo.ToString() + "_color.jpg");

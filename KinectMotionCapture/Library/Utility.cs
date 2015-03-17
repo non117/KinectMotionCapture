@@ -209,7 +209,7 @@ namespace KinectMotionCapture
             {
                 while (fs.Length != fs.Position)
                 {
-                    MotionData md = (MotionData)formatter.Deserialize(fs);
+                    MotionMetaData md = (MotionMetaData)formatter.Deserialize(fs);
                     md.isValid = true;
                     res.Add(md);
                     //if (md.TimeStamp.Minute < 20)
