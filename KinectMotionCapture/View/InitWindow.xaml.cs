@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -35,19 +36,35 @@ namespace KinectMotionCapture
             this.Close();
         }
 
-        //private void CalibrateCameraButton_Click(object sender, RoutedEventArgs e)
-        //{
-        //    CameraUndistortWindow wnd = new CameraUndistortWindow();
-        //    wnd.IsSingleWindowMode = true;
-        //    wnd.Show();
-        //    this.Close();
-        //}
-
         private void MergeRecordButton_Click(object sender, RoutedEventArgs e)
         {
             MergeRecordWindow wnd = new MergeRecordWindow();
             wnd.Show();
             this.Close();
+        }
+
+        private void ConvertButton_Click(object sender, RoutedEventArgs e)
+        {
+            FolderBrowserDialog fbd = new FolderBrowserDialog();
+            fbd.SelectedPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            string src, dest;
+            bool flg1 = false;
+            bool flg2 = false;
+            fbd.Description = "入力フォルダを選択してください";
+            if (fbd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                src = fbd.SelectedPath;
+                flg1 = true;
+
+                fbd.Description = "出力フォルダを選択してください";
+                if (fbd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    dest = fbd.SelectedPath;
+                    flg2 = true;
+                    DataConverter.Convert(src, dest);
+                }
+            }
+            
         }
     }
 }
