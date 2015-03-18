@@ -101,6 +101,24 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
+        /// メタデータを保存する
+        /// </summary>
+        /// <param name="destDir"></param>
+        /// <param name="mmds"></param>
+        private static void DumpMetaData(string destDir, IEnumerable<MotionMetaData> mmds)
+        {
+            string metaDataFilePath = Path.Combine(destDir, bodyInfoFilename);
+            IFormatter formatter = new BinaryFormatter();
+            using(FileStream fs = new FileStream(metaDataFilePath, FileMode.Append, FileAccess.Write, FileShare.None))
+            {
+                foreach (MotionMetaData mmd in mmds)
+                {
+                    formatter.Serialize(fs, mmd);
+                }
+            }
+        }
+
+        /// <summary>
         /// 外部に公開する変換ツール
         /// </summary>
         /// <param name="srcDir"></param>
@@ -117,7 +135,8 @@ namespace KinectMotionCapture
             Utility.CreateDirectories(destDir);
             MoveImages(destDir, mdList.Select(md => md.ImagePath));
             MergeImages(destDir, oldMdList);
-            // TODO. 並列化．metadata自身の保存
+            DumpMetaData(destDir, mdList);
+            // TODO. 並列化
         }
     }
 
