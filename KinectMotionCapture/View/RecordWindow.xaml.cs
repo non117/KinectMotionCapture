@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -365,7 +366,8 @@ namespace KinectMotionCapture
                 // TODO : ロケールのチェック
                 if (this.isRecording)
                 {
-                    Task.Run(() => this.motionDataHandler.AddData(this.counter++, DateTime.Now, this.bodies, ref this.colorPixels, ref this.depthBuffer, ref this.bodyIndexBuffer, pointPairs));
+                    Task.Run(() => this.motionDataHandler.AddData(Interlocked.Increment(ref this.counter), DateTime.Now, this.bodies, 
+                        ref this.colorPixels, ref this.depthBuffer, ref this.bodyIndexBuffer, pointPairs));
                 }
             }
         }
