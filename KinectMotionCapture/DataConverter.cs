@@ -73,11 +73,12 @@ namespace KinectMotionCapture
         /// <param name="imagePaths"></param>
         private static void MoveImages(string destDir, IEnumerable<string> imagePaths)
         {
-            foreach (string oldImage in imagePaths)
+            Parallel.ForEach(imagePaths, oldImage =>
             {
                 string newImage = Path.Combine(destDir, Path.GetFileName(oldImage));
-                File.Copy(oldImage, newImage);
+                File.Copy(oldImage, newImage, true);
             }
+            );
         }
 
         /// <summary>
@@ -87,7 +88,7 @@ namespace KinectMotionCapture
         /// <param name="mds"></param>
         private static void MergeImages(string destDir, IEnumerable<MotionData> mds)
         {
-            foreach (MotionData md in mds)
+            Parallel.ForEach(mds, md =>
             {
                 CvMat depth = CvMat.LoadImageM(md.DepthPath, LoadMode.Unchanged);
                 CvMat user = CvMat.LoadImageM(md.UserPath, LoadMode.Unchanged);
@@ -98,6 +99,7 @@ namespace KinectMotionCapture
                 string newImagePath = Path.Combine(destDir, Path.GetFileName(md.DepthPath));
                 merged.SaveImage(newImagePath);
             }
+            );
         }
 
         /// <summary>
@@ -136,7 +138,6 @@ namespace KinectMotionCapture
             MoveImages(destDir, mdList.Select(md => md.ImagePath));
             MergeImages(destDir, oldMdList);
             DumpMetaData(destDir, mdList);
-            // TODO. 並列化
         }
     }
 
