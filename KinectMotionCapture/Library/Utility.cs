@@ -168,6 +168,16 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
+        /// デスクトップ直下のパスを作る
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <returns></returns>
+        public static string CreateDesktopPath(string filename)
+        {
+            return System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), filename);
+        }
+
+        /// <summary>
         /// バイナリとして保存する
         /// </summary>
         /// <param name="obj"></param>
