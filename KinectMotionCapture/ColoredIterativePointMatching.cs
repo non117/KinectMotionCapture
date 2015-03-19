@@ -128,7 +128,7 @@ namespace KinectMotionCapture
             for (int i = 0; i < frame.recordNum; i++)
             {
                 CvMat[] mats = frame.GetCvMat(i);
-                List<Tuple<CvPoint3D64f, CvColor>> modelPoints = localCoordinateMappers[i].GetUserColorPoints(mats[0], mats[1], mats[2]);
+                List<Tuple<CvPoint3D64f, CvColor>> modelPoints = localCoordinateMappers[i].GetUserColorPoints(mats);
                 FlannColoredModelPoints model = new FlannColoredModelPoints(modelPoints, new KDTreeIndexParams(), new SearchParams(), colorScale);
                 _flannModels.Add(model);
             }

@@ -124,9 +124,9 @@ namespace KinectMotionCapture
             return this.MapDepthPointToColorSpace(new DepthSpacePoint() { X = x, Y = y }, depth, colorWidth, colorHeight);
         }
 
-        public List<Tuple<CvPoint3D64f, CvColor>> GetUserColorPoints(CvMat colorMat, CvMat depthMat, CvMat userMat)
+        public List<Tuple<CvPoint3D64f, CvColor>> GetUserColorPoints(CvMat[] mats)
         {
-            Dictionary<int, List<Tuple<CvPoint3D64f, CvColor>>> eachUserColorPoints = this.GetEachUserColorPoints(colorMat, depthMat, userMat);
+            Dictionary<int, List<Tuple<CvPoint3D64f, CvColor>>> eachUserColorPoints = this.GetEachUserColorPoints(mats[0], mats[1], mats[2]);
             return eachUserColorPoints.Values.SelectMany(l => l).ToList();
         }
 
