@@ -804,6 +804,27 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
+        /// 現在のフレームで選択中ユーザの点群を座標変換して統合出力
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ExportFrameIntegratedUserPoints_Click(object sender, RoutedEventArgs e)
+        {
+            Frame frame = frameSequence.Frames[playingIndex];
+            List<float[]> points = new List<float[]>();
+            string path = Utility.CreateDesktopPath("IntegratedUserPointsCloud.dump");
+            for (int recordNo = 0; recordNo < frameSequence.recordNum; recordNo++)
+            {
+                CvMat[] mats = frame.GetCvMat(recordNo);
+                List<Tuple<CvPoint3D64f, CvColor>> colors = frameSequence.LocalCoordinateMappers[recordNo].GetUserColorPoints(mats);
+                colors = colors.Select(t => Tuple.Create(CvEx.ConvertPoint3D(t.Item1, frameSequence.ToWorldConversions[recordNo]), t.Item2)).ToList();
+                List<float[]> recordPoints = colors.Select(t => new float[] { (float)t.Item1.X, (float)t.Item1.Y, (float)t.Item1.Z, t.Item2.R, t.Item2.G, t.Item2.B }).ToList();
+                points.AddRange(recordPoints);
+            }
+            Utility.SaveToBinary(points, path);
+        }
+
+        /// <summary>
         /// 選択中の統合IDを新しいIDに振りかえる
         /// </summary>
         /// <param name="sender"></param>
