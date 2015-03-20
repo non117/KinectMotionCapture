@@ -22,13 +22,15 @@ namespace KinectMotionCapture
         public double medianLengthSq;
         public double averageLengthSq;
         public double stdLengthSq;
-        public BoneStatistics(double minLength, double maxLength, double medianLength, double averageLength, double stdLength)
+        public double medianAverageLength;
+        public BoneStatistics(double minLength, double maxLength, double medianLength, double averageLength, double stdLength, double medAvgLen)
         {
             this.minLengthSq = minLength;
             this.maxLengthSq = maxLength;
             this.medianLengthSq = medianLength;
             this.averageLengthSq = averageLength;
             this.stdLengthSq = stdLength;
+            this.medianAverageLength = medAvgLen;
         }
         /// <summary>
         /// 統計情報の許容範囲かどうか
@@ -92,6 +94,8 @@ namespace KinectMotionCapture
             foreach (Bone bone in this.bones)
             {
                 List<double> data = this.boneLengthSqLog[bone];
+                double medAvgLen = Math.Abs(Math.Sqrt(Utility.CalcMedianAverage(data)));
+
                 int skip = (int)(data.Count() * 0.3);
                 int take = data.Count() - skip * 2;
                 data.Sort();
@@ -102,7 +106,8 @@ namespace KinectMotionCapture
                 double std = Math.Abs(Math.Sqrt(data.Select(d => Math.Pow(d - average, 2)).Sum() / (data.Count() - 1)));
                 double minLength = median - std * z;
                 double maxLength = median + std * z;
-                BoneStatistics bs = new BoneStatistics(minLength, maxLength, median, average, std);
+                
+                BoneStatistics bs = new BoneStatistics(minLength, maxLength, median, average, std, medAvgLen);
                 this.boneLengthSqStatistics.Add(bone, bs);
             }
         }

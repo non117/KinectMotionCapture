@@ -34,9 +34,9 @@ namespace KinectMotionCapture
     {
         Dictionary<Bone, double> boneLengthes;
         JointNode rootNode;
-        public StandardSkeleton(Dictionary<Bone, double> boneLengthes)
+        public StandardSkeleton(Dictionary<Bone, BoneStatistics> boneStats)
         {
-            this.boneLengthes = boneLengthes;
+            this.boneLengthes = boneStats.ToDictionary(p => p.Key, p => p.Value.medianAverageLength);
             // nodeの接続関係をイニシャライズ            
             this.rootNode = this.InitializeNodes();
         }
