@@ -34,6 +34,7 @@ namespace KinectMotionCapture
     {
         Dictionary<Bone, double> boneLengthes;
         JointNode rootNode;
+        // TODO : SpineBaseの長さから比率を計算する標準骨格生成も必要かもしれない
         public StandardSkeleton(Dictionary<Bone, BoneStatistics> boneStats)
         {
             this.boneLengthes = boneStats.ToDictionary(p => p.Key, p => p.Value.medianAverageLength);
