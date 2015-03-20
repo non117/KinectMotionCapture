@@ -1070,15 +1070,5 @@ namespace KinectMotionCapture
                 frameRemoveList.Clear();
             }
         }
-
-        /// <summary>
-        /// 現在のフレーム範囲での骨格情報を保存
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void ExportFrameRangeBoneStat_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
     }
 }

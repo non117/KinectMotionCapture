@@ -223,8 +223,6 @@
                 <MenuItem Name="ExportAllBodiesAsBinary" Header="現在のフレーム範囲の全ユーザをバイナリで出力" Click="ExportAllBodiesAsBinary_Click"/>
                 <MenuItem Name="ExportSelectedBodiesAsBinary" Header="現在のフレーム範囲で選択中のユーザをバイナリで出力" Click="ExportSelectedBodiesAsBinary_Click"/>
                 <Separator/>
-                <MenuItem Name="ExportFrameRangeBoneStat" Header="現在のフレーム範囲で選択中のユーザの骨格情報をバイナリで出力" Click="ExportFrameRangeBoneStat_Click"/>
-                <Separator/>
                 <MenuItem Name="ExportFrameIntegratedUserPoints" Header="現在のフレームの統合されたユーザの点群を出力" Click="ExportFrameIntegratedUserPoints_Click" />
             </MenuItem>
             <MenuItem Name="Edit" Header="Edit">
