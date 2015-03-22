@@ -748,6 +748,16 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
+        /// 現在選択されているユーザのモデルを作って出力する（最終的には）
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ExportStandardHumanModel_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        /// <summary>
         /// 選択中の統合IDを新しいIDに振りかえる
         /// </summary>
         /// <param name="sender"></param>
