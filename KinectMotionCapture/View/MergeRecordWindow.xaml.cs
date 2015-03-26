@@ -764,6 +764,11 @@ namespace KinectMotionCapture
                 // TODO : ユーザの選択チェックはそのうち
                 IEnumerable<Frame> frames = frameSequence.Slice(this.startIndex, this.endIndex);
                 string path = Utility.CreateDesktopPath("Model.dump");
+                
+                Dictionary<JointType, CvPoint3D64f> joints = frames.First().GetSelectedBody(
+                    0, frameSequence.selecteedIntegretedIdList[0]).Joints.ToCvJoints(frameSequence.ToWorldConversions[0]);
+                PointRefiner pr = new PointRefiner(new StandardSkeleton(frameSequence.BodyStat.boneLengthSqStatistics), joints);
+
                 foreach (Frame frame in frames)
                 {
                     for (int recordNo = 0; recordNo < frameSequence.recordNum; recordNo++)
@@ -771,6 +776,7 @@ namespace KinectMotionCapture
                         CvMat[] mats = frame.GetCvMat(recordNo);
                         List<Tuple<CvPoint3D64f, CvColor>> colors = frameSequence.LocalCoordinateMappers[recordNo].GetUserColorPoints(mats);
                         colors = colors.Select(t => Tuple.Create(CvEx.ConvertPoint3D(t.Item1, frameSequence.ToWorldConversions[recordNo]), t.Item2)).ToList();
+                        pr.AddData(colors);
                     }
                 }
             }
