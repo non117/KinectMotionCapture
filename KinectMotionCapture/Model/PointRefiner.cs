@@ -61,10 +61,20 @@ namespace KinectMotionCapture
             }
         }
 
+        /// <summary>
+        /// 変換するやつ
+        /// </summary>
+        /// <param name="pointColorPair"></param>
+        /// <returns></returns>
         public PointAndColor ConvertToPointAndColor(Tuple<CvPoint3D64f, CvColor> pointColorPair)
         {
-            
-            
+            Dictionary<JointType, double> distanceSqMap = new Dictionary<JointType, double>();
+            foreach (JointType joint in Enum.GetValues(typeof(JointType)))
+            {
+                distanceSqMap[joint] = CvEx.GetDistanceSq(pointColorPair.Item1, this.standardJoints[joint]);
+            }
+            var pair = distanceSqMap.OrderBy(p => p.Value).First();
+            return new PointAndColor(pointColorPair.Item1, pointColorPair.Item2, pair.Key, pair.Value);
         }
     }
 }
