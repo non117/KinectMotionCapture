@@ -350,6 +350,37 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
+        /// JointをCvPointに変換するやつ
+        /// </summary>
+        /// <param name="joints"></param>
+        /// <returns></returns>
+        public static Dictionary<JointType, CvPoint3D64f> ToCvJoints(this Dictionary<JointType, Joint> joints)
+        {
+            return joints.ToDictionary(p => p.Key, p => (CvPoint3D64f)p.Value.Position.ToCvPoint3D());
+        }
+
+        /// <summary>
+        /// JointをCvPointに変換するやつ
+        /// </summary>
+        /// <param name="joints"></param>
+        /// <returns></returns>
+        public static Dictionary<JointType, CvPoint3D64f> ToCvJoints(this Dictionary<JointType, Joint> joints, CvMat conv)
+        {
+            return joints.ToDictionary(p => p.Key, p => CvEx.ConvertPoint3D(p.Value.Position.ToCvPoint3D(), conv));
+        }
+
+        /// <summary>
+        /// 変換するやつ
+        /// </summary>
+        /// <param name="joints"></param>
+        /// <param name="conv"></param>
+        /// <returns></returns>
+        public static Dictionary<JointType, CvPoint3D64f> ApplyConversion(this Dictionary<JointType, CvPoint3D64f> joints, CvMat conv)
+        {
+            return joints.ToDictionary(p => p.Key, p => CvEx.ConvertPoint3D(p.Value, conv));
+        }
+
+        /// <summary>
         /// Unityに吐くためのデータ変換
         /// </summary>
         /// <param name="originalJoints"></param>
