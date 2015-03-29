@@ -773,10 +773,13 @@ namespace KinectMotionCapture
                 {
                     for (int recordNo = 0; recordNo < frameSequence.recordNum; recordNo++)
                     {
-                        CvMat[] mats = frame.GetCvMat(recordNo);
-                        List<Tuple<CvPoint3D64f, CvColor>> colors = frameSequence.LocalCoordinateMappers[recordNo].GetUserColorPoints(mats);
-                        colors = colors.Select(t => Tuple.Create(CvEx.ConvertPoint3D(t.Item1, frameSequence.ToWorldConversions[recordNo]), t.Item2)).ToList();
-                        pr.AddData(colors);
+                        if (frame.isValid(recordNo))
+                        {
+                            CvMat[] mats = frame.GetCvMat(recordNo);
+                            List<Tuple<CvPoint3D64f, CvColor>> colors = frameSequence.LocalCoordinateMappers[recordNo].GetUserColorPoints(mats);
+                            colors = colors.Select(t => Tuple.Create(CvEx.ConvertPoint3D(t.Item1, frameSequence.ToWorldConversions[recordNo]), t.Item2)).ToList();
+                            pr.AddData(colors);
+                        }
                     }
                 }
                 List<float[]> dumpPoints = new List<float[]>();
