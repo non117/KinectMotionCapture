@@ -60,10 +60,6 @@ namespace KinectMotionCapture
             this.standardSkeleton = skltn;
             this.standardJoints = this.standardSkeleton.FixBoneLength(standardPose);
             this.pointColorStore = new Dictionary<JointType, List<PointAndColor>>();
-            foreach (JointType key in this.pointColorStore.Keys)
-            {
-                this.pointColorStore[key] = new List<PointAndColor>();
-            }
         }
 
         /// <summary>
@@ -75,7 +71,14 @@ namespace KinectMotionCapture
             foreach (var pointColorPair in rawData)
             {
                 PointAndColor pac = this.ConvertToPointAndColor(pointColorPair);
-                this.pointColorStore[pac.nearestJoint].Add(pac);
+                if (!this.pointColorStore.ContainsKey(pac.nearestJoint))
+                {
+                    this.pointColorStore[pac.nearestJoint] = new List<PointAndColor>() { pac };
+                }
+                else
+                {
+                    this.pointColorStore[pac.nearestJoint].Add(pac);
+                }
             }
         }
 
@@ -87,7 +90,7 @@ namespace KinectMotionCapture
         public PointAndColor ConvertToPointAndColor(Tuple<CvPoint3D64f, CvColor> pointColorPair)
         {
             Dictionary<JointType, double> distanceSqMap = new Dictionary<JointType, double>();
-            foreach (JointType joint in Enum.GetValues(typeof(JointType)))
+            foreach (JointType joint in this.standardJoints.Keys)
             {
                 distanceSqMap[joint] = CvEx.GetDistanceSq(pointColorPair.Item1, this.standardJoints[joint]);
             }

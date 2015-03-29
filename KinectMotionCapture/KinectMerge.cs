@@ -707,6 +707,16 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
+        /// validフラグの状態を返す
+        /// </summary>
+        /// <param name="recordNo"></param>
+        /// <returns></returns>
+        public bool isValid(int recordNo)
+        {
+            return this.records[recordNo].isValid;
+        }
+
+        /// <summary>
         /// validフラグをリセットする
         /// </summary>
         public void ResetAllValidFlags()
