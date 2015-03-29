@@ -779,6 +779,9 @@ namespace KinectMotionCapture
                         pr.AddData(colors);
                     }
                 }
+                List<float[]> dumpPoints = new List<float[]>();
+                dumpPoints.AddRange(pr.PointColors[JointType.SpineBase].Select(pac => pac.ToFloatArr()));
+                Utility.SaveToBinary(dumpPoints, path);
             }
         }
 

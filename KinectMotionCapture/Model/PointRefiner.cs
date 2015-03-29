@@ -22,12 +22,30 @@ namespace KinectMotionCapture
             this.nearestJoint = nearest;
             this.distance = distance;
         }
+
+        /// <summary>
+        /// dump用
+        /// </summary>
+        /// <returns></returns>
+        public float[] ToFloatArr()
+        {
+            return new float[] { (float)point.X, (float)point.Y, (float)point.Z, color.R, color.G, color.B };
+        }
     }
 
     class PointRefiner
     {
         Dictionary<JointType, CvPoint3D64f> standardJoints;
         Dictionary<JointType, List<PointAndColor>> pointColorStore;
+
+        public Dictionary<JointType, List<PointAndColor>> PointColors
+        {
+            get
+            {
+                return pointColorStore;
+            }
+        }
+
         StandardSkeleton standardSkeleton;
         // 骨と表面情報を受け取って、標準骨格のまわりにマッピングしていく。
         // とりあえず胴体近傍を出力することが目標
