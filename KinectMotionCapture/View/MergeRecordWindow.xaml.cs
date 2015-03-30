@@ -789,6 +789,7 @@ namespace KinectMotionCapture
                 List<float[]> dumpPoints = new List<float[]>();
                 dumpPoints.AddRange(pr.PointColors[JointType.SpineBase].Select(pac => pac.ToFloatArr()));
                 Utility.SaveToBinary(dumpPoints, path);
+                Utility.SaveToBinary(pr, Utility.CreateDesktopPath("PointRefiner.dump")); // debug
             }
         }
 

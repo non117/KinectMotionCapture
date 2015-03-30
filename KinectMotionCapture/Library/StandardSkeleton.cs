@@ -13,6 +13,7 @@ namespace KinectMotionCapture
     /// <summary>
     /// Jointの接続関係をアレする
     /// </summary>
+    [Serializable]
     public struct JointNode
     {
         public JointNode[] nextNodes;
@@ -30,6 +31,7 @@ namespace KinectMotionCapture
         }
     }
 
+    [Serializable]
     class StandardSkeleton
     {
         Dictionary<Bone, double> boneLengthes;

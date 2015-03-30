@@ -9,6 +9,7 @@ using OpenCvSharp;
 
 namespace KinectMotionCapture
 {
+    [Serializable]
     struct PointAndColor
     {
         public CvPoint3D64f point;
@@ -33,6 +34,7 @@ namespace KinectMotionCapture
         }
     }
 
+    [Serializable]
     class PointRefiner
     {
         Dictionary<JointType, CvPoint3D64f> standardJoints;
@@ -68,9 +70,9 @@ namespace KinectMotionCapture
         /// <param name="rawData"></param>
         public void AddData(List<Tuple<CvPoint3D64f, CvColor>> rawData)
         {
-            foreach (var pointColorPair in rawData)
+            var pacList = rawData.AsParallel().Select(pair => this.ConvertToPointAndColor(pair));
+            foreach (PointAndColor pac in pacList)
             {
-                PointAndColor pac = this.ConvertToPointAndColor(pointColorPair);
                 if (!this.pointColorStore.ContainsKey(pac.nearestJoint))
                 {
                     this.pointColorStore[pac.nearestJoint] = new List<PointAndColor>() { pac };
