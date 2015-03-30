@@ -762,6 +762,10 @@ namespace KinectMotionCapture
             if (frameSequence.Segmentations != null && this.isUserSelected.All(b => b))
             {
                 // TODO : ユーザの選択チェックはそのうち
+                // spine baseを基準にする必要はあるか？
+                // 動作チェック。可視化
+                // 投票、近似とか
+                // ポリゴン化
                 IEnumerable<Frame> frames = frameSequence.Slice(this.startIndex, this.endIndex);
                 string path = Utility.CreateDesktopPath("Model.dump");
                 
