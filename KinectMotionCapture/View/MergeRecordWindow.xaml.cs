@@ -762,34 +762,42 @@ namespace KinectMotionCapture
             if (frameSequence.Segmentations != null && this.isUserSelected.All(b => b))
             {
                 // TODO : ユーザの選択チェックはそのうち
-                // spine baseを基準にする必要はあるか？
-                // 動作チェック。可視化
                 // 投票、近似とか
-                // ポリゴン化
+                List<CvMat> conversionMtxs = frameSequence.ToWorldConversions;
                 IEnumerable<Frame> frames = frameSequence.Slice(this.startIndex, this.endIndex);
-                string path = Utility.CreateDesktopPath("Model.dump");
+                string path = Utility.CreateDesktopPath("test.ply");
                 
                 Dictionary<JointType, CvPoint3D64f> joints = frames.First().GetSelectedBody(
-                    0, frameSequence.selecteedIntegretedIdList[0]).Joints.ToCvJoints(frameSequence.ToWorldConversions[0]);
+                    0, frameSequence.selecteedIntegretedIdList[0]).Joints.ToCvJoints(conversionMtxs[0]);
                 PointRefiner pr = new PointRefiner(new StandardSkeleton(frameSequence.BodyStat.boneLengthSqStatistics), joints);
 
+                List<double> store = new List<double>();
+                List<Tuple<CvPoint3D64f, CvColor>> colorStore = new List<Tuple<CvPoint3D64f, CvColor>>();
+                int count = 0;
                 foreach (Frame frame in frames)
                 {
+                    //if (count == 20) break;
                     for (int recordNo = 0; recordNo < frameSequence.recordNum; recordNo++)
                     {
                         if (frame.isValid(recordNo))
                         {
-                            CvMat[] mats = frame.GetCvMat(recordNo);
-                            List<Tuple<CvPoint3D64f, CvColor>> colors = frameSequence.LocalCoordinateMappers[recordNo].GetUserColorPoints(mats);
-                            colors = colors.Select(t => Tuple.Create(CvEx.ConvertPoint3D(t.Item1, frameSequence.ToWorldConversions[recordNo]), t.Item2)).ToList();
-                            pr.AddData(colors);
+                            SerializableBody body = frame.GetSelectedBody(recordNo, frameSequence.selecteedIntegretedIdList[recordNo]);
+                            if (body != null)
+                            {
+                                // current spine position converted
+                                CvPoint3D64f currentSpine = CvEx.ConvertPoint3D(body.Joints[JointType.SpineBase].Position.ToCvPoint3D(), conversionMtxs[recordNo]);                            
+                                CvMat[] mats = frame.GetCvMat(recordNo);
+                                List<Tuple<CvPoint3D64f, CvColor>> colors = frameSequence.LocalCoordinateMappers[recordNo].GetUserColorPoints(mats);
+                                colors = colors.AsParallel().Select(t => Tuple.Create(CvEx.ConvertPoint3D(t.Item1, conversionMtxs[recordNo]) - currentSpine, t.Item2)).ToList();
+                                //colorStore.AddRange(colors);
+                                pr.AddData(colors);
+                            }
                         }
                     }
+                    count++;
                 }
-                List<float[]> dumpPoints = new List<float[]>();
-                dumpPoints.AddRange(pr.PointColors[JointType.SpineBase].Select(pac => pac.ToFloatArr()));
-                Utility.SaveToBinary(dumpPoints, path);
-                Utility.SaveToBinary(pr, Utility.CreateDesktopPath("PointRefiner.dump")); // debug
+                //Utility.SaveToPly(colorStore, path);
+                Utility.SaveToPly(pr.PointColors[JointType.SpineShoulder].Select(pac => pac.ToPair()).ToList(), path);
             }
         }
 

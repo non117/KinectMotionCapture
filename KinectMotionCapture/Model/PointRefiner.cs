@@ -32,6 +32,11 @@ namespace KinectMotionCapture
         {
             return new float[] { (float)point.X, (float)point.Y, (float)point.Z, color.R, color.G, color.B };
         }
+
+        public Tuple<CvPoint3D64f, CvColor> ToPair()
+        {
+            return Tuple.Create(point, color);
+        }
     }
 
     [Serializable]
@@ -60,7 +65,7 @@ namespace KinectMotionCapture
         public PointRefiner(StandardSkeleton skltn, Dictionary<JointType, CvPoint3D64f> standardPose)
         {
             this.standardSkeleton = skltn;
-            this.standardJoints = this.standardSkeleton.FixBoneLength(standardPose);
+            this.standardJoints = this.standardSkeleton.FixBoneLength(standardPose).ConvertJointsByJointType(JointType.SpineBase);
             this.pointColorStore = new Dictionary<JointType, List<PointAndColor>>();
         }
 

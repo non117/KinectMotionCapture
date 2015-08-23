@@ -191,6 +191,32 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
+        /// plyファイルとして保存する
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="path"></param>
+        public static void SaveToPly(List<Tuple<CvPoint3D64f, CvColor>> data, string path)
+        {
+            using (StreamWriter fs = new StreamWriter(path, false, Encoding.ASCII))
+            {
+                int num = data.Count;
+                fs.WriteLine("ply\nformat ascii 1.0\ncomment KinectMotionCapture");
+                fs.WriteLine("element vertex " + num.ToString());
+                fs.WriteLine("property float x\nproperty float y\nproperty float z");
+                fs.WriteLine("property uchar red\nproperty uchar green\nproperty uchar blue");
+                fs.WriteLine("end_header\n");
+
+                foreach(var tuple in data)
+                {
+                    string line = String.Format("{0} {1} {2} {3} {4} {5}",
+                        tuple.Item1.X, tuple.Item1.Y, tuple.Item1.Z, tuple.Item2.R, tuple.Item2.G, tuple.Item2.B);
+                    fs.WriteLine(line);
+                }
+                
+            }
+        }
+
+        /// <summary>
         /// バイナリから読み込む
         /// </summary>
         /// <param name="path"></param>
@@ -369,6 +395,18 @@ namespace KinectMotionCapture
             return joints.ToDictionary(p => p.Key, p => CvEx.ConvertPoint3D(p.Value.Position.ToCvPoint3D(), conv));
         }
 
+        /// <summary>
+        /// JointsをあるJointTypeの座標系に変換する
+        /// </summary>
+        /// <param name="joints"></param>
+        /// <param name="jointType"></param>
+        /// <returns></returns>
+        public static Dictionary<JointType, CvPoint3D64f> ConvertJointsByJointType(this Dictionary<JointType, CvPoint3D64f> joints, JointType jointType)
+        {
+            CvPoint3D64f originJointPos = joints[jointType];
+            return joints.ToDictionary(p => p.Key, p => p.Value - originJointPos);
+        }
+        
         /// <summary>
         /// 変換するやつ
         /// </summary>
@@ -786,6 +824,30 @@ namespace KinectMotionCapture
                 res.Add(new CvPoint3D64f(x, y, z));
             }
             return res;
+        }
+
+        /// <summary>
+        /// double sequenceの頻度分布を集計するための関数
+        /// </summary>
+        /// <param name="seq"></param>
+        /// <param name="cutUnit"></param>
+        /// <returns></returns>
+        public static SortedDictionary<double, int> CountFrequencyOfNumbers(IEnumerable<double> seq, int cutUnit)
+        {
+            SortedDictionary<double, int> map = new SortedDictionary<double, int>();
+            foreach(double point in seq)
+            {
+                double key = Math.Round(point, cutUnit, MidpointRounding.AwayFromZero);
+                if(map.ContainsKey(key))
+                {
+                    map[key]++;
+                }
+                else
+                {
+                    map[key] = 0;
+                }
+            }
+            return map;
         }
 
         /// <summary>
