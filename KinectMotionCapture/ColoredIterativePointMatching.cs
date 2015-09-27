@@ -117,7 +117,7 @@ namespace KinectMotionCapture
         List<FlannColoredModelPoints> _flannModels = new List<FlannColoredModelPoints>();
         List<CvMat> _modelTransforms = new List<CvMat>();
         Func<float, double> _weightFromDistanceSq;
-        public float SearchDistance = 0.1f;
+        public float SearchDistance = 200f;
 
         public ColoredIterativePointMatching(Frame frame, List<LocalCoordinateMapper> localCoordinateMappers, IList<CvMat> initialModelTransforms, Func<float, double> weightFromDistanceSq, double colorScale)
         {
@@ -211,8 +211,8 @@ namespace KinectMotionCapture
                 if (minModelIndex != -1)
                 {
                     Tuple<CvPoint3D64f, CvColor> bestModelPoint = _flannModels[minModelIndex].ModelPoints[minPointIndex];
-                    double weightTo = 1.0 / (Math.Abs(bestModelPoint.Item1.Z - 1500 / 1000f) + 5000 / 1000f);
-                    double weightFrom = 1.0 / (Math.Abs(point.Z - 1500 / 1000f) + 5000 / 1000f);
+                    double weightTo = 1.0 / (Math.Abs(bestModelPoint.Item1.Z - 1500) + 5000);
+                    double weightFrom = 1.0 / (Math.Abs(point.Z - 1500) + 5000);
                     //weightFrom = weightTo = 1;
                     double weight = _weightFromDistanceSq(minDistanceSq) * weightFrom * weightTo;
                     CvPoint3D64f from = CvEx.ConvertPoint3D(point, targetTransform);
@@ -238,7 +238,7 @@ namespace KinectMotionCapture
                     ret.Add(CalculateTransform(i, true, randomSamplingRatio));
                 }
                 this.SetModelTransforms(ret);
-                this.SearchDistance = (this.SearchDistance - 50 / 1000f) * 0.997f + 50 / 1000f;
+                this.SearchDistance = (this.SearchDistance - 50) * 0.997f + 50;
             }
             return _modelTransforms.ToList();
         }
