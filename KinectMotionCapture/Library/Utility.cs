@@ -17,6 +17,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
+using System.Xml.Serialization;
 
 using Microsoft.Kinect;
 using KinectMotionCapture;
@@ -188,6 +189,38 @@ namespace KinectMotionCapture
             {
                 BinaryFormatter bf = new BinaryFormatter();
                 bf.Serialize(fs, obj);
+            }
+        }
+
+        /// <summary>
+        /// objをxmlに保存する
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="obj"></param>
+        /// <param name="path"></param>
+        public static void SaveToXML<T>(T obj, string path)
+        {
+            using (FileStream fs = new FileStream(path, FileMode.Create, FileAccess.Write))
+            {
+                XmlSerializer serializer = new XmlSerializer(typeof(T));
+                XmlSerializerNamespaces ns = new XmlSerializerNamespaces();
+                ns.Add(String.Empty, String.Empty);
+                serializer.Serialize(fs, obj, ns);
+            }
+        }
+
+        /// <summary>
+        /// XMLをデシリアライズする
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public static T LoadFromXML<T>(string path)
+        {
+            using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read))
+            {
+                XmlSerializer serializer = new XmlSerializer(typeof(T));
+                return (T)serializer.Deserialize(fs);
             }
         }
 
