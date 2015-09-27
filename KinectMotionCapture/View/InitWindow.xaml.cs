@@ -38,6 +38,9 @@ namespace KinectMotionCapture
 
         private void MergeRecordButton_Click(object sender, RoutedEventArgs e)
         {
+            NewProjectWindow npw = new NewProjectWindow();
+            npw.Show();
+            this.Close();
         }
 
         private void OpenProjectButton_Click(object sender, RoutedEventArgs e)
