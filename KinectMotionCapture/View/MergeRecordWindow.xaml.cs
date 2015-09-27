@@ -740,6 +740,13 @@ namespace KinectMotionCapture
         {
             if (frameSequence.Segmentations != null && this.isUserSelected.All(b => b))
             {
+                string baseDir = Utility.ChooseFolderDialog("plyファイルを出力するフォルダを選択してください");
+                if (baseDir == null)
+                {
+                    MessageBox.Show("フォルダを選択してください");
+                    return;
+                }
+
                 List<CvMat> conversionMtxs = frameSequence.ToWorldConversions;
                 
                 List<Tuple<CvPoint3D64f, CvColor>>[] colorStores = new List<Tuple<CvPoint3D64f,CvColor>>[frameSequence.recordNum];
@@ -764,9 +771,13 @@ namespace KinectMotionCapture
                    
                 for (int recordNo = 0; recordNo < frameSequence.recordNum; recordNo++)
                 {
-                    string savePath = Utility.CreateDesktopPath(String.Format("model_{0}.ply", recordNo));
-                    Utility.SaveToPly(colorStores[recordNo], savePath);
+                    string path = System.IO.Path.Combine(baseDir, String.Format("model_{0}.ply", recordNo));
+                    Utility.SaveToPly(colorStores[recordNo], path);
                 }
+            }
+            else
+            {
+                MessageBox.Show("統合されたユーザが存在しません");
             }
         }
 
