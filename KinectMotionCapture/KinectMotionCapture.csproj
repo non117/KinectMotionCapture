@@ -156,6 +156,7 @@
     <Compile Include="CoordRotTransConversion.cs" />
     <Compile Include="Library\CvEx.cs" />
     <Compile Include="Library\EventEx.cs" />
+    <Compile Include="Model\Settings.cs" />
     <Compile Include="View\InitWindow.xaml.cs">
       <DependentUpon>InitWindow.xaml</DependentUpon>
     </Compile>
