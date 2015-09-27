@@ -12,6 +12,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -1017,6 +1018,46 @@ namespace KinectMotionCapture
                 rad = -1 * rad;
             }            
             return rad;
+        }
+
+        /// <summary>
+        /// フォルダを選択するやつ
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public static string ChooseFolderDialog(string message)
+        {
+            FolderBrowserDialog fbd = new FolderBrowserDialog();
+            fbd.SelectedPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            fbd.Description = message;
+            if (fbd.ShowDialog() == DialogResult.OK)
+            {
+                return fbd.SelectedPath;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// ファイルを選択するやつ
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public static string ChooseFileDialog(string message)
+        {
+            OpenFileDialog ofd = new OpenFileDialog();
+            ofd.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            ofd.Title = message;
+            if (ofd.ShowDialog() == DialogResult.OK)
+            {
+                return ofd.FileName;
+            }
+            else
+            {
+                return null;
+            }
         }
     }
 }
