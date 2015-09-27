@@ -1025,10 +1025,14 @@ namespace KinectMotionCapture
         /// </summary>
         /// <param name="message"></param>
         /// <returns></returns>
-        public static string ChooseFolderDialog(string message)
+        public static string ChooseFolderDialog(string message, string defaultPath="")
         {
             FolderBrowserDialog fbd = new FolderBrowserDialog();
-            fbd.SelectedPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            fbd.SelectedPath = defaultPath;
+            if (defaultPath == "")
+            {
+                fbd.SelectedPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            }
             fbd.Description = message;
             if (fbd.ShowDialog() == DialogResult.OK)
             {
@@ -1045,11 +1049,16 @@ namespace KinectMotionCapture
         /// </summary>
         /// <param name="message"></param>
         /// <returns></returns>
-        public static string ChooseFileDialog(string message)
+        public static string ChooseFileDialog(string message, string defaultPath="", string filter="Dump Files (*.dump)|*.dump")
         {
             OpenFileDialog ofd = new OpenFileDialog();
-            ofd.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            ofd.InitialDirectory = defaultPath;
+            if (defaultPath == "")
+            {
+                ofd.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            }
             ofd.Title = message;
+            ofd.Filter = filter;
             if (ofd.ShowDialog() == DialogResult.OK)
             {
                 return ofd.FileName;

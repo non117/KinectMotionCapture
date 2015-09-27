@@ -593,13 +593,18 @@ namespace KinectMotionCapture
 
         /// <summary>
         /// 統合行列を保存する
-        /// TODO : ダイアログ
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void ExportConversionMatrix_Click(object sender, RoutedEventArgs e)
         {
-            string path = System.IO.Path.Combine(Environment.CurrentDirectory, @"ConversionMatrix.dump");
+            string baseDir = Utility.ChooseFolderDialog("統合行列を保存するフォルダを選んでください", Environment.CurrentDirectory);
+            if (baseDir == null)
+            {
+                MessageBox.Show("フォルダを選択してください");
+                return;
+            }
+            string path = System.IO.Path.Combine(baseDir, @"ConversionMatrix.dump");
             List<SerializableCvMat> conversions = frameSequence.ToWorldConversions.Select(mat => SerializableCvMat.CreateOrNull(mat)).ToList();
             Utility.SaveToBinary(conversions, path);
         }
@@ -611,9 +616,15 @@ namespace KinectMotionCapture
         /// <param name="e"></param>
         private void ExportConversionMatrixAsCsv_Click(object sender, RoutedEventArgs e)
         {
+            string baseDir = Utility.ChooseFolderDialog("統合行列を保存するフォルダを選んでください", Environment.CurrentDirectory);
+            if (baseDir == null)
+            {
+                MessageBox.Show("フォルダを選択してください");
+                return;
+            }
             for (int recordNo = 0; recordNo < frameSequence.recordNum; recordNo++)
             {
-                string path = System.IO.Path.Combine(Environment.CurrentDirectory, @"ConversionMatrix_" + recordNo.ToString() + ".csv");
+                string path = System.IO.Path.Combine(baseDir, @"ConversionMatrix_" + recordNo.ToString() + ".csv");
                 CvMat mat = frameSequence.ToWorldConversions[recordNo];
                 using (StreamWriter sw = new StreamWriter(path))
                 {                    
@@ -632,13 +643,17 @@ namespace KinectMotionCapture
 
         /// <summary>
         /// 統合行列を読み込む
-        /// TODO : ダイアログ
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void ImportConversionMatrix_Click(object sender, RoutedEventArgs e)
         {
-            string path = System.IO.Path.Combine(Environment.CurrentDirectory, @"ConversionMatrix.dump");
+            string path = Utility.ChooseFileDialog("統合行列を保存するフォルダを選んでください", Environment.CurrentDirectory);
+            if (path == null)
+            {
+                MessageBox.Show("dumpファイルを選択してください");
+                return;
+            }
             List<SerializableCvMat> conversions = (List<SerializableCvMat>)Utility.LoadFromBinary(path);
             frameSequence.ToWorldConversions = conversions.Select(mat => mat.CreateCvMat()).ToList();
         }
