@@ -223,8 +223,7 @@
                 <MenuItem Name="ExportAllBodiesAsBinary" Header="現在のフレーム範囲の全ユーザをバイナリで出力" Click="ExportAllBodiesAsBinary_Click"/>
                 <MenuItem Name="ExportSelectedBodiesAsBinary" Header="現在のフレーム範囲で選択中のユーザをバイナリで出力" Click="ExportSelectedBodiesAsBinary_Click"/>
                 <Separator/>
-                <MenuItem Name="ExportFrameIntegratedUserPoints" Header="現在のフレームの統合されたユーザの点群を出力" Click="ExportFrameIntegratedUserPoints_Click" />
-                <MenuItem Name="ExportStandardHumanModel" Header="選択されたユーザの標準モデルを出力" Click="ExportStandardHumanModel_Click" />
+                <MenuItem Name="ExportCurrentUserPointClouds" Header="選択されたユーザの点群を出力する" Click="ExportCurrentUserPointClouds_Click" />
             </MenuItem>
             <MenuItem Name="Edit" Header="Edit">
                 <MenuItem Name="MirrorSelectedRecordFrame" Header="現在のフレームで選択中のレコード・ユーザの骨格情報を左右反転する" Click="MirrorSelectedRecordFrame_Click"/>

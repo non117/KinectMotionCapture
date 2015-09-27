@@ -732,72 +732,36 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
-        /// 現在のフレームで選択中ユーザの点群を座標変換して統合出力
+        /// 現在選択されているユーザの点群を出力する
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void ExportFrameIntegratedUserPoints_Click(object sender, RoutedEventArgs e)
-        {
-            Frame frame = frameSequence.Frames[playingIndex];
-            List<float[]> points = new List<float[]>();
-            string path = Utility.CreateDesktopPath("IntegratedUserPointsCloud.dump");
-            for (int recordNo = 0; recordNo < frameSequence.recordNum; recordNo++)
-            {
-                CvMat[] mats = frame.GetCvMat(recordNo);
-                List<Tuple<CvPoint3D64f, CvColor>> colors = frameSequence.LocalCoordinateMappers[recordNo].GetUserColorPoints(mats);
-                colors = colors.Select(t => Tuple.Create(CvEx.ConvertPoint3D(t.Item1, frameSequence.ToWorldConversions[recordNo]), t.Item2)).ToList();
-                List<float[]> recordPoints = colors.Select(t => new float[] { (float)t.Item1.X, (float)t.Item1.Y, (float)t.Item1.Z, t.Item2.R, t.Item2.G, t.Item2.B }).ToList();
-                points.AddRange(recordPoints);
-            }
-            Utility.SaveToBinary(points, path);
-        }
-
-        /// <summary>
-        /// 現在選択されているユーザのモデルを作って出力する（最終的には）
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void ExportStandardHumanModel_Click(object sender, RoutedEventArgs e)
+        private void ExportCurrentUserPointClouds_Click(object sender, RoutedEventArgs e)
         {
             if (frameSequence.Segmentations != null && this.isUserSelected.All(b => b))
             {
-                // TODO : ユーザの選択チェックはそのうち
-                // 投票、近似とか
                 List<CvMat> conversionMtxs = frameSequence.ToWorldConversions;
-                IEnumerable<Frame> frames = frameSequence.Slice(this.startIndex, this.endIndex);
-                string path = Utility.CreateDesktopPath("test.ply");
                 
-                //Dictionary<JointType, CvPoint3D64f> joints = frames.First().GetSelectedBody(
-                //    0, frameSequence.selecteedIntegretedIdList[0]).Joints.ToCvJoints(conversionMtxs[0]);
-                //PointRefiner pr = new PointRefiner(new StandardSkeleton(frameSequence.BodyStat.boneLengthSqStatistics), joints);
-
-                //List<double> store = new List<double>();                
                 List<Tuple<CvPoint3D64f, CvColor>>[] colorStores = new List<Tuple<CvPoint3D64f,CvColor>>[frameSequence.recordNum];
 
-                int count = 0;
-                foreach (Frame frame in frames)
+                Frame frame = this.frameSequence.Frames[this.playingIndex];
+                for (int recordNo = 0; recordNo < frameSequence.recordNum; recordNo++)
                 {
-                    if (count == 1) break;
-                    for (int recordNo = 0; recordNo < frameSequence.recordNum; recordNo++)
+                    if (colorStores[recordNo] == null)
+                        colorStores[recordNo] = new List<Tuple<CvPoint3D64f, CvColor>>();
+                    if (frame.isValid(recordNo))
                     {
-                        if (colorStores[recordNo] == null)
-                            colorStores[recordNo] = new List<Tuple<CvPoint3D64f, CvColor>>();
-                        if (frame.isValid(recordNo))
+                        SerializableBody body = frame.GetSelectedBody(recordNo, frameSequence.selecteedIntegretedIdList[recordNo]);
+                        if (body != null)
                         {
-                            SerializableBody body = frame.GetSelectedBody(recordNo, frameSequence.selecteedIntegretedIdList[recordNo]);
-                            if (body != null)
-                            {
-                                // current spine position converted
-                                //CvPoint3D64f currentSpine = CvEx.ConvertPoint3D(body.Joints[JointType.SpineBase].Position.ToCvPoint3D(), conversionMtxs[recordNo]);                            
-                                CvMat[] mats = frame.GetCvMat(recordNo);
-                                List<Tuple<CvPoint3D64f, CvColor>> colors = frameSequence.LocalCoordinateMappers[recordNo].GetUserColorPoints(mats);
-                                colors = colors.AsParallel().Select(t => Tuple.Create(CvEx.ConvertPoint3D(t.Item1, conversionMtxs[recordNo]) * 1000, t.Item2)).ToList();
-                                colorStores[recordNo].AddRange(colors);
-                            }
+                            CvMat[] mats = frame.GetCvMat(recordNo);
+                            List<Tuple<CvPoint3D64f, CvColor>> colors = frameSequence.LocalCoordinateMappers[recordNo].GetUserColorPoints(mats);
+                            colors = colors.AsParallel().Select(t => Tuple.Create(CvEx.ConvertPoint3D(t.Item1, conversionMtxs[recordNo]) * 1000, t.Item2)).ToList();
+                            colorStores[recordNo].AddRange(colors);
                         }
                     }
-                    count++;
                 }
+                   
                 for (int recordNo = 0; recordNo < frameSequence.recordNum; recordNo++)
                 {
                     string savePath = Utility.CreateDesktopPath(String.Format("model_{0}.ply", recordNo));
