@@ -27,6 +27,7 @@ namespace KinectMotionCapture
     public partial class MergeRecordWindow : Window
     {
         private FrameSequence frameSequence;
+        private Settings settings;
 
         private KinectSensor kinectSensor;
         private CoordinateMapper coordinateMapper;
@@ -65,37 +66,17 @@ namespace KinectMotionCapture
         /// </summary>
         private void LoadFrames()
         {
-            string[] datadir = new string[] {
-                                                    @"C:\Users\non\Desktop\TestData\kinect1",  
-                                                    @"C:\Users\non\Desktop\TestData\kinect2", 
-                                                    @"C:\Users\non\Desktop\TestData\kinect3", 
-                                                    @"C:\Users\non\Desktop\TestData\kinect4", 
-                                                    @"C:\Users\non\Desktop\TestData\kinect5", 
-            };
-            List<string> mapdir = new List<string>() {
-                                                    @"C:\Users\non\Desktop\1226\1226_kinect1\coordmap.dump",  
-                                                    @"C:\Users\non\Desktop\1226\1226_kinect2\coordmap.dump", 
-                                                    @"C:\Users\non\Desktop\1226\1226_kinect3\coordmap.dump", 
-                                                    @"C:\Users\non\Desktop\1226\1226_kinect4\coordmap.dump", 
-                                                    @"C:\Users\non\Desktop\1226\1226_kinect5\coordmap.dump", 
-            };
-            List<string> cameradir = new List<string>() {
-                                                    @"C:\Users\non\Desktop\1226\1226_kinect1\CameraInfo.dump",  
-                                                    @"C:\Users\non\Desktop\1226\1226_kinect2\CameraInfo.dump", 
-                                                    @"C:\Users\non\Desktop\1226\1226_kinect3\CameraInfo.dump", 
-                                                    @"C:\Users\non\Desktop\1226\1226_kinect4\CameraInfo.dump", 
-                                                    @"C:\Users\non\Desktop\1226\1226_kinect5\CameraInfo.dump", 
-            };
-            this.frameSequence = new FrameSequence(datadir);
-            this.frameSequence.LocalCoordinateMappers = mapdir.Select(s => (LocalCoordinateMapper)Utility.LoadFromBinary(s)).ToList();
-            this.frameSequence.CameraInfo = cameradir.Select(s => (CameraIntrinsics)Utility.LoadFromBinary(s)).ToList();
+            this.frameSequence = new FrameSequence(settings.dataDirectories);
+            this.frameSequence.LocalCoordinateMappers = settings.mapFiles.Select(s => (LocalCoordinateMapper)Utility.LoadFromBinary(s)).ToList();
+            this.frameSequence.CameraInfo = settings.cameraFiles.Select(s => (CameraIntrinsics)Utility.LoadFromBinary(s)).ToList();
         }
 
         /// <summary>
         /// こんすとらくたん
         /// </summary>
-        public MergeRecordWindow()
+        public MergeRecordWindow(Settings settings)
         {
+            this.settings = settings;
             this.drawingGroup1 = new DrawingGroup();
             this.bodyImageSource1 = new DrawingImage(this.drawingGroup1);
             this.drawingGroup2 = new DrawingGroup();

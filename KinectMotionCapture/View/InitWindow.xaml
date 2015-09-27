@@ -14,8 +14,9 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <Button Grid.Row="0" Content="Record Motions" Margin="20" Name="RecordMotionButton" Click="RecordMotionButton_Click" />
-            <Button Grid.Row="1" Content="Merge Records" Margin="20" Name="MergeRecordButton" Click="MergeRecordButton_Click"/>
-            <Button Grid.Row="2" Content="Convert Records" Margin="20" Name="ConvertButton" Click="ConvertButton_Click" />
+            <Button Grid.Row="1" Content="Merge Records(New Project)" Margin="20" Name="MergeRecordButton" Click="MergeRecordButton_Click"/>
+            <Button Grid.Row="2" Content="Merge Records(Open Project)" Margin="20" Name="OpenProjectButton" Click="OpenProjectButton_Click" />
+            <Button Grid.Row="3" Content="Convert Records" Margin="20" Name="ConvertButton" Click="ConvertButton_Click" />
         </Grid>
     </Border>
 </Window>

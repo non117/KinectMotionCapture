@@ -38,7 +38,18 @@ namespace KinectMotionCapture
 
         private void MergeRecordButton_Click(object sender, RoutedEventArgs e)
         {
-            MergeRecordWindow wnd = new MergeRecordWindow();
+        }
+
+        private void OpenProjectButton_Click(object sender, RoutedEventArgs e)
+        {
+            string path = Utility.ChooseFileDialog("プロジェクトファイルを選択してください", defaultPath:Environment.CurrentDirectory,  filter:"XML Files (*.xml)|*.xml");
+            if (path == null)
+            {
+                System.Windows.MessageBox.Show("プロジェクトファイルを選択してください");
+                return;
+            }
+            Settings s = Utility.LoadFromXML<Settings>(path);
+            MergeRecordWindow wnd = new MergeRecordWindow(s);
             wnd.Show();
             this.Close();
         }
