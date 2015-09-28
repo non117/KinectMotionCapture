@@ -1100,5 +1100,16 @@ namespace KinectMotionCapture
                 frameRemoveList.Clear();
             }
         }
+
+        private void ExportProjectFile_Click(object sender, RoutedEventArgs e)
+        {
+            string path = Utility.SaveFileDialog("プロジェクトファイルを保存します", Environment.CurrentDirectory, "XML Files (*.xml)|*.xml");
+            if (path == null)
+            {
+                MessageBox.Show("dumpファイルを選択してください");
+                return;
+            }
+            Utility.SaveToXML(settings, path);
+        }
     }
 }

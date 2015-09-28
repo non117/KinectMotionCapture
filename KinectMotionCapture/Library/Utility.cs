@@ -1101,5 +1101,33 @@ namespace KinectMotionCapture
                 return null;
             }
         }
+
+        /// <summary>
+        /// ファイルを名前をつけて保存するやつ
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="defaultPath"></param>
+        /// <param name="filter"></param>
+        /// <returns></returns>
+        public static string SaveFileDialog(string message, string defaultPath="", string filter="Dump Files (*.dump)|*.dump")
+        {
+            SaveFileDialog sfd = new SaveFileDialog();
+            sfd.InitialDirectory = defaultPath;
+            if (defaultPath == "")
+            {
+                sfd.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            }
+            sfd.Title = message;
+            sfd.Filter = filter;
+            sfd.FileName = "NewProject";
+            if (sfd.ShowDialog() == DialogResult.OK)
+            {
+                return sfd.FileName;
+            }
+            else
+            {
+                return null;
+            }
+        }
     }
 }
