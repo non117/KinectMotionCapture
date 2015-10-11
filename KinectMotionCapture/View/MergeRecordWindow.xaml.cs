@@ -559,7 +559,15 @@ namespace KinectMotionCapture
             if (frameSequence.Segmentations != null && this.isUserSelected.All(b => b))
             {
                 var res = SkeletonInterpolator.ExportFromProject(frameSequence, startIndex, endIndex);
-                string path = System.IO.Path.Combine(Environment.CurrentDirectory, @"SelectedUserBody.dump");
+
+                string baseDir = Utility.ChooseFolderDialog("ユーザの動作データを保存するフォルダを選んでください", Environment.CurrentDirectory);
+                if (baseDir == null)
+                {
+                    MessageBox.Show("フォルダを選択してください");
+                    return;
+                }
+
+                string path = System.IO.Path.Combine(baseDir, @"SelectedUserBody.dump");
                 int id = this.frameSequence.selecteedIntegretedIdList[0];
                 if (this.frameSequence.selecteedIntegretedIdList.All(i => i == id))
                 {

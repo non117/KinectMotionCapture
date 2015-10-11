@@ -50,13 +50,13 @@
                 <TextBox Height="24" Width="400" Name="DataPathTextBox5" Text="{Binding DataPath5, Mode=OneWay}" IsReadOnly="True"/>
                 <Button Content="Open" Name="OpenFolderButton5" Height="23" Width="50" HorizontalAlignment="Right" Click="OpenFolderButton5_Click" Margin="10"/>
             </Grid>
-            <Label Content="coordmapファイルを選択してください" Grid.Row="7"/>
+            <Label Content="coordmapファイルを5つまで選択してください（Ctrl + クリックで複数選択）" Grid.Row="7"/>
             <Grid Grid.Row="8">
                 <Label Content="Map Files" Height="28"/>
                 <TextBox Height="24" Width="400" Name="MapFilesTextBox" Text="{Binding MapFiles, Mode=OneWay}" IsReadOnly="True" />
                 <Button Content="Open" Name="OpenMapFilesButton" Height="23" Width="50" HorizontalAlignment="Right" Click="OpenMapFileButton_Click" Margin="10"/>
             </Grid>
-            <Label Content="CameraInfoファイルを選択してください" Grid.Row="10"/>
+            <Label Content="CameraInfoファイルを5つまで選択してください（Ctrl + クリックで複数選択）" Grid.Row="10"/>
             <Grid Grid.Row="11">
                 <Label Content="Map Files" Height="28"/>
                 <TextBox Height="24" Width="400" Name="CameraFilesTextBox" Text="{Binding CameraFiles, Mode=OneWay}" IsReadOnly="True" />
