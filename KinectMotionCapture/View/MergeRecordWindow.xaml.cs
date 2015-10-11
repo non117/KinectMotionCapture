@@ -786,6 +786,96 @@ namespace KinectMotionCapture
         }
 
         /// <summary>
+        /// フレーム範囲で選択されたユーザのポイントクラウド
+        /// </summary>
+        /// <returns></returns>
+        private void GetCurrentUserPointSequence(string dir, bool rotate)
+        {
+            if (frameSequence.Segmentations != null && this.isUserSelected.All(b => b))
+            {
+                List<CvMat> conversionMtxs = frameSequence.ToWorldConversions;
+                List<Frame> frames = this.frameSequence.Slice(this.startIndex, this.endIndex);
+                List<List<string>> metaDatas = new List<List<string>>();
+
+                List<Tuple<CvPoint3D64f, CvColor>>[] colorStores;
+                int frameNo = 0;
+                foreach (Frame frame in frames)
+                {
+                    colorStores = new List<Tuple<CvPoint3D64f,CvColor>>[frameSequence.recordNum];
+                    for (int recordNo = 0; recordNo < frameSequence.recordNum; recordNo++)
+                    {
+                        if (colorStores[recordNo] == null)
+                            colorStores[recordNo] = new List<Tuple<CvPoint3D64f, CvColor>>();
+                        if (frame.isValid(recordNo))
+                        {
+                            SerializableBody body = frame.GetSelectedBody(recordNo, frameSequence.selecteedIntegretedIdList[recordNo]);
+                            if (body != null)
+                            {
+                                CvMat[] mats = frame.GetCvMat(recordNo);
+                                List<Tuple<CvPoint3D64f, CvColor>> colors = frameSequence.LocalCoordinateMappers[recordNo].GetUserColorPoints(mats);
+                                if (rotate)
+                                {
+                                    colors = colors.AsParallel().Select(t => Tuple.Create(CvEx.ConvertPoint3D(t.Item1, conversionMtxs[recordNo]) * 1000, t.Item2)).ToList();
+                                }
+                                else
+                                {
+                                    colors = colors.AsParallel().Select(t => Tuple.Create(t.Item1 * 1000, t.Item2)).ToList();
+                                }
+                                colorStores[recordNo].AddRange(colors);
+                            }
+                        }
+                    }
+                    for (int recordNo = 0; recordNo < frameSequence.recordNum; recordNo++)
+                    {
+                        string filename = String.Format("model_{0}_{1}.ply", frameNo, recordNo);
+                        string path = System.IO.Path.Combine(dir, filename);
+                        Utility.SaveToPly(colorStores[recordNo], path);
+                        string[] meta = new string[] { filename, frame.GetMotionData(recordNo).TimeStamp.ToString(@"HH\:mm\:ss\:fff") };
+                        metaDatas.Add(meta.ToList());
+                    }
+                    frameNo++;
+                }
+                Utility.SaveToCsv(System.IO.Path.Combine(dir, "index.csv"), metaDatas);
+            }
+            else
+            {
+                MessageBox.Show("統合されたユーザが存在しません");
+            }
+        }
+
+        /// <summary>
+        /// 現在選択されているフレーム範囲の点群を出力する
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ExportCurrentUserPointSequence_Click(object sender, RoutedEventArgs e)
+        {
+            string baseDir = Utility.ChooseFolderDialog("plyファイルを出力するフォルダを選択してください");
+            if (baseDir == null)
+            {
+                MessageBox.Show("フォルダを選択してください");
+                return;
+            }
+            GetCurrentUserPointSequence(baseDir, true);
+        }
+
+        /// <summary>
+        /// 現在選択されているフレーム範囲の点群をconvertせずに出力する
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ExportCurrentUserPointSequenceNoTrans_Click(object sender, RoutedEventArgs e)
+        {
+            string baseDir = Utility.ChooseFolderDialog("plyファイルを出力するフォルダを選択してください");
+            if (baseDir == null)
+            {
+                MessageBox.Show("フォルダを選択してください");
+                return;
+            }
+            GetCurrentUserPointSequence(baseDir, false);
+        }
+
+        /// <summary>
         /// 選択中の統合IDを新しいIDに振りかえる
         /// </summary>
         /// <param name="sender"></param>

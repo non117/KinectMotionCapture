@@ -226,6 +226,8 @@
                 <MenuItem Name="ExportSelectedBodiesAsBinary" Header="現在のフレーム範囲で選択中のユーザをバイナリで出力" Click="ExportSelectedBodiesAsBinary_Click"/>
                 <Separator/>
                 <MenuItem Name="ExportCurrentUserPointClouds" Header="選択されたユーザの点群を出力する" Click="ExportCurrentUserPointClouds_Click" />
+                <MenuItem Name="ExportCurrentUserPointSequence" Header="フレーム範囲の選択されたユーザを座標変換して点群で出力する" Click="ExportCurrentUserPointSequence_Click" />
+                <MenuItem Name="ExportCurrentUserPointSequenceNoTrans" Header="フレーム範囲の選択されたユーザを座標変換せずに点群で出力する" Click="ExportCurrentUserPointSequenceNoTrans_Click" />
             </MenuItem>
             <MenuItem Name="Edit" Header="Edit">
                 <MenuItem Name="MirrorSelectedRecordFrame" Header="現在のフレームで選択中のレコード・ユーザの骨格情報を左右反転する" Click="MirrorSelectedRecordFrame_Click"/>
